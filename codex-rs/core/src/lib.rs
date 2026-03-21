@@ -44,6 +44,7 @@ mod flags;
 pub mod git_info;
 mod guardian;
 mod hook_runtime;
+mod inline_image_request_limit;
 pub mod instructions;
 pub mod landlock;
 pub mod mcp;
