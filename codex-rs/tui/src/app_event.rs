@@ -20,11 +20,13 @@ use codex_protocol::openai_models::ModelPreset;
 use codex_protocol::protocol::Event;
 use codex_protocol::protocol::RateLimitSnapshot;
 use codex_utils_approval_presets::ApprovalPreset;
+use std::sync::Arc;
 
 use crate::bottom_pane::ApprovalRequest;
 use crate::bottom_pane::StatusLineItem;
 use crate::bottom_pane::TerminalTitleItem;
 use crate::history_cell::HistoryCell;
+use crate::history_cell::SubagentStatusCell;
 
 use codex_core::config::types::ApprovalsReviewer;
 use codex_features::Feature;
@@ -207,6 +209,11 @@ pub(crate) enum AppEvent {
     StartCommitAnimation,
     StopCommitAnimation,
     CommitTick,
+    StartSubagentAnimation,
+    StopSubagentAnimation,
+    SubagentTick,
+    UpdateSubagentPanel(Arc<SubagentStatusCell>),
+    ClearSubagentPanel,
 
     /// Update the current reasoning effort in the running app and widget.
     UpdateReasoningEffort(Option<ReasoningEffort>),
