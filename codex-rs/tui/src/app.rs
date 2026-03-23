@@ -29,6 +29,7 @@ use crate::history_cell::UpdateAvailableHistoryCell;
 use crate::model_migration::ModelMigrationOutcome;
 use crate::model_migration::migration_copy_for_models;
 use crate::model_migration::run_model_migration_prompt;
+use crate::multi_agents::AgentPickerThreadEntry;
 use crate::multi_agents::agent_picker_status_dot_spans;
 use crate::multi_agents::format_agent_picker_item_name;
 use crate::multi_agents::next_agent_shortcut_matches;
@@ -106,10 +107,10 @@ use codex_protocol::protocol::SessionConfiguredEvent;
 use codex_protocol::protocol::SessionSource;
 use codex_protocol::protocol::SkillErrorInfo;
 use codex_protocol::protocol::TokenUsage;
-use codex_terminal_detection::user_agent;
 use codex_protocol::protocol::TurnAbortedEvent;
 use codex_protocol::protocol::TurnCompleteEvent;
 use codex_protocol::protocol::TurnStartedEvent;
+use codex_terminal_detection::user_agent;
 use codex_utils_absolute_path::AbsolutePathBuf;
 use color_eyre::eyre::Result;
 use color_eyre::eyre::WrapErr;
@@ -1045,6 +1046,7 @@ fn terminal_summary(status: &AgentStatus) -> String {
         AgentStatus::Errored(message) => {
             truncate_text(message.trim(), SUBAGENT_UPDATE_PREVIEW_BUDGET)
         }
+        AgentStatus::Interrupted => "interrupted".to_string(),
         AgentStatus::Shutdown => "shutdown".to_string(),
         AgentStatus::NotFound => "not found".to_string(),
         AgentStatus::PendingInit | AgentStatus::Running => "running".to_string(),
@@ -3057,7 +3059,6 @@ impl App {
             agent_navigation: AgentNavigationState::default(),
             subagents: SubagentRegistry::new(animations_enabled),
             agent_picker_threads: HashMap::new(),
-            agent_navigation: AgentNavigationState::default(),
             active_thread_id: None,
             active_thread_rx: None,
             primary_thread_id: None,
@@ -7499,7 +7500,6 @@ guardian_approval = true
             agent_navigation: AgentNavigationState::default(),
             subagents: SubagentRegistry::new(animations_enabled),
             agent_picker_threads: HashMap::new(),
-            agent_navigation: AgentNavigationState::default(),
             active_thread_id: None,
             active_thread_rx: None,
             primary_thread_id: None,
@@ -7568,7 +7568,6 @@ guardian_approval = true
                 agent_navigation: AgentNavigationState::default(),
                 subagents: SubagentRegistry::new(animations_enabled),
                 agent_picker_threads: HashMap::new(),
-                agent_navigation: AgentNavigationState::default(),
                 active_thread_id: None,
                 active_thread_rx: None,
                 primary_thread_id: None,

@@ -705,6 +705,7 @@ fn status_span_for_panel(agent: &SubagentPanelAgent) -> Span<'static> {
         AgentStatus::PendingInit | AgentStatus::Running => "running".cyan().bold(),
         AgentStatus::Completed(_) => "completed".green(),
         AgentStatus::Errored(_) => "errored".red(),
+        AgentStatus::Interrupted => "interrupted".magenta(),
         AgentStatus::Shutdown => "shutdown".dim(),
         AgentStatus::NotFound => "not found".red(),
     }
@@ -728,6 +729,7 @@ fn status_label_span(status: &AgentStatus) -> Span<'static> {
         AgentStatus::PendingInit | AgentStatus::Running => "running".cyan().bold(),
         AgentStatus::Completed(_) => "completed".green(),
         AgentStatus::Errored(_) => "errored".red(),
+        AgentStatus::Interrupted => "interrupted".magenta(),
         AgentStatus::Shutdown => "shutdown".dim(),
         AgentStatus::NotFound => "not found".red(),
     }
