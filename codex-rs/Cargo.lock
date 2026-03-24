@@ -2240,6 +2240,7 @@ dependencies = [
  "codex-keyring-store",
  "codex-protocol",
  "codex-terminal-detection",
+ "codex-utils-home-dir",
  "core_test_support",
  "keyring",
  "once_cell",
