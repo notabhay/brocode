@@ -13,9 +13,10 @@ use crate::config::types::NotificationMethod;
 use crate::config::types::Notifications;
 use crate::config::types::ToolSuggestDiscoverableType;
 use crate::config_loader::RequirementSource;
-use crate::features::Feature;
 use assert_matches::assert_matches;
 use codex_config::CONFIG_TOML_FILE;
+use codex_features::Feature;
+use codex_features::FeaturesToml;
 use codex_protocol::permissions::FileSystemAccessMode;
 use codex_protocol::permissions::FileSystemPath;
 use codex_protocol::permissions::FileSystemSandboxEntry;
@@ -237,6 +238,7 @@ fn config_toml_deserializes_model_availability_nux() {
             show_tooltips: true,
             alternate_screen: AltScreenMode::default(),
             status_line: None,
+            terminal_title: None,
             theme: None,
             model_availability_nux: ModelAvailabilityNuxConfig {
                 shown_count: HashMap::from([
@@ -921,6 +923,7 @@ fn tui_config_missing_notifications_field_defaults_to_enabled() {
             show_tooltips: true,
             alternate_screen: AltScreenMode::Auto,
             status_line: None,
+            terminal_title: None,
             theme: None,
             model_availability_nux: ModelAvailabilityNuxConfig::default(),
         }
@@ -1660,7 +1663,7 @@ fn feature_table_overrides_legacy_flags() -> std::io::Result<()> {
     let mut entries = BTreeMap::new();
     entries.insert("apply_patch_freeform".to_string(), false);
     let cfg = ConfigToml {
-        features: Some(crate::features::FeaturesToml { entries }),
+        features: Some(FeaturesToml { entries }),
         ..Default::default()
     };
 
@@ -1708,7 +1711,7 @@ fn responses_websocket_features_do_not_change_wire_api() -> std::io::Result<()> 
         let mut entries = BTreeMap::new();
         entries.insert(feature_key.to_string(), true);
         let cfg = ConfigToml {
-            features: Some(crate::features::FeaturesToml { entries }),
+            features: Some(FeaturesToml { entries }),
             ..Default::default()
         };
 
@@ -4310,6 +4313,7 @@ fn test_precedence_fixture_with_o3_profile() -> std::io::Result<()> {
             model_verbosity: None,
             personality: Some(Personality::Pragmatic),
             chatgpt_base_url: "https://chatgpt.com/backend-api/".to_string(),
+            experimental_exec_server_url: None,
             realtime_audio: RealtimeAudioConfig::default(),
             experimental_realtime_start_instructions: None,
             experimental_realtime_ws_base_url: None,
@@ -4348,6 +4352,7 @@ fn test_precedence_fixture_with_o3_profile() -> std::io::Result<()> {
             tool_suggest: ToolSuggestConfig::default(),
             tui_alternate_screen: AltScreenMode::Auto,
             tui_status_line: None,
+            tui_terminal_title: None,
             tui_theme: None,
             otel: OtelConfig::default(),
         },
@@ -4451,6 +4456,7 @@ fn test_precedence_fixture_with_gpt3_profile() -> std::io::Result<()> {
         model_verbosity: None,
         personality: Some(Personality::Pragmatic),
         chatgpt_base_url: "https://chatgpt.com/backend-api/".to_string(),
+        experimental_exec_server_url: None,
         realtime_audio: RealtimeAudioConfig::default(),
         experimental_realtime_start_instructions: None,
         experimental_realtime_ws_base_url: None,
@@ -4489,6 +4495,7 @@ fn test_precedence_fixture_with_gpt3_profile() -> std::io::Result<()> {
         tool_suggest: ToolSuggestConfig::default(),
         tui_alternate_screen: AltScreenMode::Auto,
         tui_status_line: None,
+        tui_terminal_title: None,
         tui_theme: None,
         otel: OtelConfig::default(),
     };
@@ -4590,6 +4597,7 @@ fn test_precedence_fixture_with_zdr_profile() -> std::io::Result<()> {
         model_verbosity: None,
         personality: Some(Personality::Pragmatic),
         chatgpt_base_url: "https://chatgpt.com/backend-api/".to_string(),
+        experimental_exec_server_url: None,
         realtime_audio: RealtimeAudioConfig::default(),
         experimental_realtime_start_instructions: None,
         experimental_realtime_ws_base_url: None,
@@ -4628,6 +4636,7 @@ fn test_precedence_fixture_with_zdr_profile() -> std::io::Result<()> {
         tool_suggest: ToolSuggestConfig::default(),
         tui_alternate_screen: AltScreenMode::Auto,
         tui_status_line: None,
+        tui_terminal_title: None,
         tui_theme: None,
         otel: OtelConfig::default(),
     };
@@ -4715,6 +4724,7 @@ fn test_precedence_fixture_with_gpt5_profile() -> std::io::Result<()> {
         model_verbosity: Some(Verbosity::High),
         personality: Some(Personality::Pragmatic),
         chatgpt_base_url: "https://chatgpt.com/backend-api/".to_string(),
+        experimental_exec_server_url: None,
         realtime_audio: RealtimeAudioConfig::default(),
         experimental_realtime_start_instructions: None,
         experimental_realtime_ws_base_url: None,
@@ -4753,6 +4763,7 @@ fn test_precedence_fixture_with_gpt5_profile() -> std::io::Result<()> {
         tool_suggest: ToolSuggestConfig::default(),
         tui_alternate_screen: AltScreenMode::Auto,
         tui_status_line: None,
+        tui_terminal_title: None,
         tui_theme: None,
         otel: OtelConfig::default(),
     };
@@ -5571,16 +5582,76 @@ shell_tool = true
     Ok(())
 }
 
+#[cfg(target_os = "linux")]
 #[test]
-fn missing_system_bwrap_warning_matches_system_bwrap_presence() {
-    #[cfg(target_os = "linux")]
-    assert_eq!(
-        missing_system_bwrap_warning().is_some(),
-        !Path::new("/usr/bin/bwrap").is_file()
-    );
+fn system_bwrap_warning_reports_missing_system_bwrap() {
+    let warning = system_bwrap_warning_for_path(Path::new("/definitely/not/a/bwrap"))
+        .expect("missing system bwrap should emit a warning");
 
-    #[cfg(not(target_os = "linux"))]
-    assert!(missing_system_bwrap_warning().is_none());
+    assert!(warning.contains("could not find system bubblewrap"));
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn system_bwrap_warning_reports_too_old_system_bwrap() {
+    let fake_bwrap = write_fake_bwrap(
+        r#"#!/bin/sh
+if [ "$1" = "--help" ]; then
+  echo 'usage: bwrap [OPTION...] COMMAND'
+  exit 0
+fi
+exit 1
+"#,
+    );
+    let fake_bwrap_path: &Path = fake_bwrap.as_ref();
+    let warning = system_bwrap_warning_for_path(fake_bwrap_path)
+        .expect("old system bwrap should emit a warning");
+
+    assert!(warning.contains("too old to support `--argv0`"));
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn system_bwrap_warning_skips_supported_system_bwrap() {
+    let fake_bwrap = write_fake_bwrap(
+        r#"#!/bin/sh
+if [ "$1" = "--help" ]; then
+  echo '  --argv0 PROGRAM'
+  exit 0
+fi
+exit 1
+"#,
+    );
+    let fake_bwrap_path: &Path = fake_bwrap.as_ref();
+
+    assert_eq!(system_bwrap_warning_for_path(fake_bwrap_path), None);
+}
+
+#[cfg(not(target_os = "linux"))]
+#[test]
+fn system_bwrap_warning_is_disabled_off_linux() {
+    assert!(system_bwrap_warning().is_none());
+}
+
+#[cfg(target_os = "linux")]
+fn write_fake_bwrap(contents: &str) -> tempfile::TempPath {
+    use std::fs;
+    use std::os::unix::fs::PermissionsExt;
+    use tempfile::NamedTempFile;
+
+    // Bazel can mount the OS temp directory `noexec`, so prefer the current
+    // working directory for fake executables and fall back to the default temp
+    // dir outside that environment.
+    let temp_file = std::env::current_dir()
+        .ok()
+        .and_then(|dir| NamedTempFile::new_in(dir).ok())
+        .unwrap_or_else(|| NamedTempFile::new().expect("temp file"));
+    // Linux rejects exec-ing a file that is still open for writing.
+    let path = temp_file.into_temp_path();
+    fs::write(&path, contents).expect("write fake bwrap");
+    let permissions = fs::Permissions::from_mode(0o755);
+    fs::set_permissions(&path, permissions).expect("chmod fake bwrap");
+    path
 }
 
 #[tokio::test]
@@ -5666,7 +5737,7 @@ approvals_reviewer = "guardian_subagent"
 }
 
 #[tokio::test]
-async fn smart_approvals_alias_is_migrated_to_guardian_approval() -> std::io::Result<()> {
+async fn smart_approvals_alias_is_ignored() -> std::io::Result<()> {
     let codex_home = TempDir::new()?;
     std::fs::write(
         codex_home.path().join(CONFIG_TOML_FILE),
@@ -5681,23 +5752,19 @@ smart_approvals = true
         .build()
         .await?;
 
-    assert!(config.features.enabled(Feature::GuardianApproval));
-    assert_eq!(config.features.legacy_feature_usages().count(), 0);
-    assert_eq!(
-        config.approvals_reviewer,
-        ApprovalsReviewer::GuardianSubagent
-    );
+    assert!(!config.features.enabled(Feature::GuardianApproval));
+    assert_eq!(config.approvals_reviewer, ApprovalsReviewer::User);
 
     let serialized = tokio::fs::read_to_string(codex_home.path().join(CONFIG_TOML_FILE)).await?;
-    assert!(serialized.contains("guardian_approval = true"));
-    assert!(serialized.contains("approvals_reviewer = \"guardian_subagent\""));
-    assert!(!serialized.contains("smart_approvals"));
+    assert!(serialized.contains("smart_approvals = true"));
+    assert!(!serialized.contains("guardian_approval"));
+    assert!(!serialized.contains("approvals_reviewer"));
 
     Ok(())
 }
 
 #[tokio::test]
-async fn smart_approvals_alias_is_migrated_in_profiles() -> std::io::Result<()> {
+async fn smart_approvals_alias_is_ignored_in_profiles() -> std::io::Result<()> {
     let codex_home = TempDir::new()?;
     std::fs::write(
         codex_home.path().join(CONFIG_TOML_FILE),
@@ -5714,113 +5781,14 @@ smart_approvals = true
         .build()
         .await?;
 
-    assert!(config.features.enabled(Feature::GuardianApproval));
-    assert_eq!(config.features.legacy_feature_usages().count(), 0);
-    assert_eq!(
-        config.approvals_reviewer,
-        ApprovalsReviewer::GuardianSubagent
-    );
-
-    let serialized = tokio::fs::read_to_string(codex_home.path().join(CONFIG_TOML_FILE)).await?;
-    assert!(serialized.contains("[profiles.guardian.features]"));
-    assert!(serialized.contains("guardian_approval = true"));
-    assert!(serialized.contains("approvals_reviewer = \"guardian_subagent\""));
-    assert!(!serialized.contains("smart_approvals"));
-
-    Ok(())
-}
-
-#[tokio::test]
-async fn smart_approvals_alias_migration_preserves_disabled_profile_override() -> std::io::Result<()>
-{
-    let codex_home = TempDir::new()?;
-    std::fs::write(
-        codex_home.path().join(CONFIG_TOML_FILE),
-        r#"[features]
-guardian_approval = true
-
-[profiles.guardian.features]
-smart_approvals = false
-"#,
-    )?;
-
-    let config = ConfigBuilder::default()
-        .codex_home(codex_home.path().to_path_buf())
-        .fallback_cwd(Some(codex_home.path().to_path_buf()))
-        .harness_overrides(ConfigOverrides {
-            config_profile: Some("guardian".to_string()),
-            ..Default::default()
-        })
-        .build()
-        .await?;
-
-    assert!(!config.features.enabled(Feature::GuardianApproval));
-    assert_eq!(config.features.legacy_feature_usages().count(), 0);
-    assert_eq!(config.approvals_reviewer, ApprovalsReviewer::User);
-
-    let serialized = tokio::fs::read_to_string(codex_home.path().join(CONFIG_TOML_FILE)).await?;
-    assert!(serialized.contains("[profiles.guardian.features]"));
-    assert!(serialized.contains("guardian_approval = false"));
-    assert!(!serialized.contains("smart_approvals"));
-
-    Ok(())
-}
-
-#[tokio::test]
-async fn smart_approvals_alias_migration_preserves_existing_approvals_reviewer()
--> std::io::Result<()> {
-    let codex_home = TempDir::new()?;
-    std::fs::write(
-        codex_home.path().join(CONFIG_TOML_FILE),
-        r#"approvals_reviewer = "user"
-
-[features]
-smart_approvals = true
-"#,
-    )?;
-
-    let config = ConfigBuilder::default()
-        .codex_home(codex_home.path().to_path_buf())
-        .fallback_cwd(Some(codex_home.path().to_path_buf()))
-        .build()
-        .await?;
-
-    assert!(config.features.enabled(Feature::GuardianApproval));
-    assert_eq!(config.approvals_reviewer, ApprovalsReviewer::User);
-
-    let serialized = tokio::fs::read_to_string(codex_home.path().join(CONFIG_TOML_FILE)).await?;
-    assert!(serialized.contains("guardian_approval = true"));
-    assert!(serialized.contains("approvals_reviewer = \"user\""));
-    assert!(!serialized.contains("smart_approvals"));
-
-    Ok(())
-}
-
-#[tokio::test]
-async fn smart_approvals_alias_migration_does_not_override_canonical_disabled_flag()
--> std::io::Result<()> {
-    let codex_home = TempDir::new()?;
-    std::fs::write(
-        codex_home.path().join(CONFIG_TOML_FILE),
-        r#"[features]
-guardian_approval = false
-smart_approvals = true
-"#,
-    )?;
-
-    let config = ConfigBuilder::default()
-        .codex_home(codex_home.path().to_path_buf())
-        .fallback_cwd(Some(codex_home.path().to_path_buf()))
-        .build()
-        .await?;
-
     assert!(!config.features.enabled(Feature::GuardianApproval));
     assert_eq!(config.approvals_reviewer, ApprovalsReviewer::User);
 
     let serialized = tokio::fs::read_to_string(codex_home.path().join(CONFIG_TOML_FILE)).await?;
-    assert!(serialized.contains("guardian_approval = false"));
-    assert!(!serialized.contains("approvals_reviewer = \"guardian_subagent\""));
-    assert!(!serialized.contains("smart_approvals"));
+    assert!(serialized.contains("[profiles.guardian.features]"));
+    assert!(serialized.contains("smart_approvals = true"));
+    assert!(!serialized.contains("guardian_approval"));
+    assert!(!serialized.contains("approvals_reviewer"));
 
     Ok(())
 }
@@ -5970,6 +5938,34 @@ experimental_realtime_start_instructions = "start instructions from config"
     assert_eq!(
         config.experimental_realtime_start_instructions.as_deref(),
         Some("start instructions from config")
+    );
+    Ok(())
+}
+
+#[test]
+fn experimental_exec_server_url_loads_from_config_toml() -> std::io::Result<()> {
+    let cfg: ConfigToml = toml::from_str(
+        r#"
+experimental_exec_server_url = "http://127.0.0.1:8080"
+"#,
+    )
+    .expect("TOML deserialization should succeed");
+
+    assert_eq!(
+        cfg.experimental_exec_server_url.as_deref(),
+        Some("http://127.0.0.1:8080")
+    );
+
+    let codex_home = TempDir::new()?;
+    let config = Config::load_from_base_config_with_overrides(
+        cfg,
+        ConfigOverrides::default(),
+        codex_home.path().to_path_buf(),
+    )?;
+
+    assert_eq!(
+        config.experimental_exec_server_url.as_deref(),
+        Some("http://127.0.0.1:8080")
     );
     Ok(())
 }

@@ -1,6 +1,7 @@
 use codex_app_server_client::AppServerClient;
 use codex_app_server_client::AppServerEvent;
 use codex_app_server_client::AppServerRequestHandle;
+use codex_app_server_client::TypedRequestError;
 use codex_app_server_protocol::Account;
 use codex_app_server_protocol::AuthMode;
 use codex_app_server_protocol::ClientRequest;
@@ -42,6 +43,8 @@ use codex_app_server_protocol::ThreadRollbackParams;
 use codex_app_server_protocol::ThreadRollbackResponse;
 use codex_app_server_protocol::ThreadSetNameParams;
 use codex_app_server_protocol::ThreadSetNameResponse;
+use codex_app_server_protocol::ThreadShellCommandParams;
+use codex_app_server_protocol::ThreadShellCommandResponse;
 use codex_app_server_protocol::ThreadStartParams;
 use codex_app_server_protocol::ThreadStartResponse;
 use codex_app_server_protocol::ThreadUnsubscribeParams;
@@ -427,7 +430,7 @@ impl AppServerSession {
         thread_id: ThreadId,
         turn_id: String,
         items: Vec<codex_protocol::user_input::UserInput>,
-    ) -> Result<TurnSteerResponse> {
+    ) -> std::result::Result<TurnSteerResponse, TypedRequestError> {
         let request_id = self.next_request_id();
         self.client
             .request_typed(ClientRequest::TurnSteer {
@@ -439,7 +442,6 @@ impl AppServerSession {
                 },
             })
             .await
-            .wrap_err("turn/steer failed in app-server TUI")
     }
 
     pub(crate) async fn thread_set_name(
@@ -489,6 +491,26 @@ impl AppServerSession {
             })
             .await
             .wrap_err("thread/compact/start failed in app-server TUI")?;
+        Ok(())
+    }
+
+    pub(crate) async fn thread_shell_command(
+        &mut self,
+        thread_id: ThreadId,
+        command: String,
+    ) -> Result<()> {
+        let request_id = self.next_request_id();
+        let _: ThreadShellCommandResponse = self
+            .client
+            .request_typed(ClientRequest::ThreadShellCommand {
+                request_id,
+                params: ThreadShellCommandParams {
+                    thread_id: thread_id.to_string(),
+                    command,
+                },
+            })
+            .await
+            .wrap_err("thread/shellCommand failed in app-server TUI")?;
         Ok(())
     }
 

@@ -752,6 +752,13 @@ pub struct Tui {
     #[serde(default)]
     pub status_line: Option<Vec<String>>,
 
+    /// Ordered list of terminal title item identifiers.
+    ///
+    /// When set, the TUI renders the selected items into the terminal window/tab title.
+    /// When unset, the TUI defaults to: `spinner` and `project`.
+    #[serde(default)]
+    pub terminal_title: Option<Vec<String>>,
+
     /// Syntax highlighting theme name (kebab-case).
     ///
     /// When set, overrides automatic light/dark theme detection.
@@ -797,7 +804,12 @@ impl Notice {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, JsonSchema)]
 #[schemars(deny_unknown_fields)]
 pub struct SkillConfig {
-    pub path: AbsolutePathBuf,
+    /// Path-based selector.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<AbsolutePathBuf>,
+    /// Name-based selector.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
     pub enabled: bool,
 }
 
