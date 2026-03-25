@@ -5,6 +5,7 @@ use crate::client_common::tools::ToolSpec;
 use crate::config::AgentRoleConfig;
 use crate::mcp::CODEX_APPS_MCP_SERVER_NAME;
 use crate::mcp_connection_manager::ToolInfo;
+use crate::mcp_openai_file::mask_model_visible_tool_input_schema;
 use crate::models_manager::collaboration_mode_presets::CollaborationModesConfig;
 use crate::original_image_detail::can_request_original_image_detail;
 use crate::shell::Shell;
@@ -2343,11 +2344,28 @@ fn push_tool_spec(
     }
 }
 
+#[cfg(test)]
 pub(crate) fn mcp_tool_to_openai_tool(
+    fully_qualified_name: String,
+    tool_info: ToolInfo,
+) -> Result<ResponsesApiTool, serde_json::Error> {
+    let (description, input_schema, output_schema) = mcp_tool_to_openai_tool_parts(&tool_info)?;
+
+    Ok(ResponsesApiTool {
+        name: fully_qualified_name,
+        description,
+        strict: false,
+        defer_loading: None,
+        parameters: input_schema,
+        output_schema,
+    })
+}
+
+fn plain_mcp_tool_to_openai_tool(
     fully_qualified_name: String,
     tool: rmcp::model::Tool,
 ) -> Result<ResponsesApiTool, serde_json::Error> {
-    let (description, input_schema, output_schema) = mcp_tool_to_openai_tool_parts(tool)?;
+    let (description, input_schema, output_schema) = plain_mcp_tool_to_openai_tool_parts(tool)?;
 
     Ok(ResponsesApiTool {
         name: fully_qualified_name,
@@ -2361,9 +2379,9 @@ pub(crate) fn mcp_tool_to_openai_tool(
 
 pub(crate) fn mcp_tool_to_deferred_openai_tool(
     name: String,
-    tool: rmcp::model::Tool,
+    tool_info: &ToolInfo,
 ) -> Result<ResponsesApiTool, serde_json::Error> {
-    let (description, input_schema, _) = mcp_tool_to_openai_tool_parts(tool)?;
+    let (description, input_schema, _) = mcp_tool_to_openai_tool_parts(tool_info)?;
 
     Ok(ResponsesApiTool {
         name,
@@ -2398,8 +2416,12 @@ pub fn parse_tool_input_schema(input_schema: &JsonValue) -> Result<JsonSchema, s
 }
 
 fn mcp_tool_to_openai_tool_parts(
-    tool: rmcp::model::Tool,
+    tool_info: &ToolInfo,
 ) -> Result<(String, JsonSchema, Option<JsonValue>), serde_json::Error> {
+    let mut tool = tool_info.tool.clone();
+    if tool_info.server_name == CODEX_APPS_MCP_SERVER_NAME {
+        mask_model_visible_tool_input_schema(&mut tool);
+    }
     let rmcp::model::Tool {
         description,
         input_schema,
@@ -2426,6 +2448,30 @@ fn mcp_tool_to_openai_tool_parts(
     // Schemas (e.g. using enum/anyOf), or use unsupported variants like
     // `integer`. Our internal JsonSchema is a small subset and requires
     // `type`, so we coerce/sanitize here for compatibility.
+    sanitize_json_schema(&mut serialized_input_schema);
+    let input_schema = serde_json::from_value::<JsonSchema>(serialized_input_schema)?;
+    let structured_content_schema = output_schema
+        .map(|output_schema| serde_json::Value::Object(output_schema.as_ref().clone()))
+        .unwrap_or_else(|| JsonValue::Object(serde_json::Map::new()));
+    let output_schema = Some(mcp_call_tool_result_output_schema(
+        structured_content_schema,
+    ));
+    let description = description.map(Into::into).unwrap_or_default();
+
+    Ok((description, input_schema, output_schema))
+}
+
+fn plain_mcp_tool_to_openai_tool_parts(
+    tool: rmcp::model::Tool,
+) -> Result<(String, JsonSchema, Option<JsonValue>), serde_json::Error> {
+    let rmcp::model::Tool {
+        description,
+        input_schema,
+        output_schema,
+        ..
+    } = tool;
+
+    let mut serialized_input_schema = serde_json::Value::Object(input_schema.as_ref().clone());
     sanitize_json_schema(&mut serialized_input_schema);
     let input_schema = serde_json::from_value::<JsonSchema>(serialized_input_schema)?;
     let structured_content_schema = output_schema
@@ -3060,8 +3106,8 @@ pub(crate) fn build_specs_with_discoverable_tools(
         let mut entries: Vec<(String, rmcp::model::Tool)> = mcp_tools.into_iter().collect();
         entries.sort_by(|a, b| a.0.cmp(&b.0));
 
-        for (name, tool) in entries.into_iter() {
-            match mcp_tool_to_openai_tool(name.clone(), tool.clone()) {
+        for (name, tool) in entries {
+            match plain_mcp_tool_to_openai_tool(name.clone(), tool) {
                 Ok(converted_tool) => {
                     push_tool_spec(
                         &mut builder,
