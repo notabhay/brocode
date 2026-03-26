@@ -11,13 +11,21 @@ use codex_utils_absolute_path::AbsolutePathBuf;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum BubblewrapLauncher {
-    System(AbsolutePathBuf),
+    System(SystemBwrapLauncher),
     Vendored,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct SystemBwrapLauncher {
+    program: AbsolutePathBuf,
+    supports_argv0: bool,
 }
 
 pub(crate) fn exec_bwrap(argv: Vec<String>, preserved_files: Vec<File>) -> ! {
     match preferred_bwrap_launcher() {
-        BubblewrapLauncher::System(program) => exec_system_bwrap(&program, argv, preserved_files),
+        BubblewrapLauncher::System(launcher) => {
+            exec_system_bwrap(&launcher.program, argv, preserved_files)
+        }
         BubblewrapLauncher::Vendored => exec_vendored_bwrap(argv, preserved_files),
     }
 }
@@ -33,10 +41,21 @@ fn preferred_bwrap_launcher() -> BubblewrapLauncher {
 }
 
 fn preferred_bwrap_launcher_for_path(system_bwrap_path: &Path) -> BubblewrapLauncher {
-    if !codex_core::config::system_bwrap_supports_argv0(system_bwrap_path) {
+    preferred_bwrap_launcher_for_path_with_probe(
+        system_bwrap_path,
+        codex_core::config::system_bwrap_supports_argv0,
+    )
+}
+
+fn preferred_bwrap_launcher_for_path_with_probe(
+    system_bwrap_path: &Path,
+    system_bwrap_supports_argv0: impl FnOnce(&Path) -> bool,
+) -> BubblewrapLauncher {
+    if !system_bwrap_path.is_file() {
         return BubblewrapLauncher::Vendored;
     }
 
+    let supports_argv0 = system_bwrap_supports_argv0(system_bwrap_path);
     let system_bwrap_path = match AbsolutePathBuf::from_absolute_path(system_bwrap_path) {
         Ok(path) => path,
         Err(err) => panic!(
@@ -44,7 +63,17 @@ fn preferred_bwrap_launcher_for_path(system_bwrap_path: &Path) -> BubblewrapLaun
             system_bwrap_path.display()
         ),
     };
-    BubblewrapLauncher::System(system_bwrap_path)
+    BubblewrapLauncher::System(SystemBwrapLauncher {
+        program: system_bwrap_path,
+        supports_argv0,
+    })
+}
+
+pub(crate) fn preferred_bwrap_supports_argv0() -> bool {
+    match preferred_bwrap_launcher() {
+        BubblewrapLauncher::System(launcher) => launcher.supports_argv0,
+        BubblewrapLauncher::Vendored => true,
+    }
 }
 
 fn exec_system_bwrap(
@@ -113,44 +142,33 @@ mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
     use tempfile::NamedTempFile;
-    use tempfile::TempPath;
 
     #[test]
     fn prefers_system_bwrap_when_help_lists_argv0() {
-        let fake_bwrap = write_fake_bwrap(
-            r#"#!/bin/sh
-if [ "$1" = "--help" ]; then
-  echo '  --argv0 PROGRAM'
-  exit 0
-fi
-exit 1
-"#,
-        );
-        let fake_bwrap_path: &Path = fake_bwrap.as_ref();
+        let fake_bwrap = NamedTempFile::new().expect("temp file");
+        let fake_bwrap_path = fake_bwrap.path();
         let expected = AbsolutePathBuf::from_absolute_path(fake_bwrap_path).expect("absolute");
 
         assert_eq!(
-            preferred_bwrap_launcher_for_path(fake_bwrap_path),
-            BubblewrapLauncher::System(expected)
+            preferred_bwrap_launcher_for_path_with_probe(fake_bwrap_path, |_| true),
+            BubblewrapLauncher::System(SystemBwrapLauncher {
+                program: expected,
+                supports_argv0: true,
+            })
         );
     }
 
     #[test]
-    fn falls_back_to_vendored_when_system_bwrap_lacks_argv0() {
-        let fake_bwrap = write_fake_bwrap(
-            r#"#!/bin/sh
-if [ "$1" = "--help" ]; then
-  echo 'usage: bwrap [OPTION...] COMMAND'
-  exit 0
-fi
-exit 1
-"#,
-        );
-        let fake_bwrap_path: &Path = fake_bwrap.as_ref();
+    fn prefers_system_bwrap_when_system_bwrap_lacks_argv0() {
+        let fake_bwrap = NamedTempFile::new().expect("temp file");
+        let fake_bwrap_path = fake_bwrap.path();
 
         assert_eq!(
-            preferred_bwrap_launcher_for_path(fake_bwrap_path),
-            BubblewrapLauncher::Vendored
+            preferred_bwrap_launcher_for_path_with_probe(fake_bwrap_path, |_| false),
+            BubblewrapLauncher::System(SystemBwrapLauncher {
+                program: AbsolutePathBuf::from_absolute_path(fake_bwrap_path).expect("absolute"),
+                supports_argv0: false,
+            })
         );
     }
 
@@ -190,17 +208,5 @@ exit 1
             panic!("failed to read fd flags for test fd {fd}: {err}");
         }
         flags
-    }
-
-    fn write_fake_bwrap(contents: &str) -> TempPath {
-        use std::fs;
-        use std::os::unix::fs::PermissionsExt;
-
-        // Linux rejects exec-ing a file that is still open for writing.
-        let path = NamedTempFile::new().expect("temp file").into_temp_path();
-        fs::write(&path, contents).expect("write fake bwrap");
-        let permissions = fs::Permissions::from_mode(0o755);
-        fs::set_permissions(&path, permissions).expect("chmod fake bwrap");
-        path
     }
 }
