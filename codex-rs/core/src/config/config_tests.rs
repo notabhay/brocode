@@ -531,6 +531,62 @@ fn default_permissions_profile_populates_runtime_sandbox_policy() -> std::io::Re
 }
 
 #[test]
+fn default_permissions_profile_allows_split_tmpdir_writes() -> std::io::Result<()> {
+    let codex_home = TempDir::new()?;
+    let cwd = TempDir::new()?;
+
+    let cfg = ConfigToml {
+        default_permissions: Some("workspace".to_string()),
+        permissions: Some(PermissionsToml {
+            entries: BTreeMap::from([(
+                "workspace".to_string(),
+                PermissionProfileToml {
+                    filesystem: Some(FilesystemPermissionsToml {
+                        entries: BTreeMap::from([
+                            (
+                                ":minimal".to_string(),
+                                FilesystemPermissionToml::Access(FileSystemAccessMode::Read),
+                            ),
+                            (
+                                ":tmpdir".to_string(),
+                                FilesystemPermissionToml::Access(FileSystemAccessMode::Write),
+                            ),
+                        ]),
+                    }),
+                    network: None,
+                },
+            )]),
+        }),
+        ..Default::default()
+    };
+
+    let config = Config::load_from_base_config_with_overrides(
+        cfg,
+        ConfigOverrides {
+            cwd: Some(cwd.path().to_path_buf()),
+            ..Default::default()
+        },
+        codex_home.path().to_path_buf(),
+    )?;
+
+    assert_eq!(
+        config.permissions.sandbox_policy.get(),
+        &SandboxPolicy::ReadOnly {
+            access: ReadOnlyAccess::Restricted {
+                include_platform_defaults: true,
+                readable_roots: Vec::new(),
+            },
+            network_access: false,
+        }
+    );
+    assert!(config.permissions.file_system_sandbox_policy.can_write_path_with_cwd(
+        Path::new("/tmp/codex-profile-check"),
+        cwd.path()
+    ));
+    Ok(())
+}
+
+#[test]
 fn permissions_profiles_require_default_permissions() -> std::io::Result<()> {
     let codex_home = TempDir::new()?;
     let cwd = TempDir::new()?;
@@ -571,13 +627,13 @@ fn permissions_profiles_require_default_permissions() -> std::io::Result<()> {
 }
 
 #[test]
-fn permissions_profiles_reject_writes_outside_workspace_root() -> std::io::Result<()> {
+fn permissions_profiles_allow_writes_outside_workspace_root() -> std::io::Result<()> {
     let codex_home = TempDir::new()?;
     let cwd = TempDir::new()?;
     std::fs::write(cwd.path().join(".git"), "gitdir: nowhere")?;
     let external_write_path = if cfg!(windows) { r"C:\temp" } else { "/tmp" };
 
-    let err = Config::load_from_base_config_with_overrides(
+    let config = Config::load_from_base_config_with_overrides(
         ConfigToml {
             default_permissions: Some("workspace".to_string()),
             permissions: Some(PermissionsToml {
@@ -601,15 +657,22 @@ fn permissions_profiles_reject_writes_outside_workspace_root() -> std::io::Resul
             ..Default::default()
         },
         codex_home.path().to_path_buf(),
-    )
-    .expect_err("writes outside the workspace root should be rejected");
+    )?;
 
-    assert_eq!(err.kind(), std::io::ErrorKind::InvalidInput);
-    assert!(
-        err.to_string()
-            .contains("filesystem writes outside the workspace root"),
-        "{err}"
+    assert_eq!(
+        config.permissions.sandbox_policy.get(),
+        &SandboxPolicy::ReadOnly {
+            access: ReadOnlyAccess::Restricted {
+                include_platform_defaults: false,
+                readable_roots: Vec::new(),
+            },
+            network_access: false,
+        }
     );
+    assert!(config.permissions.file_system_sandbox_policy.can_write_path_with_cwd(
+        Path::new(external_write_path),
+        cwd.path()
+    ));
     Ok(())
 }
 

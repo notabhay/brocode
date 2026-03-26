@@ -195,6 +195,65 @@ fn explicit_unreadable_paths_are_excluded_from_readable_roots() {
 }
 
 #[test]
+fn restricted_platform_defaults_do_not_include_temp_writes() {
+    let file_system_policy = FileSystemSandboxPolicy::restricted(vec![FileSystemSandboxEntry {
+        path: FileSystemPath::Special {
+            value: FileSystemSpecialPath::Minimal,
+        },
+        access: FileSystemAccessMode::Read,
+    }]);
+
+    let args = create_seatbelt_command_args_for_policies_with_extensions(
+        vec!["/bin/true".to_string()],
+        &file_system_policy,
+        NetworkSandboxPolicy::Restricted,
+        Path::new("/"),
+        false,
+        None,
+        None,
+    );
+
+    let policy = seatbelt_policy_arg(&args);
+    for path in ["/tmp", "/private/tmp", "/var/tmp", "/private/var/tmp"] {
+        assert!(
+            !policy.contains(&format!("file-write* (subpath \"{path}\")")),
+            "unexpected implicit temp write for {path}:\n{policy}"
+        );
+    }
+}
+
+#[test]
+fn explicit_tmpdir_write_policy_adds_writable_roots() {
+    let cwd = TempDir::new().expect("tempdir");
+    let file_system_policy = FileSystemSandboxPolicy::restricted(vec![FileSystemSandboxEntry {
+        path: FileSystemPath::Special {
+            value: FileSystemSpecialPath::Tmpdir,
+        },
+        access: FileSystemAccessMode::Write,
+    }]);
+
+    let args = create_seatbelt_command_args_for_policies_with_extensions(
+        vec!["/bin/true".to_string()],
+        &file_system_policy,
+        NetworkSandboxPolicy::Restricted,
+        cwd.path(),
+        false,
+        None,
+        None,
+    );
+
+    let writable_roots = file_system_policy.get_writable_roots_with_cwd(cwd.path());
+    assert!(!writable_roots.is_empty());
+    for (index, writable_root) in writable_roots.iter().enumerate() {
+        let expected = format!("-DWRITABLE_ROOT_{index}={}", writable_root.root.display());
+        assert!(
+            args.iter().any(|arg| arg == &expected),
+            "missing writable root {expected} in args: {args:#?}"
+        );
+    }
+}
+
+#[test]
 fn seatbelt_args_include_macos_permission_extensions() {
     let cwd = std::env::temp_dir();
     let args = create_seatbelt_command_args_with_extensions(

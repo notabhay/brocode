@@ -114,6 +114,10 @@ impl FileSystemSpecialPath {
     }
 }
 
+#[cfg(target_os = "macos")]
+const MACOS_TMPDIR_WRITE_BUNDLE: [&str; 4] =
+    ["/tmp", "/private/tmp", "/var/tmp", "/private/var/tmp"];
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
 pub struct FileSystemSandboxEntry {
     pub path: FileSystemPath,
@@ -591,6 +595,10 @@ impl FileSystemSandboxPolicy {
                             if entry.access.can_write() {
                                 if cwd_absolute.as_ref().is_some_and(|cwd| cwd == path) {
                                     workspace_root_writable = true;
+                                } else if path_matches_tmpdir_env_var(path) {
+                                    tmpdir_writable = true;
+                                } else if path.as_path() == Path::new("/tmp") {
+                                    slash_tmp_writable = true;
                                 } else {
                                     writable_roots.push(path.clone());
                                 }
@@ -615,50 +623,49 @@ impl FileSystemSandboxPolicy {
                             FileSystemSpecialPath::CurrentWorkingDirectory => {
                                 if entry.access.can_write() {
                                     workspace_root_writable = true;
-                                } else if entry.access.can_read()
-                                    && let Some(path) = resolve_file_system_special_path(
+                                } else if entry.access.can_read() {
+                                    readable_roots.extend(resolve_file_system_special_paths(
                                         value,
                                         cwd_absolute.as_ref(),
-                                    )
-                                {
-                                    readable_roots.push(path);
+                                    ));
                                 }
                             }
                             FileSystemSpecialPath::ProjectRoots { subpath } => {
                                 if subpath.is_none() && entry.access.can_write() {
                                     workspace_root_writable = true;
-                                } else if let Some(path) =
-                                    resolve_file_system_special_path(value, cwd_absolute.as_ref())
-                                {
+                                } else {
+                                    let resolved_paths = resolve_file_system_special_paths(
+                                        value,
+                                        cwd_absolute.as_ref(),
+                                    );
                                     if entry.access.can_write() {
-                                        writable_roots.push(path);
+                                        writable_roots.extend(resolved_paths);
                                     } else if entry.access.can_read() {
-                                        readable_roots.push(path);
+                                        readable_roots.extend(resolved_paths);
                                     }
                                 }
                             }
                             FileSystemSpecialPath::Tmpdir => {
                                 if entry.access.can_write() {
                                     tmpdir_writable = true;
-                                } else if entry.access.can_read()
-                                    && let Some(path) = resolve_file_system_special_path(
+                                    if cfg!(target_os = "macos") {
+                                        slash_tmp_writable = true;
+                                    }
+                                } else if entry.access.can_read() {
+                                    readable_roots.extend(resolve_file_system_special_paths(
                                         value,
                                         cwd_absolute.as_ref(),
-                                    )
-                                {
-                                    readable_roots.push(path);
+                                    ));
                                 }
                             }
                             FileSystemSpecialPath::SlashTmp => {
                                 if entry.access.can_write() {
                                     slash_tmp_writable = true;
-                                } else if entry.access.can_read()
-                                    && let Some(path) = resolve_file_system_special_path(
+                                } else if entry.access.can_read() {
+                                    readable_roots.extend(resolve_file_system_special_paths(
                                         value,
                                         cwd_absolute.as_ref(),
-                                    )
-                                {
-                                    readable_roots.push(path);
+                                    ));
                                 }
                             }
                             FileSystemSpecialPath::Unknown { .. } => {}
@@ -699,11 +706,6 @@ impl FileSystemSandboxPolicy {
                         exclude_tmpdir_env_var: !tmpdir_writable,
                         exclude_slash_tmp: !slash_tmp_writable,
                     }
-                } else if !writable_roots.is_empty() || tmpdir_writable || slash_tmp_writable {
-                    return Err(io::Error::new(
-                        io::ErrorKind::InvalidInput,
-                        "permissions profile requests filesystem writes outside the workspace root, which is not supported until the runtime enforces FileSystemSandboxPolicy directly",
-                    ));
                 } else {
                     SandboxPolicy::ReadOnly {
                         access: read_only_access,
@@ -718,13 +720,13 @@ impl FileSystemSandboxPolicy {
         let cwd_absolute = AbsolutePathBuf::from_absolute_path(cwd).ok();
         self.entries
             .iter()
-            .filter_map(|entry| {
-                resolve_entry_path(&entry.path, cwd_absolute.as_ref()).map(|path| {
-                    ResolvedFileSystemEntry {
+            .flat_map(|entry| {
+                resolve_entry_paths(&entry.path, cwd_absolute.as_ref())
+                    .into_iter()
+                    .map(|path| ResolvedFileSystemEntry {
                         path,
                         access: entry.access,
-                    }
-                })
+                    })
             })
             .collect()
     }
@@ -844,12 +846,12 @@ impl From<&SandboxPolicy> for FileSystemSandboxPolicy {
                     });
                 }
                 if !exclude_tmpdir_env_var {
-                    entries.push(FileSystemSandboxEntry {
-                        path: FileSystemPath::Special {
-                            value: FileSystemSpecialPath::Tmpdir,
-                        },
-                        access: FileSystemAccessMode::Write,
-                    });
+                    if let Some(tmpdir_path) = resolved_tmpdir_env_path() {
+                        entries.push(FileSystemSandboxEntry {
+                            path: FileSystemPath::Path { path: tmpdir_path },
+                            access: FileSystemAccessMode::Write,
+                        });
+                    }
                 }
                 entries.extend(
                     writable_roots
@@ -866,25 +868,22 @@ impl From<&SandboxPolicy> for FileSystemSandboxPolicy {
     }
 }
 
-fn resolve_file_system_path(
-    path: &FileSystemPath,
-    cwd: Option<&AbsolutePathBuf>,
-) -> Option<AbsolutePathBuf> {
+fn resolve_file_system_paths(path: &FileSystemPath, cwd: Option<&AbsolutePathBuf>) -> Vec<AbsolutePathBuf> {
     match path {
-        FileSystemPath::Path { path } => Some(path.clone()),
-        FileSystemPath::Special { value } => resolve_file_system_special_path(value, cwd),
+        FileSystemPath::Path { path } => vec![path.clone()],
+        FileSystemPath::Special { value } => resolve_file_system_special_paths(value, cwd),
     }
 }
 
-fn resolve_entry_path(
+fn resolve_entry_paths(
     path: &FileSystemPath,
     cwd: Option<&AbsolutePathBuf>,
-) -> Option<AbsolutePathBuf> {
+) -> Vec<AbsolutePathBuf> {
     match path {
         FileSystemPath::Special {
             value: FileSystemSpecialPath::Root,
-        } => cwd.map(absolute_root_path_for_cwd),
-        _ => resolve_file_system_path(path, cwd),
+        } => cwd.map(absolute_root_path_for_cwd).into_iter().collect(),
+        _ => resolve_file_system_paths(path, cwd),
     }
 }
 
@@ -988,45 +987,75 @@ fn absolute_root_path_for_cwd(cwd: &AbsolutePathBuf) -> AbsolutePathBuf {
         .unwrap_or_else(|err| panic!("cwd root must be an absolute path: {err}"))
 }
 
-fn resolve_file_system_special_path(
+fn resolve_file_system_special_paths(
     value: &FileSystemSpecialPath,
     cwd: Option<&AbsolutePathBuf>,
-) -> Option<AbsolutePathBuf> {
+) -> Vec<AbsolutePathBuf> {
     match value {
         FileSystemSpecialPath::Root
         | FileSystemSpecialPath::Minimal
-        | FileSystemSpecialPath::Unknown { .. } => None,
+        | FileSystemSpecialPath::Unknown { .. } => Vec::new(),
         FileSystemSpecialPath::CurrentWorkingDirectory => {
-            let cwd = cwd?;
-            Some(cwd.clone())
+            let Some(cwd) = cwd else {
+                return Vec::new();
+            };
+            vec![cwd.clone()]
         }
         FileSystemSpecialPath::ProjectRoots { subpath } => {
-            let cwd = cwd?;
+            let Some(cwd) = cwd else {
+                return Vec::new();
+            };
             match subpath.as_ref() {
-                Some(subpath) => {
-                    AbsolutePathBuf::resolve_path_against_base(subpath, cwd.as_path()).ok()
-                }
-                None => Some(cwd.clone()),
+                Some(subpath) => AbsolutePathBuf::resolve_path_against_base(subpath, cwd.as_path())
+                    .ok()
+                    .into_iter()
+                    .collect(),
+                None => vec![cwd.clone()],
             }
         }
-        FileSystemSpecialPath::Tmpdir => {
-            let tmpdir = std::env::var_os("TMPDIR")?;
-            if tmpdir.is_empty() {
-                None
-            } else {
-                let tmpdir = AbsolutePathBuf::from_absolute_path(PathBuf::from(tmpdir)).ok()?;
-                Some(tmpdir)
-            }
-        }
+        FileSystemSpecialPath::Tmpdir => resolved_tmpdir_paths(),
         FileSystemSpecialPath::SlashTmp => {
             #[allow(clippy::expect_used)]
             let slash_tmp = AbsolutePathBuf::from_absolute_path("/tmp").expect("/tmp is absolute");
             if !slash_tmp.as_path().is_dir() {
-                return None;
+                return Vec::new();
             }
-            Some(slash_tmp)
+            vec![slash_tmp]
         }
     }
+}
+
+fn resolved_tmpdir_paths() -> Vec<AbsolutePathBuf> {
+    let mut paths = Vec::new();
+
+    if let Some(tmpdir) = resolved_tmpdir_env_path() {
+        paths.push(tmpdir);
+    }
+
+    #[cfg(target_os = "macos")]
+    for path in MACOS_TMPDIR_WRITE_BUNDLE {
+        #[allow(clippy::expect_used)]
+        let absolute_path =
+            AbsolutePathBuf::from_absolute_path(path).expect("macOS temp path is absolute");
+        if absolute_path.as_path().is_dir() {
+            paths.push(absolute_path);
+        }
+    }
+
+    dedup_absolute_paths(paths, /*normalize_effective_paths*/ false)
+}
+
+fn resolved_tmpdir_env_path() -> Option<AbsolutePathBuf> {
+    let tmpdir = std::env::var_os("TMPDIR")?;
+    if tmpdir.is_empty() {
+        None
+    } else {
+        AbsolutePathBuf::from_absolute_path(PathBuf::from(tmpdir)).ok()
+    }
+}
+
+fn path_matches_tmpdir_env_var(path: &AbsolutePathBuf) -> bool {
+    resolved_tmpdir_env_path().as_ref() == Some(path)
 }
 
 fn dedup_absolute_paths(
@@ -1211,6 +1240,61 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn split_write_paths_bridge_to_read_only_legacy_policy() -> std::io::Result<()> {
+        let policy = FileSystemSandboxPolicy::restricted(vec![FileSystemSandboxEntry {
+            path: FileSystemPath::Special {
+                value: FileSystemSpecialPath::Tmpdir,
+            },
+            access: FileSystemAccessMode::Write,
+        }]);
+
+        let sandbox_policy = policy.to_legacy_sandbox_policy(
+            NetworkSandboxPolicy::Restricted,
+            Path::new("/tmp/workspace"),
+        )?;
+
+        assert_eq!(
+            sandbox_policy,
+            SandboxPolicy::ReadOnly {
+                access: ReadOnlyAccess::Restricted {
+                    include_platform_defaults: false,
+                    readable_roots: Vec::new(),
+                },
+                network_access: false,
+            }
+        );
+        Ok(())
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn tmpdir_special_path_matches_macos_temp_bundle() {
+        let cwd = TempDir::new().expect("tempdir");
+        let policy = FileSystemSandboxPolicy::restricted(vec![FileSystemSandboxEntry {
+            path: FileSystemPath::Special {
+                value: FileSystemSpecialPath::Tmpdir,
+            },
+            access: FileSystemAccessMode::Write,
+        }]);
+
+        for path in [
+            Path::new("/tmp/codex-temp-file"),
+            Path::new("/private/tmp/codex-temp-file"),
+            Path::new("/var/tmp/codex-temp-file"),
+            Path::new("/private/var/tmp/codex-temp-file"),
+        ] {
+            assert!(policy.can_write_path_with_cwd(path, cwd.path()), "{path:?}");
+        }
+
+        if let Some(tmpdir) = std::env::var_os("TMPDIR")
+            && !tmpdir.is_empty()
+        {
+            let tmpdir_path = PathBuf::from(tmpdir).join("codex-temp-file");
+            assert!(policy.can_write_path_with_cwd(&tmpdir_path, cwd.path()));
+        }
+    }
+
     #[cfg(unix)]
     #[test]
     fn effective_runtime_roots_canonicalize_symlinked_paths() {
@@ -1257,18 +1341,14 @@ mod tests {
         );
 
         let writable_roots = policy.get_writable_roots_with_cwd(cwd.path());
+        #[cfg(not(target_os = "macos"))]
         assert_eq!(writable_roots.len(), 1);
-        assert_eq!(writable_roots[0].root, expected_root);
-        assert!(
-            writable_roots[0]
-                .read_only_subpaths
-                .contains(&expected_blocked)
-        );
-        assert!(
-            writable_roots[0]
-                .read_only_subpaths
-                .contains(&expected_codex)
-        );
+        let tmpdir_root = writable_roots
+            .iter()
+            .find(|root| root.root == expected_root)
+            .expect("expected tmpdir writable root");
+        assert!(tmpdir_root.read_only_subpaths.contains(&expected_blocked));
+        assert!(tmpdir_root.read_only_subpaths.contains(&expected_codex));
     }
 
     #[cfg(unix)]
@@ -1606,18 +1686,14 @@ mod tests {
         );
 
         let writable_roots = policy.get_writable_roots_with_cwd(cwd.path());
+        #[cfg(not(target_os = "macos"))]
         assert_eq!(writable_roots.len(), 1);
-        assert_eq!(writable_roots[0].root, expected_root);
-        assert!(
-            writable_roots[0]
-                .read_only_subpaths
-                .contains(&expected_blocked)
-        );
-        assert!(
-            writable_roots[0]
-                .read_only_subpaths
-                .contains(&expected_codex)
-        );
+        let tmpdir_root = writable_roots
+            .iter()
+            .find(|root| root.root == expected_root)
+            .expect("expected tmpdir writable root");
+        assert!(tmpdir_root.read_only_subpaths.contains(&expected_blocked));
+        assert!(tmpdir_root.read_only_subpaths.contains(&expected_codex));
     }
 
     #[test]

@@ -4166,14 +4166,19 @@ mod tests {
             access: FileSystemAccessMode::Write,
         }]);
 
-        let err = policy
+        let actual = policy
             .to_legacy_sandbox_policy(NetworkSandboxPolicy::Restricted, cwd)
-            .expect_err("non-workspace writes should be rejected");
+            .expect("split writes should fall back to a conservative legacy policy");
 
-        assert!(
-            err.to_string()
-                .contains("filesystem writes outside the workspace root"),
-            "{err}"
+        assert_eq!(
+            actual,
+            SandboxPolicy::ReadOnly {
+                access: ReadOnlyAccess::Restricted {
+                    include_platform_defaults: false,
+                    readable_roots: Vec::new(),
+                },
+                network_access: false,
+            }
         );
     }
 
