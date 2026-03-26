@@ -176,6 +176,7 @@ pub(crate) async fn handle_mcp_tool_call(
                             request_meta: request_meta.clone(),
                         },
                     )
+                    .await
                 }
                 .instrument(mcp_tool_call_span(
                     sess.as_ref(),
@@ -276,6 +277,7 @@ pub(crate) async fn handle_mcp_tool_call(
                 request_meta,
             },
         )
+        .await
     }
     .instrument(mcp_tool_call_span(
         sess.as_ref(),
