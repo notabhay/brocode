@@ -1,0 +1,10 @@
+load("//:defs.bzl", "brocode_rust_crate", "multiplatform_binaries")
+
+brocode_rust_crate(
+    name = "cli",
+    crate_name = "brocode_cli",
+)
+
+multiplatform_binaries(
+    name = "brocode",
+)

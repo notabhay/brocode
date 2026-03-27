@@ -1,27 +1,32 @@
-set working-directory := "codex-rs"
+set working-directory := "brocode-rs"
 set positional-arguments
 
 # Display help
 help:
     just -l
 
-# `codex`
-alias c := codex
-codex *args:
-    cargo run --bin codex -- "$@"
+# `brocode`
+alias c := brocode
+brocode *args:
+    cargo run --bin brocode -- "$@"
 
-# `codex exec`
+# `brocode exec`
 exec *args:
-    cargo run --bin codex -- exec "$@"
+    cargo run --bin brocode -- exec "$@"
+
+# Start brocode-exec-server, enable the app-server TUI, and run brocode-tui.
+[no-cd]
+tui-with-exec-server *args:
+    ./scripts/run_tui_with_exec_server.sh "$@"
 
 # Run the CLI version of the file-search crate.
 file-search *args:
-    cargo run --bin codex-file-search -- "$@"
+    cargo run --bin brocode-file-search -- "$@"
 
 # Build the CLI and run the app-server test client
 app-server-test-client *args:
-    cargo build -p codex-cli
-    cargo run -p codex-app-server-test-client -- --codex-bin ./target/debug/codex "$@"
+    cargo build -p brocode-cli
+    cargo run -p brocode-app-server-test-client -- --brocode-bin ./target/debug/brocode "$@"
 
 # format code
 fmt:
@@ -30,7 +35,7 @@ fmt:
 fix *args:
     cargo clippy --fix --tests --allow-dirty "$@"
 
-clippy:
+clippy *args:
     cargo clippy --tests "$@"
 
 install:
@@ -46,12 +51,12 @@ install:
 test:
     cargo nextest run --no-fail-fast
 
-# Build and run Codex from source using Bazel.
+# Build and run Brocode from source using Bazel.
 # Note we have to use the combination of `[no-cd]` and `--run_under="cd $PWD &&"`
 # to ensure that Bazel runs the command in the current working directory.
 [no-cd]
-bazel-codex *args:
-    bazel run //codex-rs/cli:codex --run_under="cd $PWD &&" -- "$@"
+bazel-brocode *args:
+    bazel run //brocode-rs/cli:brocode --run_under="cd $PWD &&" -- "$@"
 
 [no-cd]
 bazel-lock-update:
@@ -68,29 +73,33 @@ bazel-remote-test:
     bazel test //... --config=remote --platforms=//:rbe --keep_going
 
 build-for-release:
-    bazel build //codex-rs/cli:release_binaries --config=remote
+    bazel build //brocode-rs/cli:release_binaries --config=remote
 
 # Run the MCP server
 mcp-server-run *args:
-    cargo run -p codex-mcp-server -- "$@"
+    cargo run -p brocode-mcp-server -- "$@"
 
 # Regenerate the json schema for config.toml from the current config types.
 write-config-schema:
-    cargo run -p codex-core --bin codex-write-config-schema
+    cargo run -p brocode-core --bin brocode-write-config-schema
 
 # Regenerate vendored app-server protocol schema artifacts.
 write-app-server-schema *args:
-    cargo run -p codex-app-server-protocol --bin write_schema_fixtures -- "$@"
+    cargo run -p brocode-app-server-protocol --bin write_schema_fixtures -- "$@"
 
 [no-cd]
 write-hooks-schema:
-    cargo run --manifest-path ./codex-rs/Cargo.toml -p codex-hooks --bin write_hooks_schema_fixtures
+    cargo run --manifest-path ./brocode-rs/Cargo.toml -p brocode-hooks --bin write_hooks_schema_fixtures
 
-# Run the argument-comment Dylint checks across codex-rs.
+# Run the argument-comment Dylint checks across brocode-rs.
 [no-cd]
 argument-comment-lint *args:
+    ./tools/argument-comment-lint/run-prebuilt-linter.sh "$@"
+
+[no-cd]
+argument-comment-lint-from-source *args:
     ./tools/argument-comment-lint/run.sh "$@"
 
 # Tail logs from the state SQLite database
 log *args:
-    if [ "${1:-}" = "--" ]; then shift; fi; cargo run -p codex-state --bin logs_client -- "$@"
+    if [ "${1:-}" = "--" ]; then shift; fi; cargo run -p brocode-state --bin logs_client -- "$@"

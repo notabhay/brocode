@@ -14,10 +14,10 @@ from _bootstrap import (
 
 ensure_local_sdk_src()
 
-from codex_app_server import Codex, TextInput
+from brocode_app_server import Brocode, TextInput
 
-with Codex(config=runtime_config()) as codex:
-    thread = codex.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
+with Brocode(config=runtime_config()) as brocode:
+    thread = brocode.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
     result = thread.turn(TextInput("Give 3 bullets about SIMD.")).run()
     persisted = thread.read(include_turns=True)
     persisted_turn = find_turn_by_id(persisted.thread.turns, result.id)

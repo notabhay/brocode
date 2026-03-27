@@ -1,0 +1,18 @@
+[package]
+edition.workspace = true
+license.workspace = true
+name = "brocode-plugin"
+version.workspace = true
+
+[lib]
+doctest = false
+name = "brocode_plugin"
+path = "src/lib.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+brocode-utils-absolute-path = { workspace = true }
+brocode-utils-plugins = { workspace = true }
+thiserror = { workspace = true }

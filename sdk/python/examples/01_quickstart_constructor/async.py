@@ -6,9 +6,7 @@ if str(_EXAMPLES_ROOT) not in sys.path:
     sys.path.insert(0, str(_EXAMPLES_ROOT))
 
 from _bootstrap import (
-    assistant_text_from_turn,
     ensure_local_sdk_src,
-    find_turn_by_id,
     runtime_config,
     server_label,
 )
@@ -17,21 +15,17 @@ ensure_local_sdk_src()
 
 import asyncio
 
-from codex_app_server import AsyncCodex, TextInput
+from brocode_app_server import AsyncBrocode
 
 
 async def main() -> None:
-    async with AsyncCodex(config=runtime_config()) as codex:
-        print("Server:", server_label(codex.metadata))
+    async with AsyncBrocode(config=runtime_config()) as brocode:
+        print("Server:", server_label(brocode.metadata))
 
-        thread = await codex.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
-        turn = await thread.turn(TextInput("Say hello in one sentence."))
-        result = await turn.run()
-        persisted = await thread.read(include_turns=True)
-        persisted_turn = find_turn_by_id(persisted.thread.turns, result.id)
-
-        print("Status:", result.status)
-        print("Text:", assistant_text_from_turn(persisted_turn))
+        thread = await brocode.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
+        result = await thread.run("Say hello in one sentence.")
+        print("Items:", len(result.items))
+        print("Text:", result.final_response)
 
 
 if __name__ == "__main__":

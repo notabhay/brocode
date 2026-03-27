@@ -1,0 +1,13 @@
+[package]
+name = "brocode-utils-oss"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+brocode-core = { workspace = true }
+brocode-lmstudio = { workspace = true }
+brocode-ollama = { workspace = true }

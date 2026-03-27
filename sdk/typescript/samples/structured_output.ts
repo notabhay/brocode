@@ -1,12 +1,12 @@
 #!/usr/bin/env -S NODE_NO_WARNINGS=1 pnpm ts-node-esm --files
 
-import { Codex } from "@openai/codex-sdk";
+import { Brocode } from "@openai/codex-sdk";
 
-import { codexPathOverride } from "./helpers.ts";
+import { brocodePathOverride } from "./helpers.ts";
 
-const codex = new Codex({ codexPathOverride: codexPathOverride() });
+const brocode = new Brocode({ brocodePathOverride: brocodePathOverride() });
 
-const thread = codex.startThread();
+const thread = brocode.startThread();
 
 const schema = {
   type: "object",

@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+REPO_DIR="$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)"
+PRIMARY_BINARY="$REPO_DIR/brocode-rs/target/release/brocode"
+DEBUG_BINARY="$REPO_DIR/brocode-rs/target/debug/brocode"
+FALLBACK_BINARY="/opt/homebrew/bin/brocode"
+LEGACY_FALLBACK_BINARY="/opt/homebrew/bin/brocode"
+export PATH="/opt/homebrew/bin:/usr/bin:/bin:${PATH:-}"
+DEFAULT_BROCODE_HOME="$HOME/.brocode"
+DEFAULT_PROXY="http://127.0.0.1:18888"
+
+if [ -x "$PRIMARY_BINARY" ]; then
+  BINARY="$PRIMARY_BINARY"
+elif [ -x "$DEBUG_BINARY" ]; then
+  BINARY="$DEBUG_BINARY"
+  printf 'brocode: release binary not built yet, using %s\n' "$BINARY" >&2
+elif [ -x "$FALLBACK_BINARY" ]; then
+  BINARY="$FALLBACK_BINARY"
+  printf 'brocode: local clone binary not built yet, using %s\n' "$BINARY" >&2
+elif [ -x "$LEGACY_FALLBACK_BINARY" ]; then
+  BINARY="$LEGACY_FALLBACK_BINARY"
+  printf 'brocode: rebranded binary not built yet, using legacy %s\n' "$BINARY" >&2
+else
+  printf 'brocode binary not available at %s, %s, %s, or %s\n' "$PRIMARY_BINARY" "$DEBUG_BINARY" "$FALLBACK_BINARY" "$LEGACY_FALLBACK_BINARY" >&2
+  exit 1
+fi
+
+export BROCODE_HOME="${BROCODE_HOME:-$DEFAULT_BROCODE_HOME}"
+install -d -m 700 "$BROCODE_HOME"
+export CODEX_HOME="$BROCODE_HOME"
+export HTTP_PROXY="${HTTP_PROXY:-$DEFAULT_PROXY}"
+export HTTPS_PROXY="${HTTPS_PROXY:-$HTTP_PROXY}"
+export NO_PROXY="${NO_PROXY:-localhost,127.0.0.1,::1}"
+unset ALL_PROXY
+
+need_yolo=1
+for arg in "$@"; do
+  if [ "$arg" = "--yolo" ] || [ "$arg" = "--dangerously-bypass-approvals-and-sandbox" ] || [ "$arg" = "--full-auto" ]; then
+    need_yolo=0
+    break
+  fi
+done
+
+if [ "$need_yolo" -eq 1 ]; then
+  final_args=()
+  inserted=0
+  for arg in "$@"; do
+    if [ "$arg" = "--" ] && [ "$inserted" -eq 0 ]; then
+      final_args+=("--yolo")
+      inserted=1
+    fi
+    final_args+=("$arg")
+  done
+  if [ "$inserted" -eq 0 ]; then
+    final_args+=("--yolo")
+  fi
+  set -- "${final_args[@]}"
+fi
+
+exec "$BINARY" "$@"

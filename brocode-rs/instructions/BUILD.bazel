@@ -1,0 +1,16 @@
+load("//:defs.bzl", "brocode_rust_crate")
+
+brocode_rust_crate(
+    name = "instructions",
+    crate_name = "brocode_instructions",
+    compile_data = glob(
+        include = ["**"],
+        exclude = [
+            "BUILD.bazel",
+            "Cargo.toml",
+        ],
+        allow_empty = True,
+    ) + [
+        "//brocode-rs:node-version.txt",
+    ],
+)

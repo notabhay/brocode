@@ -1,0 +1,6 @@
+load("//:defs.bzl", "brocode_rust_crate")
+
+brocode_rust_crate(
+    name = "app-server-client",
+    crate_name = "brocode_app_server_client",
+)

@@ -1,0 +1,6 @@
+load("//:defs.bzl", "brocode_rust_crate")
+
+brocode_rust_crate(
+    name = "output-truncation",
+    crate_name = "brocode_utils_output_truncation",
+)

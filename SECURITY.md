@@ -1,6 +1,6 @@
 # Security Policy
 
-Thank you for helping us keep Codex secure!
+Thank you for helping us keep Brocode secure!
 
 ## Reporting Security Issues
 

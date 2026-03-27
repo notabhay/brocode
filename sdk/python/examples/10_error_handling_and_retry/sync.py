@@ -14,8 +14,8 @@ from _bootstrap import (
 
 ensure_local_sdk_src()
 
-from codex_app_server import (
-    Codex,
+from brocode_app_server import (
+    Brocode,
     JsonRpcError,
     ServerBusyError,
     TextInput,
@@ -23,8 +23,8 @@ from codex_app_server import (
     retry_on_overload,
 )
 
-with Codex(config=runtime_config()) as codex:
-    thread = codex.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
+with Brocode(config=runtime_config()) as brocode:
+    thread = brocode.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
 
     try:
         result = retry_on_overload(

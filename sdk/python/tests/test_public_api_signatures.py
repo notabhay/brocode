@@ -4,9 +4,9 @@ import importlib.resources as resources
 import inspect
 from typing import Any
 
-from codex_app_server import AppServerConfig
-from codex_app_server.models import InitializeResponse
-from codex_app_server.api import AsyncCodex, AsyncThread, Codex, Thread
+from brocode_app_server import AppServerConfig, RunResult
+from brocode_app_server.models import InitializeResponse
+from brocode_app_server.api import AsyncBrocode, AsyncThread, Brocode, Thread
 
 
 def _keyword_only_names(fn: object) -> list[str]:
@@ -31,14 +31,18 @@ def test_root_exports_app_server_config() -> None:
     assert AppServerConfig.__name__ == "AppServerConfig"
 
 
+def test_root_exports_run_result() -> None:
+    assert RunResult.__name__ == "RunResult"
+
+
 def test_package_includes_py_typed_marker() -> None:
-    marker = resources.files("codex_app_server").joinpath("py.typed")
+    marker = resources.files("brocode_app_server").joinpath("py.typed")
     assert marker.is_file()
 
 
 def test_generated_public_signatures_are_snake_case_and_typed() -> None:
     expected = {
-        Codex.thread_start: [
+        Brocode.thread_start: [
             "approval_policy",
             "approvals_reviewer",
             "base_instructions",
@@ -53,7 +57,7 @@ def test_generated_public_signatures_are_snake_case_and_typed() -> None:
             "service_name",
             "service_tier",
         ],
-        Codex.thread_list: [
+        Brocode.thread_list: [
             "archived",
             "cursor",
             "cwd",
@@ -63,7 +67,7 @@ def test_generated_public_signatures_are_snake_case_and_typed() -> None:
             "sort_key",
             "source_kinds",
         ],
-        Codex.thread_resume: [
+        Brocode.thread_resume: [
             "approval_policy",
             "approvals_reviewer",
             "base_instructions",
@@ -76,7 +80,7 @@ def test_generated_public_signatures_are_snake_case_and_typed() -> None:
             "sandbox",
             "service_tier",
         ],
-        Codex.thread_fork: [
+        Brocode.thread_fork: [
             "approval_policy",
             "approvals_reviewer",
             "base_instructions",
@@ -101,7 +105,19 @@ def test_generated_public_signatures_are_snake_case_and_typed() -> None:
             "service_tier",
             "summary",
         ],
-        AsyncCodex.thread_start: [
+        Thread.run: [
+            "approval_policy",
+            "approvals_reviewer",
+            "cwd",
+            "effort",
+            "model",
+            "output_schema",
+            "personality",
+            "sandbox_policy",
+            "service_tier",
+            "summary",
+        ],
+        AsyncBrocode.thread_start: [
             "approval_policy",
             "approvals_reviewer",
             "base_instructions",
@@ -116,7 +132,7 @@ def test_generated_public_signatures_are_snake_case_and_typed() -> None:
             "service_name",
             "service_tier",
         ],
-        AsyncCodex.thread_list: [
+        AsyncBrocode.thread_list: [
             "archived",
             "cursor",
             "cwd",
@@ -126,7 +142,7 @@ def test_generated_public_signatures_are_snake_case_and_typed() -> None:
             "sort_key",
             "source_kinds",
         ],
-        AsyncCodex.thread_resume: [
+        AsyncBrocode.thread_resume: [
             "approval_policy",
             "approvals_reviewer",
             "base_instructions",
@@ -139,7 +155,7 @@ def test_generated_public_signatures_are_snake_case_and_typed() -> None:
             "sandbox",
             "service_tier",
         ],
-        AsyncCodex.thread_fork: [
+        AsyncBrocode.thread_fork: [
             "approval_policy",
             "approvals_reviewer",
             "base_instructions",
@@ -164,6 +180,18 @@ def test_generated_public_signatures_are_snake_case_and_typed() -> None:
             "service_tier",
             "summary",
         ],
+        AsyncThread.run: [
+            "approval_policy",
+            "approvals_reviewer",
+            "cwd",
+            "effort",
+            "model",
+            "output_schema",
+            "personality",
+            "sandbox_policy",
+            "service_tier",
+            "summary",
+        ],
     }
 
     for fn, expected_kwargs in expected.items():
@@ -173,17 +201,17 @@ def test_generated_public_signatures_are_snake_case_and_typed() -> None:
         _assert_no_any_annotations(fn)
 
 
-def test_lifecycle_methods_are_codex_scoped() -> None:
-    assert hasattr(Codex, "thread_resume")
-    assert hasattr(Codex, "thread_fork")
-    assert hasattr(Codex, "thread_archive")
-    assert hasattr(Codex, "thread_unarchive")
-    assert hasattr(AsyncCodex, "thread_resume")
-    assert hasattr(AsyncCodex, "thread_fork")
-    assert hasattr(AsyncCodex, "thread_archive")
-    assert hasattr(AsyncCodex, "thread_unarchive")
-    assert not hasattr(Codex, "thread")
-    assert not hasattr(AsyncCodex, "thread")
+def test_lifecycle_methods_are_brocode_scoped() -> None:
+    assert hasattr(Brocode, "thread_resume")
+    assert hasattr(Brocode, "thread_fork")
+    assert hasattr(Brocode, "thread_archive")
+    assert hasattr(Brocode, "thread_unarchive")
+    assert hasattr(AsyncBrocode, "thread_resume")
+    assert hasattr(AsyncBrocode, "thread_fork")
+    assert hasattr(AsyncBrocode, "thread_archive")
+    assert hasattr(AsyncBrocode, "thread_unarchive")
+    assert not hasattr(Brocode, "thread")
+    assert not hasattr(AsyncBrocode, "thread")
 
     assert not hasattr(Thread, "resume")
     assert not hasattr(Thread, "fork")
@@ -195,27 +223,27 @@ def test_lifecycle_methods_are_codex_scoped() -> None:
     assert not hasattr(AsyncThread, "unarchive")
 
     for fn in (
-        Codex.thread_archive,
-        Codex.thread_unarchive,
-        AsyncCodex.thread_archive,
-        AsyncCodex.thread_unarchive,
+        Brocode.thread_archive,
+        Brocode.thread_unarchive,
+        AsyncBrocode.thread_archive,
+        AsyncBrocode.thread_unarchive,
     ):
         _assert_no_any_annotations(fn)
 
 
 def test_initialize_metadata_parses_user_agent_shape() -> None:
-    payload = InitializeResponse.model_validate({"userAgent": "codex-cli/1.2.3"})
-    parsed = Codex._validate_initialize(payload)
+    payload = InitializeResponse.model_validate({"userAgent": "brocode-cli/1.2.3"})
+    parsed = Brocode._validate_initialize(payload)
     assert parsed is payload
-    assert parsed.userAgent == "codex-cli/1.2.3"
+    assert parsed.userAgent == "brocode-cli/1.2.3"
     assert parsed.serverInfo is not None
-    assert parsed.serverInfo.name == "codex-cli"
+    assert parsed.serverInfo.name == "brocode-cli"
     assert parsed.serverInfo.version == "1.2.3"
 
 
 def test_initialize_metadata_requires_non_empty_information() -> None:
     try:
-        Codex._validate_initialize(InitializeResponse.model_validate({}))
+        Brocode._validate_initialize(InitializeResponse.model_validate({}))
     except RuntimeError as exc:
         assert "missing required metadata" in str(exc)
     else:

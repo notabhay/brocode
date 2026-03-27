@@ -26,9 +26,9 @@ export type {
 export { Thread } from "./thread";
 export type { RunResult, RunStreamedResult, Input, UserInput } from "./thread";
 
-export { Codex } from "./codex";
+export { Brocode } from "./brocode";
 
-export type { CodexOptions } from "./codexOptions";
+export type { BrocodeOptions } from "./brocodeOptions";
 
 export type {
   ThreadOptions,

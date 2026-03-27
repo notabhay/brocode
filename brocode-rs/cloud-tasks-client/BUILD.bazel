@@ -1,0 +1,10 @@
+load("//:defs.bzl", "brocode_rust_crate")
+
+brocode_rust_crate(
+    name = "cloud-tasks-client",
+    crate_name = "brocode_cloud_tasks_client",
+    crate_features = [
+        "mock",
+        "online",
+    ],
+)

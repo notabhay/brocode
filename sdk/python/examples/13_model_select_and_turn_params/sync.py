@@ -9,9 +9,9 @@ from _bootstrap import assistant_text_from_turn, ensure_local_sdk_src, find_turn
 
 ensure_local_sdk_src()
 
-from codex_app_server import (
+from brocode_app_server import (
     AskForApproval,
-    Codex,
+    Brocode,
     Personality,
     ReasoningEffort,
     ReasoningSummary,
@@ -74,15 +74,15 @@ SANDBOX_POLICY = SandboxPolicy.model_validate(
 APPROVAL_POLICY = AskForApproval.model_validate("never")
 
 
-with Codex(config=runtime_config()) as codex:
-    models = codex.models(include_hidden=True)
+with Brocode(config=runtime_config()) as brocode:
+    models = brocode.models(include_hidden=True)
     selected_model = _pick_highest_model(models.data)
     selected_effort = _pick_highest_turn_effort(selected_model)
 
     print("selected.model:", selected_model.model)
     print("selected.effort:", selected_effort.value)
 
-    thread = codex.thread_start(
+    thread = brocode.thread_start(
         model=selected_model.model,
         config={"model_reasoning_effort": selected_effort.value},
     )

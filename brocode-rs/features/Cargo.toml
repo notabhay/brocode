@@ -1,0 +1,25 @@
+[package]
+edition.workspace = true
+license.workspace = true
+name = "brocode-features"
+version.workspace = true
+
+[lib]
+doctest = false
+name = "brocode_features"
+path = "src/lib.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+brocode-login = { workspace = true }
+brocode-otel = { workspace = true }
+brocode-protocol = { workspace = true }
+schemars = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+toml = { workspace = true }
+tracing = { workspace = true, features = ["log"] }
+
+[dev-dependencies]
+pretty_assertions = { workspace = true }

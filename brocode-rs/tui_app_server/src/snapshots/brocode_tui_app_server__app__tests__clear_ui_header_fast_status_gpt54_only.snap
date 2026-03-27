@@ -1,0 +1,8 @@
+---
+source: tui_app_server/src/app.rs
+assertion_line: 8160
+expression: rendered
+---
+╭───────────────────────╮
+│ >_ brocode v<VERSION> │
+╰───────────────────────╯

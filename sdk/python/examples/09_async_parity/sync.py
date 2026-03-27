@@ -15,12 +15,12 @@ from _bootstrap import (
 
 ensure_local_sdk_src()
 
-from codex_app_server import Codex, TextInput
+from brocode_app_server import Brocode, TextInput
 
-with Codex(config=runtime_config()) as codex:
-    print("Server:", server_label(codex.metadata))
+with Brocode(config=runtime_config()) as brocode:
+    print("Server:", server_label(brocode.metadata))
 
-    thread = codex.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
+    thread = brocode.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
     turn = thread.turn(TextInput("Say hello in one sentence."))
     result = turn.run()
     persisted = thread.read(include_turns=True)

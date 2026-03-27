@@ -1,0 +1,6 @@
+load("//:defs.bzl", "brocode_rust_crate")
+
+brocode_rust_crate(
+    name = "analytics",
+    crate_name = "brocode_analytics",
+)

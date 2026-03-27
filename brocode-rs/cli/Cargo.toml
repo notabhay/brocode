@@ -1,0 +1,72 @@
+[package]
+name = "brocode-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "brocode"
+path = "src/main.rs"
+
+[lib]
+name = "brocode_cli"
+path = "src/lib.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
+clap_complete = { workspace = true }
+brocode-app-server = { workspace = true }
+brocode-app-server-protocol = { workspace = true }
+brocode-app-server-test-client = { workspace = true }
+brocode-arg0 = { workspace = true }
+brocode-chatgpt = { workspace = true }
+brocode-cloud-tasks = { path = "../cloud-tasks" }
+brocode-utils-cli = { workspace = true }
+brocode-config = { workspace = true }
+brocode-core = { workspace = true }
+brocode-exec = { workspace = true }
+brocode-execpolicy = { workspace = true }
+brocode-features = { workspace = true }
+brocode-login = { workspace = true }
+brocode-mcp-server = { workspace = true }
+brocode-protocol = { workspace = true }
+brocode-responses-api-proxy = { workspace = true }
+brocode-rmcp-client = { workspace = true }
+brocode-sandboxing = { workspace = true }
+brocode-state = { workspace = true }
+brocode-stdio-to-uds = { workspace = true }
+brocode-terminal-detection = { workspace = true }
+brocode-tui = { workspace = true }
+brocode-tui-app-server = { workspace = true }
+libc = { workspace = true }
+owo-colors = { workspace = true }
+regex-lite = { workspace = true }
+serde_json = { workspace = true }
+supports-color = { workspace = true }
+tempfile = { workspace = true }
+tokio = { workspace = true, features = [
+    "io-std",
+    "macros",
+    "process",
+    "rt-multi-thread",
+    "signal",
+] }
+toml = { workspace = true }
+tracing = { workspace = true }
+tracing-appender = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+brocode_windows_sandbox = { package = "brocode-windows-sandbox", path = "../windows-sandbox-rs" }
+
+[dev-dependencies]
+assert_cmd = { workspace = true }
+assert_matches = { workspace = true }
+brocode-utils-cargo-bin = { workspace = true }
+predicates = { workspace = true }
+pretty_assertions = { workspace = true }
+sqlx = { workspace = true }

@@ -1,0 +1,15 @@
+[package]
+edition.workspace = true
+license.workspace = true
+name = "brocode-utils-output-truncation"
+version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+brocode-protocol = { workspace = true }
+brocode-utils-string = { workspace = true }
+
+[dev-dependencies]
+pretty_assertions = { workspace = true }

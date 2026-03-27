@@ -1,0 +1,7 @@
+load("//:defs.bzl", "brocode_rust_crate")
+
+brocode_rust_crate(
+    name = "execpolicy-legacy",
+    crate_name = "brocode_execpolicy_legacy",
+    compile_data = ["src/default.policy"],
+)

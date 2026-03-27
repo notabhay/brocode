@@ -16,65 +16,65 @@ python -m pip install -e .
 Requirements:
 
 - Python `>=3.10`
-- installed `codex-cli-bin` runtime package, or an explicit `codex_bin` override
-- local Codex auth/session configured
+- installed `brocode-cli-bin` runtime package, or an explicit `brocode_bin` override
+- local Brocode auth/session configured
 
 ## 2) Run your first turn (sync)
 
 ```python
-from codex_app_server import Codex, TextInput
+from brocode_app_server import Brocode
 
-with Codex() as codex:
-    server = codex.metadata.serverInfo
+with Brocode() as brocode:
+    server = brocode.metadata.serverInfo
     print("Server:", None if server is None else server.name, None if server is None else server.version)
 
-    thread = codex.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
-    completed_turn = thread.turn(TextInput("Say hello in one sentence.")).run()
+    thread = brocode.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
+    result = thread.run("Say hello in one sentence.")
 
     print("Thread:", thread.id)
-    print("Turn:", completed_turn.id)
-    print("Status:", completed_turn.status)
-    print("Items:", len(completed_turn.items or []))
+    print("Text:", result.final_response)
+    print("Items:", len(result.items))
 ```
 
 What happened:
 
-- `Codex()` started and initialized `codex app-server`.
+- `Brocode()` started and initialized `brocode app-server`.
 - `thread_start(...)` created a thread.
-- `turn(...).run()` consumed events until `turn/completed` and returned the canonical generated app-server `Turn` model.
-- one client can have only one active `TurnHandle.stream()` / `TurnHandle.run()` consumer at a time in the current experimental build
+- `thread.run("...")` started a turn, consumed events until completion, and returned the final assistant response plus collected items and usage.
+- `result.final_response` is `None` when no final-answer or phase-less assistant message item completes for the turn.
+- use `thread.turn(...)` when you need a `TurnHandle` for streaming, steering, interrupting, or turn IDs/status
+- one client can have only one active turn consumer (`thread.run(...)`, `TurnHandle.stream()`, or `TurnHandle.run()`) at a time in the current experimental build
 
 ## 3) Continue the same thread (multi-turn)
 
 ```python
-from codex_app_server import Codex, TextInput
+from brocode_app_server import Brocode
 
-with Codex() as codex:
-    thread = codex.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
+with Brocode() as brocode:
+    thread = brocode.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
 
-    first = thread.turn(TextInput("Summarize Rust ownership in 2 bullets.")).run()
-    second = thread.turn(TextInput("Now explain it to a Python developer.")).run()
+    first = thread.run("Summarize Rust ownership in 2 bullets.")
+    second = thread.run("Now explain it to a Python developer.")
 
-    print("first:", first.id, first.status)
-    print("second:", second.id, second.status)
+    print("first:", first.final_response)
+    print("second:", second.final_response)
 ```
 
 ## 4) Async parity
 
-Use `async with AsyncCodex()` as the normal async entrypoint. `AsyncCodex`
+Use `async with AsyncBrocode()` as the normal async entrypoint. `AsyncBrocode`
 initializes lazily, and context entry makes startup/shutdown explicit.
 
 ```python
 import asyncio
-from codex_app_server import AsyncCodex, TextInput
+from brocode_app_server import AsyncBrocode
 
 
 async def main() -> None:
-    async with AsyncCodex() as codex:
-        thread = await codex.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
-        turn = await thread.turn(TextInput("Continue where we left off."))
-        completed_turn = await turn.run()
-        print(completed_turn.id, completed_turn.status)
+    async with AsyncBrocode() as brocode:
+        thread = await brocode.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
+        result = await thread.run("Continue where we left off.")
+        print(result.final_response)
 
 
 asyncio.run(main())
@@ -83,14 +83,14 @@ asyncio.run(main())
 ## 5) Resume an existing thread
 
 ```python
-from codex_app_server import Codex, TextInput
+from brocode_app_server import Brocode
 
 THREAD_ID = "thr_123"  # replace with a real id
 
-with Codex() as codex:
-    thread = codex.thread_resume(THREAD_ID)
-    completed_turn = thread.turn(TextInput("Continue where we left off.")).run()
-    print(completed_turn.id, completed_turn.status)
+with Brocode() as brocode:
+    thread = brocode.thread_resume(THREAD_ID)
+    result = thread.run("Continue where we left off.")
+    print(result.final_response)
 ```
 
 ## 6) Generated models
@@ -98,7 +98,7 @@ with Codex() as codex:
 The convenience wrappers live at the package root, but the canonical app-server models live under:
 
 ```python
-from codex_app_server.generated.v2_all import Turn, TurnStatus, ThreadReadResponse
+from brocode_app_server.generated.v2_all import Turn, TurnStatus, ThreadReadResponse
 ```
 
 ## 7) Next stops

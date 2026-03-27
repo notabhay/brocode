@@ -1,0 +1,7 @@
+load("//:defs.bzl", "brocode_rust_crate")
+
+brocode_rust_crate(
+    name = "exec-server",
+    crate_name = "brocode_exec_server",
+    test_tags = ["no-sandbox"],
+)

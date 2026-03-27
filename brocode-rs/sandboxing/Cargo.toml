@@ -1,0 +1,27 @@
+[package]
+name = "brocode-sandboxing"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "brocode_sandboxing"
+path = "src/lib.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+brocode-network-proxy = { workspace = true }
+brocode-protocol = { workspace = true }
+brocode-utils-absolute-path = { workspace = true }
+dirs = { workspace = true }
+dunce = { workspace = true }
+libc = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true, features = ["log"] }
+url = { workspace = true }
+
+[dev-dependencies]
+pretty_assertions = { workspace = true }
+tempfile = { workspace = true }

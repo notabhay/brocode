@@ -1,0 +1,6 @@
+load("//:defs.bzl", "brocode_rust_crate")
+
+brocode_rust_crate(
+    name = "code-mode",
+    crate_name = "brocode_code_mode",
+)

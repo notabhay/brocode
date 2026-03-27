@@ -1,0 +1,7 @@
+load("//:defs.bzl", "brocode_rust_crate")
+
+brocode_rust_crate(
+    name = "protocol",
+    crate_name = "brocode_protocol",
+    compile_data = glob(["src/prompts/**/*.md"]),
+)

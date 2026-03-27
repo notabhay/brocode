@@ -1,0 +1,6 @@
+load("//:defs.bzl", "brocode_rust_crate")
+
+brocode_rust_crate(
+    name = "stdio-to-uds",
+    crate_name = "brocode_stdio_to_uds",
+)

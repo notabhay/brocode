@@ -1,0 +1,23 @@
+[package]
+name = "brocode-arg0"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "brocode_arg0"
+path = "src/lib.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+brocode-apply-patch = { workspace = true }
+brocode-linux-sandbox = { workspace = true }
+brocode-sandboxing = { workspace = true }
+brocode-shell-escalation = { workspace = true }
+brocode-utils-home-dir = { workspace = true }
+dotenvy = { workspace = true }
+tempfile = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread"] }

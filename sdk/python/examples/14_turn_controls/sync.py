@@ -13,10 +13,10 @@ from _bootstrap import (
 
 ensure_local_sdk_src()
 
-from codex_app_server import Codex, TextInput
+from brocode_app_server import Brocode, TextInput
 
-with Codex(config=runtime_config()) as codex:
-    thread = codex.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
+with Brocode(config=runtime_config()) as brocode:
+    thread = brocode.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
     steer_turn = thread.turn(TextInput("Count from 1 to 40 with commas, then one summary sentence."))
     steer_result = "sent"
     try:

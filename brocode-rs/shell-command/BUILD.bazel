@@ -1,0 +1,7 @@
+load("//:defs.bzl", "brocode_rust_crate")
+
+brocode_rust_crate(
+    name = "shell-command",
+    crate_name = "brocode_shell_command",
+    compile_data = ["src/command_safety/powershell_parser.ps1"],
+)

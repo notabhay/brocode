@@ -74,11 +74,11 @@ def test_schema_normalization_only_flattens_string_literal_oneofs() -> None:
     schema = json.loads(
         (
             ROOT.parent.parent
-            / "codex-rs"
+            / "brocode-rs"
             / "app-server-protocol"
             / "schema"
             / "json"
-            / "codex_app_server_protocol.v2.schemas.json"
+            / "brocode_app_server_protocol.v2.schemas.json"
         ).read_text()
     )
 
@@ -104,11 +104,11 @@ def test_python_codegen_schema_annotation_adds_stable_variant_titles() -> None:
     schema = json.loads(
         (
             ROOT.parent.parent
-            / "codex-rs"
+            / "brocode-rs"
             / "app-server-protocol"
             / "schema"
             / "json"
-            / "codex_app_server_protocol.v2.schemas.json"
+            / "brocode_app_server_protocol.v2.schemas.json"
         ).read_text()
     )
 
@@ -151,7 +151,7 @@ def test_generate_v2_all_uses_titles_for_generated_names() -> None:
 
 
 def test_runtime_package_template_has_no_checked_in_binaries() -> None:
-    runtime_root = ROOT.parent / "python-runtime" / "src" / "codex_cli_bin"
+    runtime_root = ROOT.parent / "python-runtime" / "src" / "brocode_cli_bin"
     assert sorted(
         path.name
         for path in runtime_root.rglob("*")
@@ -236,8 +236,8 @@ def test_runtime_package_is_wheel_only_and_builds_platform_specific_wheels() -> 
     }
 
     assert pyproject["tool"]["hatch"]["build"]["targets"]["wheel"] == {
-        "packages": ["src/codex_cli_bin"],
-        "include": ["src/codex_cli_bin/bin/**"],
+        "packages": ["src/brocode_cli_bin"],
+        "include": ["src/brocode_cli_bin/bin/**"],
         "hooks": {"custom": {}},
     }
     assert pyproject["tool"]["hatch"]["build"]["targets"]["sdist"] == {
@@ -250,7 +250,7 @@ def test_runtime_package_is_wheel_only_and_builds_platform_specific_wheels() -> 
 def test_stage_runtime_release_copies_binary_and_sets_version(tmp_path: Path) -> None:
     script = _load_update_script_module()
     fake_binary = tmp_path / script.runtime_binary_name()
-    fake_binary.write_text("fake codex\n")
+    fake_binary.write_text("fake brocode\n")
 
     staged = script.stage_python_runtime_package(
         tmp_path / "runtime-stage",
@@ -259,7 +259,7 @@ def test_stage_runtime_release_copies_binary_and_sets_version(tmp_path: Path) ->
     )
 
     assert staged == tmp_path / "runtime-stage"
-    assert script.staged_runtime_bin_path(staged).read_text() == "fake codex\n"
+    assert script.staged_runtime_bin_path(staged).read_text() == "fake brocode\n"
     assert 'version = "1.2.3"' in (staged / "pyproject.toml").read_text()
 
 
@@ -271,7 +271,7 @@ def test_stage_runtime_release_replaces_existing_staging_dir(tmp_path: Path) -> 
     old_file.write_text("stale")
 
     fake_binary = tmp_path / script.runtime_binary_name()
-    fake_binary.write_text("fake codex\n")
+    fake_binary.write_text("fake brocode\n")
 
     staged = script.stage_python_runtime_package(
         staging_dir,
@@ -281,7 +281,7 @@ def test_stage_runtime_release_replaces_existing_staging_dir(tmp_path: Path) -> 
 
     assert staged == staging_dir
     assert not old_file.exists()
-    assert script.staged_runtime_bin_path(staged).read_text() == "fake codex\n"
+    assert script.staged_runtime_bin_path(staged).read_text() == "fake brocode\n"
 
 
 def test_stage_sdk_release_injects_exact_runtime_pin(tmp_path: Path) -> None:
@@ -290,8 +290,8 @@ def test_stage_sdk_release_injects_exact_runtime_pin(tmp_path: Path) -> None:
 
     pyproject = (staged / "pyproject.toml").read_text()
     assert 'version = "0.2.1"' in pyproject
-    assert '"codex-cli-bin==1.2.3"' in pyproject
-    assert not any((staged / "src" / "codex_app_server").glob("bin/**"))
+    assert '"brocode-cli-bin==1.2.3"' in pyproject
+    assert not any((staged / "src" / "brocode_app_server").glob("bin/**"))
 
 
 def test_stage_sdk_release_replaces_existing_staging_dir(tmp_path: Path) -> None:
@@ -351,7 +351,7 @@ def test_stage_sdk_runs_type_generation_before_staging(tmp_path: Path) -> None:
 def test_stage_runtime_stages_binary_without_type_generation(tmp_path: Path) -> None:
     script = _load_update_script_module()
     fake_binary = tmp_path / script.runtime_binary_name()
-    fake_binary.write_text("fake codex\n")
+    fake_binary.write_text("fake brocode\n")
     calls: list[str] = []
     args = script.parse_args(
         [
@@ -395,63 +395,63 @@ def test_stage_runtime_stages_binary_without_type_generation(tmp_path: Path) -> 
 def test_default_runtime_is_resolved_from_installed_runtime_package(
     tmp_path: Path,
 ) -> None:
-    from codex_app_server import client as client_module
+    from brocode_app_server import client as client_module
 
-    fake_binary = tmp_path / ("codex.exe" if client_module.os.name == "nt" else "codex")
+    fake_binary = tmp_path / ("brocode.exe" if client_module.os.name == "nt" else "brocode")
     fake_binary.write_text("")
-    ops = client_module.CodexBinResolverOps(
-        installed_codex_path=lambda: fake_binary,
+    ops = client_module.BrocodeBinResolverOps(
+        installed_brocode_path=lambda: fake_binary,
         path_exists=lambda path: path == fake_binary,
     )
 
     config = client_module.AppServerConfig()
-    assert config.codex_bin is None
-    assert client_module.resolve_codex_bin(config, ops) == fake_binary
+    assert config.brocode_bin is None
+    assert client_module.resolve_brocode_bin(config, ops) == fake_binary
 
 
-def test_explicit_codex_bin_override_takes_priority(tmp_path: Path) -> None:
-    from codex_app_server import client as client_module
+def test_explicit_brocode_bin_override_takes_priority(tmp_path: Path) -> None:
+    from brocode_app_server import client as client_module
 
     explicit_binary = tmp_path / (
-        "custom-codex.exe" if client_module.os.name == "nt" else "custom-codex"
+        "custom-brocode.exe" if client_module.os.name == "nt" else "custom-brocode"
     )
     explicit_binary.write_text("")
-    ops = client_module.CodexBinResolverOps(
-        installed_codex_path=lambda: (_ for _ in ()).throw(
+    ops = client_module.BrocodeBinResolverOps(
+        installed_brocode_path=lambda: (_ for _ in ()).throw(
             AssertionError("packaged runtime should not be used")
         ),
         path_exists=lambda path: path == explicit_binary,
     )
 
-    config = client_module.AppServerConfig(codex_bin=str(explicit_binary))
-    assert client_module.resolve_codex_bin(config, ops) == explicit_binary
+    config = client_module.AppServerConfig(brocode_bin=str(explicit_binary))
+    assert client_module.resolve_brocode_bin(config, ops) == explicit_binary
 
 
-def test_missing_runtime_package_requires_explicit_codex_bin() -> None:
-    from codex_app_server import client as client_module
+def test_missing_runtime_package_requires_explicit_brocode_bin() -> None:
+    from brocode_app_server import client as client_module
 
-    ops = client_module.CodexBinResolverOps(
-        installed_codex_path=lambda: (_ for _ in ()).throw(
+    ops = client_module.BrocodeBinResolverOps(
+        installed_brocode_path=lambda: (_ for _ in ()).throw(
             FileNotFoundError("missing packaged runtime")
         ),
         path_exists=lambda _path: False,
     )
 
     with pytest.raises(FileNotFoundError, match="missing packaged runtime"):
-        client_module.resolve_codex_bin(client_module.AppServerConfig(), ops)
+        client_module.resolve_brocode_bin(client_module.AppServerConfig(), ops)
 
 
 def test_broken_runtime_package_does_not_fall_back() -> None:
-    from codex_app_server import client as client_module
+    from brocode_app_server import client as client_module
 
-    ops = client_module.CodexBinResolverOps(
-        installed_codex_path=lambda: (_ for _ in ()).throw(
+    ops = client_module.BrocodeBinResolverOps(
+        installed_brocode_path=lambda: (_ for _ in ()).throw(
             FileNotFoundError("missing packaged binary")
         ),
         path_exists=lambda _path: False,
     )
 
     with pytest.raises(FileNotFoundError) as exc_info:
-        client_module.resolve_codex_bin(client_module.AppServerConfig(), ops)
+        client_module.resolve_brocode_bin(client_module.AppServerConfig(), ops)
 
     assert str(exc_info.value) == ("missing packaged binary")

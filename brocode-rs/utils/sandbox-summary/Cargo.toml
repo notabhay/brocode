@@ -1,0 +1,16 @@
+[package]
+name = "brocode-utils-sandbox-summary"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+brocode-core = { workspace = true }
+brocode-protocol = { workspace = true }
+
+[dev-dependencies]
+brocode-utils-absolute-path = { workspace = true }
+pretty_assertions = { workspace = true }

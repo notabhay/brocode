@@ -1,6 +1,6 @@
-# Codex App Server Python SDK (Experimental)
+# Brocode App Server Python SDK (Experimental)
 
-Experimental Python SDK for `codex app-server` JSON-RPC v2 over stdio, with a small default surface optimized for real scripts and apps.
+Experimental Python SDK for `brocode app-server` JSON-RPC v2 over stdio, with a small default surface optimized for real scripts and apps.
 
 The generated wire-model layer is currently sourced from the bundled v2 schema and exposed as Pydantic models with snake_case Python fields that serialize back to the app-server’s camelCase wire format.
 
@@ -11,22 +11,25 @@ cd sdk/python
 python -m pip install -e .
 ```
 
-Published SDK builds pin an exact `codex-cli-bin` runtime dependency. For local
-repo development, either pass `AppServerConfig(codex_bin=...)` to point at a
+Published SDK builds pin an exact `brocode-cli-bin` runtime dependency. For local
+repo development, either pass `AppServerConfig(brocode_bin=...)` to point at a
 local build explicitly, or use the repo examples/notebook bootstrap which
 installs the pinned runtime package automatically.
 
 ## Quickstart
 
 ```python
-from codex_app_server import Codex, TextInput
+from brocode_app_server import Brocode
 
-with Codex() as codex:
-    thread = codex.thread_start(model="gpt-5")
-    completed_turn = thread.turn(TextInput("Say hello in one sentence.")).run()
-    print(completed_turn.status)
-    print(completed_turn.id)
+with Brocode() as brocode:
+    thread = brocode.thread_start(model="gpt-5")
+    result = thread.run("Say hello in one sentence.")
+    print(result.final_response)
+    print(len(result.items))
 ```
+
+`result.final_response` is `None` when the turn completes without a final-answer
+or phase-less assistant message item.
 
 ## Docs map
 
@@ -48,15 +51,15 @@ python examples/01_quickstart_constructor/async.py
 
 ## Runtime packaging
 
-The repo no longer checks `codex` binaries into `sdk/python`.
+The repo no longer checks `brocode` binaries into `sdk/python`.
 
-Published SDK builds are pinned to an exact `codex-cli-bin` package version,
+Published SDK builds are pinned to an exact `brocode-cli-bin` package version,
 and that runtime package carries the platform-specific binary for the target
 wheel.
 
 For local repo development, the checked-in `sdk/python-runtime` package is only
 a template for staged release artifacts. Editable installs should use an
-explicit `codex_bin` override for manual SDK usage; the repo examples and
+explicit `brocode_bin` override for manual SDK usage; the repo examples and
 notebook bootstrap the pinned runtime package automatically.
 
 ## Maintainer workflow
@@ -66,33 +69,35 @@ cd sdk/python
 python scripts/update_sdk_artifacts.py generate-types
 python scripts/update_sdk_artifacts.py \
   stage-sdk \
-  /tmp/codex-python-release/codex-app-server-sdk \
+  /tmp/brocode-python-release/brocode-app-server-sdk \
   --runtime-version 1.2.3
 python scripts/update_sdk_artifacts.py \
   stage-runtime \
-  /tmp/codex-python-release/codex-cli-bin \
-  /path/to/codex \
+  /tmp/brocode-python-release/brocode-cli-bin \
+  /path/to/brocode \
   --runtime-version 1.2.3
 ```
 
 This supports the CI release flow:
 
 - run `generate-types` before packaging
-- stage `codex-app-server-sdk` once with an exact `codex-cli-bin==...` dependency
-- stage `codex-cli-bin` on each supported platform runner with the same pinned runtime version
-- build and publish `codex-cli-bin` as platform wheels only; do not publish an sdist
+- stage `brocode-app-server-sdk` once with an exact `brocode-cli-bin==...` dependency
+- stage `brocode-cli-bin` on each supported platform runner with the same pinned runtime version
+- build and publish `brocode-cli-bin` as platform wheels only; do not publish an sdist
 
 ## Compatibility and versioning
 
-- Package: `codex-app-server-sdk`
-- Runtime package: `codex-cli-bin`
+- Package: `brocode-app-server-sdk`
+- Runtime package: `brocode-cli-bin`
 - Current SDK version in this repo: `0.2.0`
 - Python: `>=3.10`
-- Target protocol: Codex `app-server` JSON-RPC v2
-- Recommendation: keep SDK and `codex` CLI reasonably up to date together
+- Target protocol: Brocode `app-server` JSON-RPC v2
+- Recommendation: keep SDK and `brocode` CLI reasonably up to date together
 
 ## Notes
 
-- `Codex()` is eager and performs startup + `initialize` in the constructor.
-- Use context managers (`with Codex() as codex:`) to ensure shutdown.
-- For transient overload, use `codex_app_server.retry.retry_on_overload`.
+- `Brocode()` is eager and performs startup + `initialize` in the constructor.
+- Use context managers (`with Brocode() as brocode:`) to ensure shutdown.
+- Prefer `thread.run("...")` for the common case. Use `thread.turn(...)` when
+  you need streaming, steering, or interrupt control.
+- For transient overload, use `brocode_app_server.retry.retry_on_overload`.

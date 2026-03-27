@@ -15,9 +15,9 @@ from _bootstrap import (
 
 ensure_local_sdk_src()
 
-from codex_app_server import (
+from brocode_app_server import (
     AskForApproval,
-    Codex,
+    Brocode,
     Personality,
     ReasoningSummary,
     TextInput,
@@ -44,8 +44,8 @@ PROMPT = (
 )
 APPROVAL_POLICY = AskForApproval.model_validate("never")
 
-with Codex(config=runtime_config()) as codex:
-    thread = codex.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
+with Brocode(config=runtime_config()) as brocode:
+    thread = brocode.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
 
     turn = thread.turn(
         TextInput(PROMPT),

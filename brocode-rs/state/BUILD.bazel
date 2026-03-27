@@ -1,0 +1,7 @@
+load("//:defs.bzl", "brocode_rust_crate")
+
+brocode_rust_crate(
+    name = "state",
+    crate_name = "brocode_state",
+    compile_data = glob(["logs_migrations/**", "migrations/**"]),
+)

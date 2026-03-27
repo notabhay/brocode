@@ -21,10 +21,10 @@ if root_str not in sys.path:
 
 from _runtime_setup import ensure_runtime_package_installed, pinned_runtime_version
 
-RUN_REAL_CODEX_TESTS = os.environ.get("RUN_REAL_CODEX_TESTS") == "1"
+RUN_REAL_BROCODE_TESTS = os.environ.get("RUN_REAL_BROCODE_TESTS") == "1"
 pytestmark = pytest.mark.skipif(
-    not RUN_REAL_CODEX_TESTS,
-    reason="set RUN_REAL_CODEX_TESTS=1 to run real Codex integration coverage",
+    not RUN_REAL_BROCODE_TESTS,
+    reason="set RUN_REAL_BROCODE_TESTS=1 to run real Brocode integration coverage",
 )
 
 # 11_cli_mini_app is interactive; we still run it by feeding one prompt, then '/exit'.
@@ -96,7 +96,7 @@ def runtime_env(tmp_path_factory: pytest.TempPathFactory) -> PreparedRuntimeEnv:
 
     env = os.environ.copy()
     env["PYTHONPATH"] = os.pathsep.join([str(isolated_site), str(ROOT / "src")])
-    env["CODEX_PYTHON_SDK_DIR"] = str(ROOT)
+    env["BROCODE_PYTHON_SDK_DIR"] = str(ROOT)
     return PreparedRuntimeEnv(python=python, env=env, runtime_version=runtime_version)
 
 
@@ -205,13 +205,13 @@ def test_real_initialize_and_model_list(runtime_env: PreparedRuntimeEnv) -> None
         textwrap.dedent(
             """
             import json
-            from codex_app_server import Codex
+            from brocode_app_server import Brocode
 
-            with Codex() as codex:
-                models = codex.models(include_hidden=True)
-                server = codex.metadata.serverInfo
+            with Brocode() as brocode:
+                models = brocode.models(include_hidden=True)
+                server = brocode.metadata.serverInfo
                 print(json.dumps({
-                    "user_agent": codex.metadata.userAgent,
+                    "user_agent": brocode.metadata.userAgent,
                     "server_name": None if server is None else server.name,
                     "server_version": None if server is None else server.version,
                     "model_count": len(models.data),
@@ -234,10 +234,10 @@ def test_real_thread_and_turn_start_smoke(runtime_env: PreparedRuntimeEnv) -> No
         textwrap.dedent(
             """
             import json
-            from codex_app_server import Codex, TextInput
+            from brocode_app_server import Brocode, TextInput
 
-            with Codex() as codex:
-                thread = codex.thread_start(
+            with Brocode() as brocode:
+                thread = brocode.thread_start(
                     model="gpt-5.4",
                     config={"model_reasoning_effort": "high"},
                 )
@@ -265,6 +265,36 @@ def test_real_thread_and_turn_start_smoke(runtime_env: PreparedRuntimeEnv) -> No
     assert isinstance(data["persisted_items_count"], int)
 
 
+def test_real_thread_run_convenience_smoke(runtime_env: PreparedRuntimeEnv) -> None:
+    data = _run_json_python(
+        runtime_env,
+        textwrap.dedent(
+            """
+            import json
+            from brocode_app_server import Brocode
+
+            with Brocode() as brocode:
+                thread = brocode.thread_start(
+                    model="gpt-5.4",
+                    config={"model_reasoning_effort": "high"},
+                )
+                result = thread.run("say ok")
+                print(json.dumps({
+                    "thread_id": thread.id,
+                    "final_response": result.final_response,
+                    "items_count": len(result.items),
+                    "has_usage": result.usage is not None,
+                }))
+            """
+        ),
+    )
+
+    assert isinstance(data["thread_id"], str) and data["thread_id"].strip()
+    assert isinstance(data["final_response"], str) and data["final_response"].strip()
+    assert isinstance(data["items_count"], int)
+    assert isinstance(data["has_usage"], bool)
+
+
 def test_real_async_thread_turn_usage_and_ids_smoke(
     runtime_env: PreparedRuntimeEnv,
 ) -> None:
@@ -274,11 +304,11 @@ def test_real_async_thread_turn_usage_and_ids_smoke(
             """
             import asyncio
             import json
-            from codex_app_server import AsyncCodex, TextInput
+            from brocode_app_server import AsyncBrocode, TextInput
 
             async def main():
-                async with AsyncCodex() as codex:
-                    thread = await codex.thread_start(
+                async with AsyncBrocode() as brocode:
+                    thread = await brocode.thread_start(
                         model="gpt-5.4",
                         config={"model_reasoning_effort": "high"},
                     )
@@ -306,6 +336,42 @@ def test_real_async_thread_turn_usage_and_ids_smoke(
     assert data["status"] == "completed"
     assert isinstance(data["items_count"], int)
     assert isinstance(data["persisted_items_count"], int)
+
+
+def test_real_async_thread_run_convenience_smoke(
+    runtime_env: PreparedRuntimeEnv,
+) -> None:
+    data = _run_json_python(
+        runtime_env,
+        textwrap.dedent(
+            """
+            import asyncio
+            import json
+            from brocode_app_server import AsyncBrocode
+
+            async def main():
+                async with AsyncBrocode() as brocode:
+                    thread = await brocode.thread_start(
+                        model="gpt-5.4",
+                        config={"model_reasoning_effort": "high"},
+                    )
+                    result = await thread.run("say ok")
+                    print(json.dumps({
+                        "thread_id": thread.id,
+                        "final_response": result.final_response,
+                        "items_count": len(result.items),
+                        "has_usage": result.usage is not None,
+                    }))
+
+            asyncio.run(main())
+            """
+        ),
+    )
+
+    assert isinstance(data["thread_id"], str) and data["thread_id"].strip()
+    assert isinstance(data["final_response"], str) and data["final_response"].strip()
+    assert isinstance(data["items_count"], int)
+    assert isinstance(data["has_usage"], bool)
 
 
 def test_notebook_bootstrap_resolves_sdk_and_runtime_from_unrelated_cwd(
@@ -370,10 +436,10 @@ def test_real_streaming_smoke_turn_completed(runtime_env: PreparedRuntimeEnv) ->
         textwrap.dedent(
             """
             import json
-            from codex_app_server import Codex, TextInput
+            from brocode_app_server import Brocode, TextInput
 
-            with Codex() as codex:
-                thread = codex.thread_start(
+            with Brocode() as brocode:
+                thread = brocode.thread_start(
                     model="gpt-5.4",
                     config={"model_reasoning_effort": "high"},
                 )
@@ -403,10 +469,10 @@ def test_real_turn_interrupt_smoke(runtime_env: PreparedRuntimeEnv) -> None:
         textwrap.dedent(
             """
             import json
-            from codex_app_server import Codex, TextInput
+            from brocode_app_server import Brocode, TextInput
 
-            with Codex() as codex:
-                thread = codex.thread_start(
+            with Brocode() as brocode:
+                thread = brocode.thread_start(
                     model="gpt-5.4",
                     config={"model_reasoning_effort": "high"},
                 )
@@ -439,7 +505,7 @@ def test_real_examples_run_and_assert(
     out = result.stdout
 
     if folder == "01_quickstart_constructor":
-        assert "Status:" in out and "Text:" in out
+        assert "Server:" in out and "Items:" in out and "Text:" in out
         assert "Server: unknown" not in out
     elif folder == "02_turn_run":
         assert "thread_id:" in out and "turn_id:" in out and "status:" in out

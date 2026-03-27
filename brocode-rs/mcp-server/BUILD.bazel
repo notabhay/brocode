@@ -1,0 +1,6 @@
+load("//:defs.bzl", "brocode_rust_crate")
+
+brocode_rust_crate(
+    name = "mcp-server",
+    crate_name = "brocode_mcp_server",
+)

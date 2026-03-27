@@ -1,0 +1,10 @@
+---
+source: tui_app_server/src/history_cell.rs
+assertion_line: 2925
+expression: rendered
+---
+╭─────────────────────╮
+│ >_ brocode v0.117.0 │
+╰─────────────────────╯
+
+  Tip: Model just became available

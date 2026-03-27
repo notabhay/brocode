@@ -1,8 +1,8 @@
 import path from "node:path";
 
-export function codexPathOverride() {
+export function brocodePathOverride() {
   return (
-    process.env.CODEX_EXECUTABLE ??
-    path.join(process.cwd(), "..", "..", "codex-rs", "target", "debug", "codex")
+    process.env.BROCODE_EXECUTABLE ??
+    path.join(process.cwd(), "..", "..", "brocode-rs", "target", "debug", "brocode")
   );
 }

@@ -1,0 +1,10 @@
+---
+source: tui/src/chatwidget/tests.rs
+assertion_line: 11878
+expression: terminal.backend()
+---
+"                                                                                "
+"                                                                                "
+"› Ask brocode to do anything                                                    "
+"                                                                                "
+"  Fast on                                                                       "

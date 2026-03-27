@@ -11,13 +11,13 @@ ensure_local_sdk_src()
 
 import asyncio
 
-from codex_app_server import AsyncCodex
+from brocode_app_server import AsyncBrocode
 
 
 async def main() -> None:
-    async with AsyncCodex(config=runtime_config()) as codex:
-        print("server:", server_label(codex.metadata))
-        models = await codex.models()
+    async with AsyncBrocode(config=runtime_config()) as brocode:
+        print("server:", server_label(brocode.metadata))
+        models = await brocode.models()
         print("models.count:", len(models.data))
         print("models:", ", ".join(model.id for model in models.data[:5]) or "[none]")
 

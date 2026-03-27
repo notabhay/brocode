@@ -9,26 +9,26 @@ from _bootstrap import ensure_local_sdk_src, runtime_config
 
 ensure_local_sdk_src()
 
-from codex_app_server import Codex, TextInput
+from brocode_app_server import Brocode, TextInput
 
 
-with Codex(config=runtime_config()) as codex:
-    thread = codex.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
+with Brocode(config=runtime_config()) as brocode:
+    thread = brocode.thread_start(model="gpt-5.4", config={"model_reasoning_effort": "high"})
     first = thread.turn(TextInput("One sentence about structured planning.")).run()
     second = thread.turn(TextInput("Now restate it for a junior engineer.")).run()
 
-    reopened = codex.thread_resume(thread.id)
-    listing_active = codex.thread_list(limit=20, archived=False)
+    reopened = brocode.thread_resume(thread.id)
+    listing_active = brocode.thread_list(limit=20, archived=False)
     reading = reopened.read(include_turns=True)
 
     _ = reopened.set_name("sdk-lifecycle-demo")
-    _ = codex.thread_archive(reopened.id)
-    listing_archived = codex.thread_list(limit=20, archived=True)
-    unarchived = codex.thread_unarchive(reopened.id)
+    _ = brocode.thread_archive(reopened.id)
+    listing_archived = brocode.thread_list(limit=20, archived=True)
+    unarchived = brocode.thread_unarchive(reopened.id)
 
     resumed_info = "n/a"
     try:
-        resumed = codex.thread_resume(
+        resumed = brocode.thread_resume(
             unarchived.id,
             model="gpt-5.4",
             config={"model_reasoning_effort": "high"},
@@ -40,7 +40,7 @@ with Codex(config=runtime_config()) as codex:
 
     forked_info = "n/a"
     try:
-        forked = codex.thread_fork(unarchived.id, model="gpt-5.4")
+        forked = brocode.thread_fork(unarchived.id, model="gpt-5.4")
         forked_result = forked.turn(TextInput("Take a different angle in one short sentence.")).run()
         forked_info = f"{forked_result.id} {forked_result.status}"
     except Exception as exc:

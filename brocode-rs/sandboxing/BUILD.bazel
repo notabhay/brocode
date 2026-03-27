@@ -1,0 +1,11 @@
+load("//:defs.bzl", "brocode_rust_crate")
+
+brocode_rust_crate(
+    name = "sandboxing",
+    crate_name = "brocode_sandboxing",
+    compile_data = [
+        "src/restricted_read_only_platform_defaults.sbpl",
+        "src/seatbelt_base_policy.sbpl",
+        "src/seatbelt_network_policy.sbpl",
+    ],
+)
