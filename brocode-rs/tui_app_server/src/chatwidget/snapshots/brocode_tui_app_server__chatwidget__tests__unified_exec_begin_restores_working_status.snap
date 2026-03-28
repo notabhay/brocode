@@ -1,12 +1,11 @@
 ---
 source: tui_app_server/src/chatwidget/tests.rs
-assertion_line: 4331
 expression: terminal.backend()
 ---
 "                                                                                "
 "• Working (0s • esc to interrupt) · 1 background terminal running · /ps to view…"
 "                                                                                "
 "                                                                                "
-"› Ask brocode to do anything                                                    "
+"› [PROMPT HERE]                                                                 "
 "                                                                                "
 "  ? for shortcuts                                            100% context left  "

@@ -3785,27 +3785,33 @@ impl App {
             }
             AppEvent::InsertHistoryCell(cell) => {
                 let cell: Arc<dyn HistoryCell> = cell.into();
-                if let Some(Overlay::Transcript(t)) = &mut self.overlay {
+                if cell.show_in_transcript_history()
+                    && let Some(Overlay::Transcript(t)) = &mut self.overlay
+                {
                     t.insert_cell(cell.clone());
                     tui.frame_requester().schedule_frame();
                 }
-                self.transcript_cells.push(cell.clone());
-                let mut display = cell.display_lines(tui.terminal.last_known_screen_size.width);
-                if !display.is_empty() {
-                    // Only insert a separating blank line for new cells that are not
-                    // part of an ongoing stream. Streaming continuations should not
-                    // accrue extra blank lines between chunks.
-                    if !cell.is_stream_continuation() {
-                        if self.has_emitted_history_lines {
-                            display.insert(0, Line::from(""));
-                        } else {
-                            self.has_emitted_history_lines = true;
+                if cell.show_in_transcript_history() {
+                    self.transcript_cells.push(cell.clone());
+                }
+                if cell.show_in_main_history() {
+                    let mut display = cell.display_lines(tui.terminal.last_known_screen_size.width);
+                    if !display.is_empty() {
+                        // Only insert a separating blank line for new cells that are not
+                        // part of an ongoing stream. Streaming continuations should not
+                        // accrue extra blank lines between chunks.
+                        if !cell.is_stream_continuation() {
+                            if self.has_emitted_history_lines {
+                                display.insert(0, Line::from(""));
+                            } else {
+                                self.has_emitted_history_lines = true;
+                            }
                         }
-                    }
-                    if self.overlay.is_some() {
-                        self.deferred_history_lines.extend(display);
-                    } else {
-                        tui.insert_history_lines(display);
+                        if self.overlay.is_some() {
+                            self.deferred_history_lines.extend(display);
+                        } else {
+                            tui.insert_history_lines(display);
+                        }
                     }
                 }
             }

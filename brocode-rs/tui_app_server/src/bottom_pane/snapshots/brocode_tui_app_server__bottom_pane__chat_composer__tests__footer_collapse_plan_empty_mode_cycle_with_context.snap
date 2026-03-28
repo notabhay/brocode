@@ -3,7 +3,7 @@ source: tui_app_server/src/bottom_pane/chat_composer.rs
 expression: terminal.backend()
 ---
 "                                                            "
-"› Ask brocode to do anything                                "
+"› [PROMPT HERE]                                             "
 "                                                            "
 "                                                            "
 "                                                            "

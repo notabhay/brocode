@@ -98,6 +98,16 @@ pub(crate) trait HistoryCell: std::fmt::Debug + Send + Sync + Any {
     /// Returns the logical lines for the main chat viewport.
     fn display_lines(&self, width: u16) -> Vec<Line<'static>>;
 
+    /// Whether this cell should be shown in the main chat viewport.
+    fn show_in_main_history(&self) -> bool {
+        true
+    }
+
+    /// Whether this cell should be shown in the transcript overlay.
+    fn show_in_transcript_history(&self) -> bool {
+        self.show_in_main_history()
+    }
+
     /// Returns the number of viewport rows needed to render this cell.
     ///
     /// The default delegates to `Paragraph::line_count` with
@@ -472,17 +482,37 @@ impl HistoryCell for AgentMessageCell {
 #[derive(Debug)]
 pub(crate) struct PlainHistoryCell {
     lines: Vec<Line<'static>>,
+    show_in_main_history: bool,
+    show_in_transcript_history: bool,
 }
 
 impl PlainHistoryCell {
     pub(crate) fn new(lines: Vec<Line<'static>>) -> Self {
-        Self { lines }
+        Self {
+            lines,
+            show_in_main_history: true,
+            show_in_transcript_history: true,
+        }
+    }
+
+    pub(crate) fn hidden(mut self) -> Self {
+        self.show_in_main_history = false;
+        self.show_in_transcript_history = false;
+        self
     }
 }
 
 impl HistoryCell for PlainHistoryCell {
     fn display_lines(&self, _width: u16) -> Vec<Line<'static>> {
         self.lines.clone()
+    }
+
+    fn show_in_main_history(&self) -> bool {
+        self.show_in_main_history
+    }
+
+    fn show_in_transcript_history(&self) -> bool {
+        self.show_in_transcript_history
     }
 }
 
@@ -631,6 +661,10 @@ impl HistoryCell for UnifiedExecInteractionCell {
         );
         out.extend(input_wrapped);
         out
+    }
+
+    fn show_in_main_history(&self) -> bool {
+        false
     }
 }
 
@@ -963,9 +997,7 @@ pub fn new_guardian_approved_action_request(summary: String) -> Box<dyn HistoryC
 
 /// Cyan history cell line showing the current review status.
 pub(crate) fn new_review_status_line(message: String) -> PlainHistoryCell {
-    PlainHistoryCell {
-        lines: vec![Line::from(message.cyan())],
-    }
+    PlainHistoryCell::new(vec![Line::from(message.cyan())])
 }
 
 #[derive(Debug)]
@@ -978,6 +1010,10 @@ impl HistoryCell for PatchHistoryCell {
     fn display_lines(&self, width: u16) -> Vec<Line<'static>> {
         create_diff_summary(&self.changes, &self.cwd, width as usize)
     }
+
+    fn show_in_main_history(&self) -> bool {
+        false
+    }
 }
 
 #[derive(Debug)]
@@ -987,6 +1023,10 @@ struct CompletedMcpToolCallWithImageOutput {
 impl HistoryCell for CompletedMcpToolCallWithImageOutput {
     fn display_lines(&self, _width: u16) -> Vec<Line<'static>> {
         vec!["tool result (image output)".into()]
+    }
+
+    fn show_in_main_history(&self) -> bool {
+        false
     }
 }
 
@@ -1175,7 +1215,7 @@ pub(crate) fn new_session_info(
             ]),
         ];
 
-        parts.push(Box::new(PlainHistoryCell { lines: help_lines }));
+        parts.push(Box::new(PlainHistoryCell::new(help_lines)));
     } else {
         if config.show_tooltips
             && let Some(tooltips) = tooltip_override
@@ -1195,7 +1235,7 @@ pub(crate) fn new_session_info(
                 format!("requested: {requested_model}").into(),
                 format!("used: {model}").into(),
             ];
-            parts.push(Box::new(PlainHistoryCell { lines }));
+            parts.push(Box::new(PlainHistoryCell::new(lines)));
         }
     }
 
@@ -1479,6 +1519,10 @@ impl HistoryCell for McpToolCallCell {
         }
         Some((self.start_time.elapsed().as_millis() / 50) as u64)
     }
+
+    fn show_in_main_history(&self) -> bool {
+        false
+    }
 }
 
 pub(crate) fn new_active_mcp_tool_call(
@@ -1553,6 +1597,10 @@ impl HistoryCell for WebSearchCell {
             Line::from(vec![header.bold(), " ".into(), detail.into()]).into()
         };
         PrefixedWrappedHistoryCell::new(text, vec![bullet, " ".into()], "  ").display_lines(width)
+    }
+
+    fn show_in_main_history(&self) -> bool {
+        false
     }
 }
 
@@ -1694,7 +1742,7 @@ pub(crate) fn empty_mcp_output() -> PlainHistoryCell {
         .style(Style::default().add_modifier(Modifier::DIM)),
     ];
 
-    PlainHistoryCell { lines }
+    PlainHistoryCell::new(lines)
 }
 
 /// Render MCP tools grouped by connection using the fully-qualified tool names.
@@ -1862,7 +1910,7 @@ pub(crate) fn new_mcp_tools_output(
         lines.push(Line::from(""));
     }
 
-    PlainHistoryCell { lines }
+    PlainHistoryCell::new(lines)
 }
 pub(crate) fn new_info_event(message: String, hint: Option<String>) -> PlainHistoryCell {
     let mut line = vec!["• ".dim(), message.into()];
@@ -1871,7 +1919,7 @@ pub(crate) fn new_info_event(message: String, hint: Option<String>) -> PlainHist
         line.push(hint.dark_gray());
     }
     let lines: Vec<Line<'static>> = vec![line.into()];
-    PlainHistoryCell { lines }
+    PlainHistoryCell::new(lines)
 }
 
 pub(crate) fn new_error_event(message: String) -> PlainHistoryCell {
@@ -1879,7 +1927,7 @@ pub(crate) fn new_error_event(message: String) -> PlainHistoryCell {
     // before the text. VS16 is intentionally omitted to keep spacing tighter
     // in terminals like Ghostty.
     let lines: Vec<Line<'static>> = vec![vec![format!("■ {message}").red()].into()];
-    PlainHistoryCell { lines }
+    PlainHistoryCell::new(lines)
 }
 
 /// Renders a completed (or interrupted) request_user_input exchange in history.
@@ -2194,7 +2242,7 @@ pub(crate) fn new_patch_apply_failure(stderr: String) -> PlainHistoryCell {
         lines.extend(output.lines);
     }
 
-    PlainHistoryCell { lines }
+    PlainHistoryCell::new(lines)
 }
 
 pub(crate) fn new_view_image_tool_call(path: PathBuf, cwd: &Path) -> PlainHistoryCell {
@@ -2205,7 +2253,7 @@ pub(crate) fn new_view_image_tool_call(path: PathBuf, cwd: &Path) -> PlainHistor
         vec!["  └ ".dim(), display_path.dim()].into(),
     ];
 
-    PlainHistoryCell { lines }
+    PlainHistoryCell::new(lines).hidden()
 }
 
 pub(crate) fn new_image_generation_call(
@@ -2223,7 +2271,7 @@ pub(crate) fn new_image_generation_call(
         lines.push(vec!["  └ ".dim(), "Saved to: ".dim(), saved_path.into()].into());
     }
 
-    PlainHistoryCell { lines }
+    PlainHistoryCell::new(lines).hidden()
 }
 
 /// Create the reasoning history cell emitted at the end of a reasoning block.

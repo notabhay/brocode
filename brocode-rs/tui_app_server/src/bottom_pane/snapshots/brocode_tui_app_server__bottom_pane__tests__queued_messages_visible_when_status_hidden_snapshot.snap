@@ -1,12 +1,11 @@
 ---
 source: tui_app_server/src/bottom_pane/mod.rs
-assertion_line: 1596
 expression: "render_snapshot(&pane, area)"
 ---
 • Queued follow-up messages                     
   ↳ Queued follow-up question                   
     ⌥ + ↑ edit last queued message              
                                                 
-› Ask brocode to do anything                    
+› [PROMPT HERE]                                 
                                                 
   ? for shortcuts            100% context left

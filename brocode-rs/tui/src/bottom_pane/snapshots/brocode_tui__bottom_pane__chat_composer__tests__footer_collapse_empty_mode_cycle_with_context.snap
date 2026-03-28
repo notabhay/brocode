@@ -1,10 +1,9 @@
 ---
 source: tui/src/bottom_pane/chat_composer.rs
-assertion_line: 4694
 expression: terminal.backend()
 ---
 "                                                            "
-"› Ask brocode to do anything                                "
+"› [PROMPT HERE]                                             "
 "                                                            "
 "                                                            "
 "                                                            "

@@ -4534,13 +4534,7 @@ mod tests {
     fn footer_hint_row_is_separated_from_composer() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let composer = ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let area = Rect::new(0, 0, 40, 6);
         let mut buf = Buffer::empty(area);
@@ -4588,13 +4582,8 @@ mod tests {
     fn footer_flash_overrides_footer_hint_override() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_footer_hint_override(Some(vec![("K".to_string(), "label".to_string())]));
         composer.show_footer_flash(Line::from("FLASH"), Duration::from_secs(10));
 
@@ -4626,13 +4615,8 @@ mod tests {
     fn footer_flash_expires_and_falls_back_to_hint_override() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_footer_hint_override(Some(vec![("K".to_string(), "label".to_string())]));
         composer.show_footer_flash(Line::from("FLASH"), Duration::from_secs(10));
         composer.footer_flash.as_mut().unwrap().expires_at =
@@ -4679,7 +4663,7 @@ mod tests {
             true,
             sender,
             enhanced_keys_supported,
-            "Ask brocode to do anything".to_string(),
+            "[PROMPT HERE]".to_string(),
             false,
         );
         setup(&mut composer);
@@ -4936,13 +4920,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            true,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, true, "[PROMPT HERE]".to_string(), false);
 
         type_chars_humanlike(&mut composer, &['d']);
 
@@ -4963,13 +4942,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         type_chars_humanlike(&mut composer, &['d']);
         composer.show_quit_shortcut_hint(key_hint::ctrl(KeyCode::Char('c')), true);
@@ -4986,13 +4960,8 @@ mod tests {
     fn clear_for_ctrl_c_records_cleared_draft() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_text_content("draft text".to_string(), Vec::new(), Vec::new());
         assert_eq!(composer.clear_for_ctrl_c(), Some("draft text".to_string()));
@@ -5012,13 +4981,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let large = "x".repeat(LARGE_PASTE_CHAR_THRESHOLD + 5);
         composer.handle_paste(large.clone());
@@ -5074,13 +5038,8 @@ mod tests {
     fn clear_for_ctrl_c_preserves_image_draft_state() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let path = PathBuf::from("example.png");
         composer.attach_image(path.clone());
@@ -5117,13 +5076,8 @@ mod tests {
     fn clear_for_ctrl_c_preserves_remote_offset_image_labels() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         let remote_image_url = "https://example.com/one.png".to_string();
         composer.set_remote_image_urls(vec![remote_image_url.clone()]);
         let text = "[Image #2] draft".to_string();
@@ -5159,13 +5113,8 @@ mod tests {
     fn apply_history_entry_preserves_local_placeholders_after_remote_prefix() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let remote_image_url = "https://example.com/one.png".to_string();
         let local_image_path = PathBuf::from("/tmp/local-draft.png");
@@ -5202,13 +5151,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let (result, needs_redraw) =
             composer.handle_key_event(KeyEvent::new(KeyCode::Char('?'), KeyModifiers::NONE));
@@ -5244,13 +5188,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         // Force an active paste burst so this test doesn't depend on tight timing.
         composer
@@ -5273,13 +5212,8 @@ mod tests {
     fn set_connector_mentions_refreshes_open_mention_popup() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_connectors_enabled(true);
         composer.set_text_content("$".to_string(), Vec::new(), Vec::new());
         assert!(matches!(composer.active_popup, ActivePopup::None));
@@ -5315,13 +5249,8 @@ mod tests {
     fn set_connector_mentions_skips_disabled_connectors() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_connectors_enabled(true);
         composer.set_text_content("$".to_string(), Vec::new(), Vec::new());
         assert!(matches!(composer.active_popup, ActivePopup::None));
@@ -5353,13 +5282,8 @@ mod tests {
     fn set_plugin_mentions_refreshes_open_mention_popup() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_text_content("$".to_string(), Vec::new(), Vec::new());
         assert!(matches!(composer.active_popup, ActivePopup::None));
 
@@ -5386,13 +5310,8 @@ mod tests {
     fn mention_items_show_plugin_owned_skill_and_app_duplicates() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_connectors_enabled(true);
         composer.set_text_content("$goog".to_string(), Vec::new(), Vec::new());
         composer.set_skill_mentions(Some(vec![SkillMetadata {
@@ -5541,13 +5460,8 @@ mod tests {
     fn set_connector_mentions_excludes_disabled_apps_from_mention_popup() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_connectors_enabled(true);
         composer.set_text_content("$".to_string(), Vec::new(), Vec::new());
 
@@ -5579,13 +5493,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let _ = composer.handle_key_event(KeyEvent::new(KeyCode::Char('?'), KeyModifiers::NONE));
         assert_eq!(composer.footer_mode, FooterMode::ShortcutOverlay);
@@ -5829,13 +5738,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let input = "npx -y @kaeawc/auto-mobile@latest";
         composer.textarea.insert_str(input);
@@ -5864,13 +5768,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let _ = composer.handle_key_event(KeyEvent::new(KeyCode::Char('1'), KeyModifiers::NONE));
         assert!(composer.is_in_paste_burst());
@@ -5895,13 +5794,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let _ = composer.handle_key_event(KeyEvent::new(KeyCode::Char('あ'), KeyModifiers::NONE));
 
@@ -5919,13 +5813,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer
             .paste_burst
@@ -5952,13 +5841,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer
             .paste_burst
@@ -6000,13 +5884,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         // Force an active burst so the test doesn't depend on timing heuristics.
         composer
@@ -6037,13 +5916,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let mut now = Instant::now();
         let step = Duration::from_millis(1);
@@ -6091,13 +5965,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.textarea.set_text_clearing_elements("/diff");
         composer.textarea.set_cursor("/diff".len());
@@ -6120,13 +5989,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         // Force an active burst so we can deterministically buffer characters without relying on
         // timing.
@@ -6155,13 +6019,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         // First ASCII char is normally held briefly. Flip the config mid-stream and ensure the
         // held char is not dropped.
@@ -6188,13 +6047,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let needs_redraw = composer.handle_paste("hello".to_string());
         assert!(needs_redraw);
@@ -6217,13 +6071,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         // Ensure composer is empty and press Enter.
         assert!(composer.textarea.text().is_empty());
@@ -6246,13 +6095,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let large = "x".repeat(LARGE_PASTE_CHAR_THRESHOLD + 10);
         let needs_redraw = composer.handle_paste(large.clone());
@@ -6280,13 +6124,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_steer_enabled(true);
         let input = "x".repeat(MAX_USER_INPUT_TEXT_CHARS);
         composer.textarea.set_text_clearing_elements(&input);
@@ -6308,13 +6147,8 @@ mod tests {
 
         let (tx, mut rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_steer_enabled(true);
         let input = "x".repeat(MAX_USER_INPUT_TEXT_CHARS + 1);
         composer.textarea.set_text_clearing_elements(&input);
@@ -6350,13 +6184,8 @@ mod tests {
 
         let (tx, mut rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_steer_enabled(false);
         let input = "x".repeat(MAX_USER_INPUT_TEXT_CHARS + 1);
         composer.textarea.set_text_clearing_elements(&input);
@@ -6395,13 +6224,8 @@ mod tests {
         let large = "y".repeat(LARGE_PASTE_CHAR_THRESHOLD + 1);
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.handle_paste(large);
         assert_eq!(composer.pending_pastes.len(), 1);
@@ -6440,7 +6264,7 @@ mod tests {
                 true,
                 sender.clone(),
                 false,
-                "Ask brocode to do anything".to_string(),
+                "[PROMPT HERE]".to_string(),
                 false,
             );
 
@@ -6528,13 +6352,8 @@ mod tests {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
 
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         // Type "/mo" humanlike so paste-burst doesn’t interfere.
         type_chars_humanlike(&mut composer, &['/', 'm', 'o']);
@@ -6556,13 +6375,8 @@ mod tests {
         use super::super::command_popup::CommandItem;
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         type_chars_humanlike(&mut composer, &['/', 'm', 'o']);
 
         match &composer.active_popup {
@@ -6587,13 +6401,8 @@ mod tests {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
 
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         // Type "/res" humanlike so paste-burst doesn’t interfere.
         type_chars_humanlike(&mut composer, &['/', 'r', 'e', 's']);
@@ -6612,13 +6421,8 @@ mod tests {
         use super::super::command_popup::CommandItem;
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         type_chars_humanlike(&mut composer, &['/', 'r', 'e', 's']);
 
         match &composer.active_popup {
@@ -6668,13 +6472,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         // Type the slash command.
         type_chars_humanlike(&mut composer, &['/', 'i', 'n', 'i', 't']);
@@ -6711,13 +6510,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_steer_enabled(true);
         composer.textarea.insert_str("restore me");
         composer.textarea.set_cursor(0);
@@ -6745,13 +6539,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.textarea.insert_str("restore me");
         composer.textarea.set_cursor(0);
 
@@ -6783,13 +6572,8 @@ mod tests {
 
         let (tx, mut rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_task_running(true);
         composer
             .textarea
@@ -6827,13 +6611,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            true,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), true);
         composer.set_text_content("x".to_string(), Vec::new(), Vec::new());
         composer.move_cursor_to_end();
 
@@ -6856,13 +6635,8 @@ mod tests {
     fn space_hold_timeout_without_release_or_repeat_keeps_typed_space() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_voice_transcription_enabled(true);
 
         composer.set_text_content("x".to_string(), Vec::new(), Vec::new());
@@ -6888,13 +6662,8 @@ mod tests {
     fn space_hold_timeout_with_repeat_uses_hold_path_without_release() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_voice_transcription_enabled(true);
 
         composer.set_text_content("x".to_string(), Vec::new(), Vec::new());
@@ -6922,13 +6691,8 @@ mod tests {
     fn space_hold_timeout_with_repeat_does_not_duplicate_existing_space() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_voice_transcription_enabled(true);
 
         composer.set_text_content("x ".to_string(), Vec::new(), Vec::new());
@@ -6956,13 +6720,8 @@ mod tests {
     fn replace_transcription_stops_spinner_for_placeholder() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let id = "voice-placeholder".to_string();
         composer.textarea.insert_named_element("", id.clone());
@@ -6983,13 +6742,8 @@ mod tests {
     fn set_text_content_stops_all_transcription_spinners() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let flag_one = Arc::new(AtomicBool::new(false));
         let flag_two = Arc::new(AtomicBool::new(false));
@@ -7053,13 +6807,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         type_chars_humanlike(&mut composer, &['/', 'c']);
 
@@ -7074,13 +6823,8 @@ mod tests {
     fn slash_tab_then_enter_dispatches_builtin_command() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         // Type a prefix and complete with Tab, which inserts a trailing space
         // and moves the cursor beyond the '/name' token (hides the popup).
@@ -7112,13 +6856,8 @@ mod tests {
     fn slash_command_elementizes_on_space() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_collaboration_modes_enabled(true);
 
         type_chars_humanlike(&mut composer, &['/', 'p', 'l', 'a', 'n', ' ']);
@@ -7134,13 +6873,8 @@ mod tests {
     fn slash_command_elementizes_only_known_commands() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_collaboration_modes_enabled(true);
 
         type_chars_humanlike(&mut composer, &['/', 'U', 's', 'e', 'r', 's', ' ']);
@@ -7155,13 +6889,8 @@ mod tests {
     fn slash_command_element_removed_when_not_at_start() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         type_chars_humanlike(&mut composer, &['/', 'r', 'e', 'v', 'i', 'e', 'w', ' ']);
 
@@ -7187,13 +6916,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         type_chars_humanlike(&mut composer, &['h', 'i']);
 
@@ -7215,13 +6939,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_task_running(false);
 
         type_chars_humanlike(&mut composer, &['!', 'l', 's']);
@@ -7244,13 +6963,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         type_chars_humanlike(&mut composer, &['/', 'm', 'e', 'n', 't', 'i', 'o', 'n']);
 
@@ -7285,13 +6999,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_collaboration_modes_enabled(true);
 
         type_chars_humanlike(&mut composer, &['/', 'p', 'l', 'a', 'n', ' ']);
@@ -7323,13 +7032,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let large = "x".repeat(LARGE_PASTE_CHAR_THRESHOLD + 5);
         let placeholder = format!("[Pasted Content {} chars]", large.chars().count());
@@ -7381,13 +7085,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         // Define test cases: (paste content, is_large)
         let test_cases = [
@@ -7460,13 +7159,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         // Define test cases: (content, is_large)
         let test_cases = [
@@ -7534,13 +7228,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let paste = "x".repeat(LARGE_PASTE_CHAR_THRESHOLD + 4);
         let placeholder_base = format!("[Pasted Content {} chars]", paste.chars().count());
@@ -7573,13 +7262,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let paste = "x".repeat(LARGE_PASTE_CHAR_THRESHOLD + 4);
         let base = format!("[Pasted Content {} chars]", paste.chars().count());
@@ -7613,13 +7297,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         // Define test cases: (cursor_position_from_end, expected_pending_count)
         let test_cases = [
@@ -7661,13 +7340,8 @@ mod tests {
     fn attach_image_and_submit_includes_local_image_paths() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         let path = PathBuf::from("/tmp/image1.png");
         composer.attach_image(path.clone());
         composer.handle_paste(" hi".into());
@@ -7699,13 +7373,8 @@ mod tests {
     fn submit_captures_recent_mention_bindings_before_clearing_textarea() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let mention_bindings = vec![MentionBinding {
             mention: "figma".to_string(),
@@ -7732,13 +7401,8 @@ mod tests {
     fn history_navigation_restores_remote_and_local_image_attachments() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         let remote_image_url = "https://example.com/remote.png".to_string();
         composer.set_remote_image_urls(vec![remote_image_url.clone()]);
         let path = PathBuf::from("/tmp/image1.png");
@@ -7766,13 +7430,8 @@ mod tests {
     fn history_navigation_restores_remote_only_submissions() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         let remote_image_urls = vec![
             "https://example.com/one.png".to_string(),
             "https://example.com/two.png".to_string(),
@@ -7798,13 +7457,8 @@ mod tests {
     fn history_navigation_leaves_cursor_at_end_of_line() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         type_chars_humanlike(&mut composer, &['f', 'i', 'r', 's', 't']);
         let (result, _needs_redraw) =
@@ -7841,13 +7495,8 @@ mod tests {
     fn set_text_content_reattaches_images_without_placeholder_metadata() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let placeholder = local_image_label_text(1);
         let text = format!("{placeholder} restored");
@@ -7863,13 +7512,8 @@ mod tests {
     fn large_paste_preserves_image_text_elements_on_submit() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let large_content = "x".repeat(LARGE_PASTE_CHAR_THRESHOLD + 5);
         composer.handle_paste(large_content.clone());
@@ -7906,13 +7550,8 @@ mod tests {
     fn large_paste_with_leading_whitespace_trims_and_shifts_elements() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let large_content = format!("  {}", "x".repeat(LARGE_PASTE_CHAR_THRESHOLD + 5));
         composer.handle_paste(large_content.clone());
@@ -7949,13 +7588,8 @@ mod tests {
     fn pasted_crlf_normalizes_newlines_for_elements() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let pasted = "line1\r\nline2\r\n".to_string();
         composer.handle_paste(pasted);
@@ -7992,13 +7626,8 @@ mod tests {
     fn suppressed_submission_restores_pending_paste_payload() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.textarea.set_text_clearing_elements("/unknown ");
         composer.textarea.set_cursor("/unknown ".len());
@@ -8038,13 +7667,8 @@ mod tests {
     fn attach_image_without_text_submits_empty_text_and_images() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         let path = PathBuf::from("/tmp/image2.png");
         composer.attach_image(path.clone());
         let (result, _) =
@@ -8077,13 +7701,8 @@ mod tests {
     fn duplicate_image_placeholders_get_suffix() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         let path = PathBuf::from("/tmp/image_dup.png");
         composer.attach_image(path.clone());
         composer.handle_paste(" ".into());
@@ -8100,13 +7719,8 @@ mod tests {
     fn image_placeholder_backspace_behaves_like_text_placeholder() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         let path = PathBuf::from("/tmp/image3.png");
         composer.attach_image(path.clone());
         let placeholder = composer.attached_images[0].placeholder.clone();
@@ -8140,13 +7754,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         // Insert an image placeholder at the start
         let path = PathBuf::from("/tmp/image_multibyte.png");
@@ -8166,13 +7775,8 @@ mod tests {
     fn deleting_one_of_duplicate_image_placeholders_removes_one_entry() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let path1 = PathBuf::from("/tmp/image_dup1.png");
         let path2 = PathBuf::from("/tmp/image_dup2.png");
@@ -8226,13 +7830,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let path1 = PathBuf::from("/tmp/image_first.png");
         let path2 = PathBuf::from("/tmp/image_second.png");
@@ -8289,13 +7888,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let path1 = PathBuf::from("/tmp/image_first.png");
         let path2 = PathBuf::from("/tmp/image_second.png");
@@ -8327,13 +7921,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let needs_redraw = composer.handle_paste(tmp_path.to_string_lossy().to_string());
         assert!(needs_redraw);
@@ -8349,13 +7938,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         // Inject prompts as if received via event.
         composer.set_custom_prompts(vec![CustomPrompt {
@@ -8388,13 +7972,8 @@ mod tests {
     fn custom_prompt_submission_expands_arguments() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_custom_prompts(vec![CustomPrompt {
             name: "my-prompt".to_string(),
@@ -8423,13 +8002,8 @@ mod tests {
     fn custom_prompt_submission_accepts_quoted_values() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_custom_prompts(vec![CustomPrompt {
             name: "my-prompt".to_string(),
@@ -8462,13 +8036,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_custom_prompts(vec![CustomPrompt {
             name: "my-prompt".to_string(),
@@ -8517,13 +8086,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_custom_prompts(vec![CustomPrompt {
             name: "my-prompt".to_string(),
@@ -8573,13 +8137,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_custom_prompts(vec![CustomPrompt {
             name: "my-prompt".to_string(),
@@ -8621,13 +8180,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         // Create a custom prompt with positional args (no named args like $USER)
         composer.set_custom_prompts(vec![CustomPrompt {
@@ -8685,13 +8239,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_custom_prompts(vec![CustomPrompt {
             name: "my-prompt".to_string(),
@@ -8743,13 +8292,8 @@ mod tests {
 
         let (tx, mut rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer
             .textarea
@@ -8779,13 +8323,8 @@ mod tests {
 
         let (tx, mut rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer
             .textarea
@@ -8811,13 +8350,8 @@ mod tests {
     fn custom_prompt_invalid_args_reports_error() {
         let (tx, mut rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_custom_prompts(vec![CustomPrompt {
             name: "my-prompt".to_string(),
@@ -8861,13 +8395,8 @@ mod tests {
     fn custom_prompt_missing_required_args_reports_error() {
         let (tx, mut rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_custom_prompts(vec![CustomPrompt {
             name: "my-prompt".to_string(),
@@ -8916,13 +8445,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_custom_prompts(vec![CustomPrompt {
             name: "my-prompt".to_string(),
@@ -8954,13 +8478,8 @@ mod tests {
     fn popup_prompt_submission_prunes_unused_image_attachments() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_custom_prompts(vec![CustomPrompt {
             name: "my-prompt".to_string(),
@@ -8992,13 +8511,8 @@ mod tests {
     fn numeric_prompt_auto_submit_prunes_unused_image_attachments() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_custom_prompts(vec![CustomPrompt {
             name: "my-prompt".to_string(),
@@ -9035,13 +8549,8 @@ mod tests {
     fn numeric_prompt_auto_submit_expands_pending_pastes() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_custom_prompts(vec![CustomPrompt {
             name: "my-prompt".to_string(),
@@ -9075,13 +8584,8 @@ mod tests {
     fn queued_prompt_submission_prunes_unused_image_attachments() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_custom_prompts(vec![CustomPrompt {
             name: "my-prompt".to_string(),
@@ -9116,13 +8620,8 @@ mod tests {
     fn prompt_expansion_over_character_limit_reports_error_and_restores_draft() {
         let (tx, mut rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
         composer.set_steer_enabled(true);
 
         composer.set_custom_prompts(vec![CustomPrompt {
@@ -9199,13 +8698,8 @@ mod tests {
         // key=value parsing errors when given positional arguments.
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_custom_prompts(vec![CustomPrompt {
             name: "elegant".to_string(),
@@ -9235,13 +8729,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_custom_prompts(vec![CustomPrompt {
             name: "p".to_string(),
@@ -9271,13 +8760,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_custom_prompts(vec![CustomPrompt {
             name: "price".to_string(),
@@ -9309,13 +8793,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_custom_prompts(vec![CustomPrompt {
             name: "repeat".to_string(),
@@ -9352,13 +8831,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let _ = composer.handle_key_event(KeyEvent::new(KeyCode::Char('h'), KeyModifiers::NONE));
         assert!(composer.is_in_paste_burst());
@@ -9381,13 +8855,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let count = 32;
         let mut now = Instant::now();
@@ -9428,13 +8897,8 @@ mod tests {
     fn burst_paste_fast_large_inserts_placeholder_on_flush() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let count = LARGE_PASTE_CHAR_THRESHOLD + 1; // > threshold to trigger placeholder
         let mut now = Instant::now();
@@ -9467,13 +8931,8 @@ mod tests {
     fn humanlike_typing_1000_chars_appears_live_no_placeholder() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let count = LARGE_PASTE_CHAR_THRESHOLD; // 1000 in current config
         let chars: Vec<char> = vec!['z'; count];
@@ -9492,13 +8951,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         // Simulate history-like content: "/ test"
         composer.set_text_content("/ test".to_string(), Vec::new(), Vec::new());
@@ -9522,13 +8976,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         // Case 1: bare "/"
         composer.set_text_content("/".to_string(), Vec::new(), Vec::new());
@@ -9565,13 +9014,8 @@ mod tests {
     fn apply_external_edit_rebuilds_text_and_attachments() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let placeholder = local_image_label_text(1);
         composer.textarea.insert_element(&placeholder);
@@ -9599,13 +9043,8 @@ mod tests {
     fn apply_external_edit_drops_missing_attachments() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let placeholder = local_image_label_text(1);
         composer.textarea.insert_element(&placeholder);
@@ -9624,13 +9063,8 @@ mod tests {
     fn apply_external_edit_renumbers_image_placeholders() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let first_path = PathBuf::from("img1.png");
         let second_path = PathBuf::from("img2.png");
@@ -9652,13 +9086,8 @@ mod tests {
     fn current_text_with_pending_expands_placeholders() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let placeholder = "[Pasted Content 5 chars]".to_string();
         composer.textarea.insert_element(&placeholder);
@@ -9677,13 +9106,8 @@ mod tests {
     fn apply_external_edit_limits_duplicates_to_occurrences() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         let placeholder = local_image_label_text(1);
         composer.textarea.insert_element(&placeholder);
@@ -9705,13 +9129,8 @@ mod tests {
     fn remote_images_do_not_modify_textarea_text_or_elements() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_remote_image_urls(vec![
             "https://example.com/one.png".to_string(),
@@ -9726,13 +9145,8 @@ mod tests {
     fn attach_image_after_remote_prefix_uses_offset_label() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_remote_image_urls(vec![
             "https://example.com/one.png".to_string(),
@@ -9748,13 +9162,8 @@ mod tests {
     fn prepare_submission_keeps_remote_offset_local_placeholder_numbering() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_remote_image_urls(vec!["https://example.com/one.png".to_string()]);
         let base_text = "[Image #2] hello".to_string();
@@ -9785,13 +9194,8 @@ mod tests {
     fn prepare_submission_with_only_remote_images_returns_empty_text() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_remote_image_urls(vec!["https://example.com/one.png".to_string()]);
         let (submitted_text, submitted_elements) = composer
@@ -9805,13 +9209,8 @@ mod tests {
     fn delete_selected_remote_image_relabels_local_placeholders() {
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_remote_image_urls(vec![
             "https://example.com/one.png".to_string(),
@@ -9844,13 +9243,8 @@ mod tests {
 
         let (tx, _rx) = unbounded_channel::<AppEvent>();
         let sender = AppEventSender::new(tx);
-        let mut composer = ChatComposer::new(
-            true,
-            sender,
-            false,
-            "Ask brocode to do anything".to_string(),
-            false,
-        );
+        let mut composer =
+            ChatComposer::new(true, sender, false, "[PROMPT HERE]".to_string(), false);
 
         composer.set_text_content("hello".to_string(), Vec::new(), Vec::new());
         composer.set_input_enabled(false, Some("Input disabled for test.".to_string()));

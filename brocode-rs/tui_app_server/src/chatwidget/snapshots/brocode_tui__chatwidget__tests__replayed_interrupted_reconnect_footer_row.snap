@@ -3,4 +3,4 @@ source: tui/src/chatwidget/tests.rs
 assertion_line: 7060
 expression: header
 ---
-› Ask brocode to do anything
+› [PROMPT HERE]

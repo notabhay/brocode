@@ -1,12 +1,11 @@
 ---
 source: tui/src/chatwidget/tests.rs
-assertion_line: 10620
 expression: terminal.backend()
 ---
 "                                                                                "
 "• Analyzing (0s • esc to interrupt)                                             "
 "                                                                                "
 "                                                                                "
-"› Ask brocode to do anything                                                    "
+"› [PROMPT HERE]                                                                 "
 "                                                                                "
 "  ? for shortcuts                                            100% context left  "

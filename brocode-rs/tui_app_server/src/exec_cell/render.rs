@@ -247,6 +247,14 @@ impl HistoryCell for ExecCell {
         }
         lines
     }
+
+    fn show_in_main_history(&self) -> bool {
+        false
+    }
+
+    fn show_in_transcript_history(&self) -> bool {
+        false
+    }
 }
 
 impl ExecCell {

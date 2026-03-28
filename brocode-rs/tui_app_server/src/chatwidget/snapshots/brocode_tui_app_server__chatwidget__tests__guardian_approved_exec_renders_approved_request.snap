@@ -11,6 +11,6 @@ expression: term.backend().vt100().screen().contents()
   time
 
 
-› Ask brocode to do anything
+› [PROMPT HERE]
 
   ? for shortcuts                                                                                    100% context left
