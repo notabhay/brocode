@@ -35,9 +35,19 @@ export BROCODE_HOME="${BROCODE_HOME:-$DEFAULT_BROCODE_HOME}"
 install -d -m 700 "$BROCODE_HOME"
 export CODEX_HOME="$BROCODE_HOME"
 
-# direct network access is the default. the old tailscale proxy is now opt-in.
-if [ "${BROCODE_USE_TAILNET_PROXY:-0}" = "1" ]; then
-  proxy_url="${BROCODE_TAILNET_PROXY_URL:-http://127.0.0.1:18888}"
+# proxy selection:
+# - preserve explicit shell proxy env when already set
+# - allow explicit opt-in/opt-out with BROCODE_USE_TAILNET_PROXY=1/0
+# - otherwise, auto-use the local tailscale proxy when it is listening
+proxy_url="${BROCODE_TAILNET_PROXY_URL:-http://127.0.0.1:18888}"
+if [ "${BROCODE_USE_TAILNET_PROXY:-}" = "1" ]; then
+  export HTTP_PROXY="$proxy_url"
+  export HTTPS_PROXY="$proxy_url"
+elif [ "${BROCODE_USE_TAILNET_PROXY:-}" = "0" ]; then
+  unset HTTP_PROXY HTTPS_PROXY
+elif [ -n "${HTTP_PROXY:-}" ] || [ -n "${HTTPS_PROXY:-}" ]; then
+  :
+elif command -v nc >/dev/null 2>&1 && nc -z 127.0.0.1 18888 >/dev/null 2>&1; then
   export HTTP_PROXY="$proxy_url"
   export HTTPS_PROXY="$proxy_url"
 else
