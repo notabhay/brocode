@@ -9,7 +9,6 @@ FALLBACK_BINARY="/opt/homebrew/bin/brocode"
 LEGACY_FALLBACK_BINARY="/opt/homebrew/bin/brocode"
 export PATH="/opt/homebrew/bin:/usr/bin:/bin:${PATH:-}"
 DEFAULT_BROCODE_HOME="$HOME/.brocode"
-DEFAULT_PROXY="http://127.0.0.1:18888"
 
 if [ -x "$PRIMARY_BINARY" ]; then
   BINARY="$PRIMARY_BINARY"
@@ -30,8 +29,15 @@ fi
 export BROCODE_HOME="${BROCODE_HOME:-$DEFAULT_BROCODE_HOME}"
 install -d -m 700 "$BROCODE_HOME"
 export CODEX_HOME="$BROCODE_HOME"
-export HTTP_PROXY="${HTTP_PROXY:-$DEFAULT_PROXY}"
-export HTTPS_PROXY="${HTTPS_PROXY:-$HTTP_PROXY}"
+
+# direct network access is the default. the old tailscale proxy is now opt-in.
+if [ "${BROCODE_USE_TAILNET_PROXY:-0}" = "1" ]; then
+  proxy_url="${BROCODE_TAILNET_PROXY_URL:-http://127.0.0.1:18888}"
+  export HTTP_PROXY="$proxy_url"
+  export HTTPS_PROXY="$proxy_url"
+else
+  unset HTTP_PROXY HTTPS_PROXY
+fi
 export NO_PROXY="${NO_PROXY:-localhost,127.0.0.1,::1}"
 unset ALL_PROXY
 
