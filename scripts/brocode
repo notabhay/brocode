@@ -10,11 +10,16 @@ LEGACY_FALLBACK_BINARY="/opt/homebrew/bin/brocode"
 export PATH="/opt/homebrew/bin:/usr/bin:/bin:${PATH:-}"
 DEFAULT_BROCODE_HOME="$HOME/.brocode"
 
-if [ -x "$PRIMARY_BINARY" ]; then
+if [ -x "$PRIMARY_BINARY" ] && [ -x "$DEBUG_BINARY" ]; then
+  if [ "$DEBUG_BINARY" -nt "$PRIMARY_BINARY" ]; then
+    BINARY="$DEBUG_BINARY"
+  else
+    BINARY="$PRIMARY_BINARY"
+  fi
+elif [ -x "$PRIMARY_BINARY" ]; then
   BINARY="$PRIMARY_BINARY"
 elif [ -x "$DEBUG_BINARY" ]; then
   BINARY="$DEBUG_BINARY"
-  printf 'brocode: release binary not built yet, using %s\n' "$BINARY" >&2
 elif [ -x "$FALLBACK_BINARY" ]; then
   BINARY="$FALLBACK_BINARY"
   printf 'brocode: local clone binary not built yet, using %s\n' "$BINARY" >&2

@@ -2078,6 +2078,7 @@ async fn make_chatwidget_manual(
         current_status: StatusIndicatorState::working(),
         retry_status_header: None,
         pending_status_indicator_restore: false,
+        last_completed_agent_message: None,
         suppress_queue_autosend: false,
         thread_id: None,
         thread_name: None,
@@ -4574,6 +4575,78 @@ async fn live_legacy_agent_message_after_item_completed_does_not_duplicate_assis
     });
 
     assert!(drain_insert_history(&mut rx).is_empty());
+}
+
+#[tokio::test]
+async fn live_legacy_agent_messages_render_when_tool_history_is_hidden() {
+    let (mut chat, mut rx, _op_rx) = make_chatwidget_manual(None).await;
+
+    chat.handle_brocode_event(Event {
+        id: "turn-1".into(),
+        msg: EventMsg::TurnStarted(TurnStartedEvent {
+            turn_id: "turn-1".to_string(),
+            model_context_window: None,
+            collaboration_mode_kind: ModeKind::Default,
+        }),
+    });
+    assert!(
+        chat.bottom_pane.status_indicator_visible(),
+        "status indicator should be visible during the turn"
+    );
+
+    chat.handle_brocode_event(Event {
+        id: "commentary".into(),
+        msg: EventMsg::AgentMessage(AgentMessageEvent {
+            message: "writing the temp file.".into(),
+            phase: Some(MessagePhase::Commentary),
+            memory_citation: None,
+        }),
+    });
+    let commentary_cells = drain_insert_history(&mut rx);
+    assert_eq!(commentary_cells.len(), 1);
+    assert!(lines_to_single_string(&commentary_cells[0]).contains("writing the temp file."));
+
+    let begin = begin_exec(&mut chat, "call-hidden", "python3 -c 'print(1)'");
+    end_exec(&mut chat, begin, "1\n", "", 0);
+    assert!(
+        drain_insert_history(&mut rx).is_empty(),
+        "tool history rows should stay hidden"
+    );
+
+    chat.handle_brocode_event(Event {
+        id: "final".into(),
+        msg: EventMsg::AgentMessage(AgentMessageEvent {
+            message: "finished the temp file workflow.".into(),
+            phase: Some(MessagePhase::FinalAnswer),
+            memory_citation: None,
+        }),
+    });
+    let final_cells = drain_insert_history(&mut rx);
+    assert_eq!(final_cells.len(), 1);
+    assert!(lines_to_single_string(&final_cells[0]).contains("finished the temp file workflow."));
+
+    chat.handle_brocode_event(Event {
+        id: "turn-1".into(),
+        msg: EventMsg::TurnComplete(TurnCompleteEvent {
+            turn_id: "turn-1".to_string(),
+            last_agent_message: Some("finished the temp file workflow.".into()),
+        }),
+    });
+
+    let completion_cells = drain_insert_history(&mut rx);
+    let completion_text = completion_cells
+        .iter()
+        .map(|lines| lines_to_single_string(lines))
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(
+        !completion_text.contains("• Ran "),
+        "tool transcript should remain hidden after turn completion"
+    );
+    assert!(
+        !chat.bottom_pane.status_indicator_visible(),
+        "status indicator should be hidden after turn completion"
+    );
 }
 
 #[tokio::test]

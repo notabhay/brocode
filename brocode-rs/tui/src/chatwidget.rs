@@ -580,6 +580,12 @@ struct StatusIndicatorState {
     details_max_lines: usize,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct CompletedAgentMessageKey {
+    message: String,
+    phase: Option<MessagePhase>,
+}
+
 impl StatusIndicatorState {
     fn working() -> Self {
         Self {
@@ -763,6 +769,9 @@ pub(crate) struct ChatWidget {
     retry_status_header: Option<String>,
     // Set when commentary output completes; once stream queues go idle we restore the status row.
     pending_status_indicator_restore: bool,
+    // Deduplicate legacy completed `AgentMessage` events when the same content
+    // is also delivered through `ItemCompleted(TurnItem::AgentMessage(_))`.
+    last_completed_agent_message: Option<CompletedAgentMessageKey>,
     suppress_queue_autosend: bool,
     thread_id: Option<ThreadId>,
     thread_name: Option<String>,
@@ -812,10 +821,11 @@ pub(crate) struct ChatWidget {
     // The separator itself is only rendered if the turn recorded "work" activity (see
     // `had_work_activity`).
     needs_final_message_separator: bool,
-    // Whether the current turn performed "work" (exec commands, MCP tool calls, patch applications).
+    // Whether the current turn produced visible work-related UI that should get a separator before
+    // the next assistant message.
     //
-    // This gates rendering of the "Worked for …" separator so purely conversational turns don't
-    // show an empty divider. It is reset when the separator is emitted.
+    // Hidden tool rows should not flip this on, because the "commentary only" transcript mode
+    // should not reintroduce tool noise through a "Worked for …" divider.
     had_work_activity: bool,
     // Whether the current turn emitted a plan update.
     saw_plan_update_this_turn: bool,
@@ -1639,6 +1649,19 @@ impl ChatWidget {
         self.finalize_completed_assistant_message(Some(&message));
     }
 
+    fn finalize_completed_agent_message(
+        &mut self,
+        message: Option<&str>,
+        phase: Option<MessagePhase>,
+    ) {
+        self.finalize_completed_assistant_message(message);
+        self.pending_status_indicator_restore = match phase {
+            Some(MessagePhase::FinalAnswer) | None => false,
+            Some(MessagePhase::Commentary) => true,
+        };
+        self.maybe_restore_status_indicator_after_stream_idle();
+    }
+
     fn on_agent_message_delta(&mut self, delta: String) {
         self.handle_streaming_delta(delta);
     }
@@ -1754,6 +1777,7 @@ impl ChatWidget {
 
     fn on_task_started(&mut self) {
         self.agent_turn_running = true;
+        self.last_completed_agent_message = None;
         self.turn_sleep_inhibitor
             .set_turn_running(/*turn_running*/ true);
         self.saw_plan_update_this_turn = false;
@@ -1821,6 +1845,7 @@ impl ChatWidget {
         }
         // Mark task stopped and request redraw now that all content is in history.
         self.pending_status_indicator_restore = false;
+        self.last_completed_agent_message = None;
         self.agent_turn_running = false;
         self.turn_sleep_inhibitor
             .set_turn_running(/*turn_running*/ false);
@@ -2185,6 +2210,7 @@ impl ChatWidget {
         self.stream_controller = None;
         self.plan_stream_controller = None;
         self.pending_status_indicator_restore = false;
+        self.last_completed_agent_message = None;
         self.request_status_line_branch_refresh();
         self.maybe_show_pending_rate_limit_prompt();
     }
@@ -3037,7 +3063,6 @@ impl ChatWidget {
         if !handled {
             self.add_to_history(history_cell::new_web_search_call(call_id, query, action));
         }
-        self.had_work_activity = true;
     }
 
     fn on_collab_event(&mut self, cell: PlainHistoryCell) {
@@ -3177,15 +3202,15 @@ impl ChatWidget {
                 AgentMessageContent::Text { text } => message.push_str(text),
             }
         }
-        self.finalize_completed_assistant_message(
+        let phase = item.phase.clone();
+        self.last_completed_agent_message = Some(CompletedAgentMessageKey {
+            message: message.clone(),
+            phase: phase.clone(),
+        });
+        self.finalize_completed_agent_message(
             (!message.is_empty()).then_some(message.as_str()),
+            phase,
         );
-        self.pending_status_indicator_restore = match item.phase {
-            // Models that don't support preambles only output AgentMessageItems on turn completion.
-            Some(MessagePhase::FinalAnswer) | None => false,
-            Some(MessagePhase::Commentary) => true,
-        };
-        self.maybe_restore_status_indicator_after_stream_idle();
     }
 
     /// Periodic tick for stream commits. In smooth mode this preserves one-line pacing, while
@@ -3435,8 +3460,6 @@ impl ChatWidget {
                 }
             }
         }
-        // Mark that actual work was done (command executed)
-        self.had_work_activity = true;
     }
 
     pub(crate) fn handle_patch_apply_end_now(
@@ -3447,9 +3470,8 @@ impl ChatWidget {
         // Otherwise, add a failure block.
         if !event.success {
             self.add_to_history(history_cell::new_patch_apply_failure(event.stderr));
+            self.had_work_activity = true;
         }
-        // Mark that actual work was done (patch applied)
-        self.had_work_activity = true;
     }
 
     pub(crate) fn handle_exec_approval_now(&mut self, ev: ExecApprovalRequestEvent) {
@@ -3665,9 +3687,8 @@ impl ChatWidget {
         self.flush_active_cell();
         if let Some(extra) = extra_cell {
             self.add_boxed_history(extra);
+            self.had_work_activity = true;
         }
-        // Mark that actual work was done (MCP tool call)
-        self.had_work_activity = true;
     }
 
     pub(crate) fn new(common: ChatWidgetInit, thread_manager: Arc<ThreadManager>) -> Self {
@@ -3783,6 +3804,7 @@ impl ChatWidget {
             terminal_title_status_kind: TerminalTitleStatusKind::Working,
             retry_status_header: None,
             pending_status_indicator_restore: false,
+            last_completed_agent_message: None,
             suppress_queue_autosend: false,
             thread_id: None,
             thread_name: None,
@@ -3986,6 +4008,7 @@ impl ChatWidget {
             terminal_title_status_kind: TerminalTitleStatusKind::Working,
             retry_status_header: None,
             pending_status_indicator_restore: false,
+            last_completed_agent_message: None,
             suppress_queue_autosend: false,
             thread_id: None,
             thread_name: None,
@@ -4181,6 +4204,7 @@ impl ChatWidget {
             terminal_title_status_kind: TerminalTitleStatusKind::Working,
             retry_status_header: None,
             pending_status_indicator_restore: false,
+            last_completed_agent_message: None,
             suppress_queue_autosend: false,
             thread_id: None,
             thread_name: None,
@@ -5471,7 +5495,22 @@ impl ChatWidget {
                 // ItemCompleted(TurnItem::AgentMessage(_)) instead.
                 self.on_agent_message(message)
             }
-            EventMsg::AgentMessage(AgentMessageEvent { .. }) => {}
+            EventMsg::AgentMessage(AgentMessageEvent { message, phase, .. }) => {
+                if self.stream_controller.is_some() {
+                    return;
+                }
+                let dedup_key = CompletedAgentMessageKey {
+                    message: message.clone(),
+                    phase: phase.clone(),
+                };
+                if self.last_completed_agent_message.as_ref() != Some(&dedup_key) {
+                    self.last_completed_agent_message = Some(dedup_key);
+                    self.finalize_completed_agent_message(
+                        (!message.is_empty()).then_some(message.as_str()),
+                        phase,
+                    );
+                }
+            }
             EventMsg::AgentMessageDelta(AgentMessageDeltaEvent { delta }) => {
                 self.on_agent_message_delta(delta)
             }
