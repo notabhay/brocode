@@ -2,11 +2,8 @@
 source: tui/src/history_cell.rs
 expression: rendered
 ---
-╭─────────────────────────────────────╮
-│ >_ OpenAI Brocode (v0.118.0)        │
-│                                     │
-│ model:     gpt-5   /model to change │
-│ directory: /tmp/project             │
-╰─────────────────────────────────────╯
+╭─────────────────────╮
+│ >_ brocode v0.118.0 │
+╰─────────────────────╯
 
   Tip: Model just became available
