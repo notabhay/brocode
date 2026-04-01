@@ -30,9 +30,9 @@ use super::textarea::TextArea;
 use super::textarea::TextAreaState;
 
 const BASE_CLI_BUG_ISSUE_URL: &str =
-    "https://github.com/openai/codex/issues/new?template=3-cli.yml";
+    "https://github.com/openai/brocode/issues/new?template=3-cli.yml";
 /// Internal routing link for employee feedback follow-ups. This must not be shown to external users.
-const BROCODE_FEEDBACK_INTERNAL_URL: &str = "http://go/codex-feedback-internal";
+const BROCODE_FEEDBACK_INTERNAL_URL: &str = "http://go/brocode-feedback-internal";
 
 /// The target audience for feedback follow-up instructions.
 ///
@@ -132,7 +132,7 @@ impl FeedbackNoteView {
                             Line::from("  Share this and add some info about your problem:"),
                             Line::from(vec![
                                 "    ".into(),
-                                format!("https://go/codex-feedback/{thread_id}").bold(),
+                                format!("https://go/brocode-feedback/{thread_id}").bold(),
                             ]),
                         ]);
                     }
@@ -566,7 +566,7 @@ pub(crate) fn feedback_upload_consent_params(
             super::SelectionItem {
                 name: "Yes".to_string(),
                 description: Some(
-                    "Share the current brocode session logs with the team for troubleshooting."
+                    "Share the current Brocode session logs with the team for troubleshooting."
                         .to_string(),
                 ),
                 actions: vec![yes_action],
@@ -628,13 +628,13 @@ mod tests {
     fn make_view(category: FeedbackCategory) -> FeedbackNoteView {
         let (tx_raw, _rx) = tokio::sync::mpsc::unbounded_channel::<AppEvent>();
         let tx = AppEventSender::new(tx_raw);
-        let snapshot = brocode_feedback::BrocodeFeedback::new().snapshot(None);
+        let snapshot = brocode_feedback::BrocodeFeedback::new().snapshot(/*session_id*/ None);
         FeedbackNoteView::new(
             category,
             snapshot,
-            None,
+            /*rollout_path*/ None,
             tx,
-            true,
+            /*include_logs*/ true,
             FeedbackAudience::External,
         )
     }
@@ -642,35 +642,35 @@ mod tests {
     #[test]
     fn feedback_view_bad_result() {
         let view = make_view(FeedbackCategory::BadResult);
-        let rendered = render(&view, 60);
+        let rendered = render(&view, /*width*/ 60);
         insta::assert_snapshot!("feedback_view_bad_result", rendered);
     }
 
     #[test]
     fn feedback_view_good_result() {
         let view = make_view(FeedbackCategory::GoodResult);
-        let rendered = render(&view, 60);
+        let rendered = render(&view, /*width*/ 60);
         insta::assert_snapshot!("feedback_view_good_result", rendered);
     }
 
     #[test]
     fn feedback_view_bug() {
         let view = make_view(FeedbackCategory::Bug);
-        let rendered = render(&view, 60);
+        let rendered = render(&view, /*width*/ 60);
         insta::assert_snapshot!("feedback_view_bug", rendered);
     }
 
     #[test]
     fn feedback_view_other() {
         let view = make_view(FeedbackCategory::Other);
-        let rendered = render(&view, 60);
+        let rendered = render(&view, /*width*/ 60);
         insta::assert_snapshot!("feedback_view_other", rendered);
     }
 
     #[test]
     fn feedback_view_safety_check() {
         let view = make_view(FeedbackCategory::SafetyCheck);
-        let rendered = render(&view, 60);
+        let rendered = render(&view, /*width*/ 60);
         insta::assert_snapshot!("feedback_view_safety_check", rendered);
     }
 
@@ -690,17 +690,17 @@ mod tests {
             },
         ]);
         let snapshot = brocode_feedback::BrocodeFeedback::new()
-            .snapshot(None)
+            .snapshot(/*session_id*/ None)
             .with_feedback_diagnostics(diagnostics);
         let view = FeedbackNoteView::new(
             FeedbackCategory::Bug,
             snapshot,
-            None,
+            /*rollout_path*/ None,
             tx,
-            false,
+            /*include_logs*/ false,
             FeedbackAudience::External,
         );
-        let rendered = render(&view, 60);
+        let rendered = render(&view, /*width*/ 60);
 
         insta::assert_snapshot!("feedback_view_with_connectivity_diagnostics", rendered);
     }
@@ -737,7 +737,7 @@ mod tests {
             "thread-1",
             FeedbackAudience::OpenAiEmployee,
         );
-        let expected_slack_url = "http://go/codex-feedback-internal".to_string();
+        let expected_slack_url = "http://go/brocode-feedback-internal".to_string();
         assert_eq!(bug_url.as_deref(), Some(expected_slack_url.as_str()));
 
         let bad_result_url = issue_url_for_category(
@@ -771,7 +771,7 @@ mod tests {
         );
         let bug_url_non_employee =
             issue_url_for_category(FeedbackCategory::Bug, "t", FeedbackAudience::External);
-        let expected_external_url = "https://github.com/openai/codex/issues/new?template=3-cli.yml&steps=Uploaded%20thread:%20t";
+        let expected_external_url = "https://github.com/openai/brocode/issues/new?template=3-cli.yml&steps=Uploaded%20thread:%20t";
         assert_eq!(bug_url_non_employee.as_deref(), Some(expected_external_url));
     }
 }

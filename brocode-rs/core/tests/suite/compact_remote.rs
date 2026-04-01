@@ -353,7 +353,7 @@ async fn remote_compact_runs_automatically() -> Result<()> {
         harness.server(),
         sse(vec![
             responses::ev_shell_command_call("m1", "echo 'hi'"),
-            responses::ev_completed_with_tokens("resp-1", 100000000), // over token limit
+            responses::ev_completed_with_tokens("resp-1", /*total_tokens*/ 100000000), // over token limit
         ]),
     )
     .await;
@@ -548,7 +548,10 @@ async fn auto_remote_compact_trims_function_call_history_to_fit_context_window()
         vec![
             sse(vec![
                 responses::ev_shell_command_call(retained_call_id, retained_command),
-                responses::ev_completed_with_tokens("retained-call-response", 100),
+                responses::ev_completed_with_tokens(
+                    "retained-call-response",
+                    /*total_tokens*/ 100,
+                ),
             ]),
             sse(vec![
                 responses::ev_assistant_message("retained-assistant", "retained complete"),
@@ -556,11 +559,14 @@ async fn auto_remote_compact_trims_function_call_history_to_fit_context_window()
             ]),
             sse(vec![
                 responses::ev_shell_command_call(trimmed_call_id, trimmed_command),
-                responses::ev_completed_with_tokens("trimmed-call-response", 100),
+                responses::ev_completed_with_tokens(
+                    "trimmed-call-response",
+                    /*total_tokens*/ 100,
+                ),
             ]),
             sse(vec![responses::ev_completed_with_tokens(
                 "trimmed-final-response",
-                500_000,
+                /*total_tokens*/ 500_000,
             )]),
         ],
     )
@@ -672,7 +678,7 @@ async fn auto_remote_compact_failure_stops_agent_loop() -> Result<()> {
         harness.server(),
         sse(vec![
             responses::ev_assistant_message("initial-assistant", "initial turn complete"),
-            responses::ev_completed_with_tokens("initial-response", 500_000),
+            responses::ev_completed_with_tokens("initial-response", /*total_tokens*/ 500_000),
         ]),
     )
     .await;
@@ -1482,11 +1488,11 @@ async fn snapshot_request_shape_remote_pre_turn_compaction_restates_realtime_sta
         vec![
             responses::sse(vec![
                 responses::ev_assistant_message("m1", "REMOTE_FIRST_REPLY"),
-                responses::ev_completed_with_tokens("r1", 500),
+                responses::ev_completed_with_tokens("r1", /*total_tokens*/ 500),
             ]),
             responses::sse(vec![
                 responses::ev_assistant_message("m2", "REMOTE_SECOND_REPLY"),
-                responses::ev_completed_with_tokens("r2", 80),
+                responses::ev_completed_with_tokens("r2", /*total_tokens*/ 80),
             ]),
         ],
     )
@@ -1616,11 +1622,11 @@ async fn snapshot_request_shape_remote_pre_turn_compaction_restates_realtime_end
         vec![
             responses::sse(vec![
                 responses::ev_assistant_message("m1", "REMOTE_FIRST_REPLY"),
-                responses::ev_completed_with_tokens("r1", 500),
+                responses::ev_completed_with_tokens("r1", /*total_tokens*/ 500),
             ]),
             responses::sse(vec![
                 responses::ev_assistant_message("m2", "REMOTE_SECOND_REPLY"),
-                responses::ev_completed_with_tokens("r2", 80),
+                responses::ev_completed_with_tokens("r2", /*total_tokens*/ 80),
             ]),
         ],
     )
@@ -1701,11 +1707,11 @@ async fn snapshot_request_shape_remote_manual_compact_restates_realtime_start() 
         vec![
             responses::sse(vec![
                 responses::ev_assistant_message("m1", "REMOTE_FIRST_REPLY"),
-                responses::ev_completed_with_tokens("r1", 60),
+                responses::ev_completed_with_tokens("r1", /*total_tokens*/ 60),
             ]),
             responses::sse(vec![
                 responses::ev_assistant_message("m2", "REMOTE_SECOND_REPLY"),
-                responses::ev_completed_with_tokens("r2", 80),
+                responses::ev_completed_with_tokens("r2", /*total_tokens*/ 80),
             ]),
         ],
     )
@@ -1792,15 +1798,15 @@ async fn snapshot_request_shape_remote_mid_turn_compaction_does_not_restate_real
         vec![
             responses::sse(vec![
                 responses::ev_assistant_message("setup", "REMOTE_SETUP_REPLY"),
-                responses::ev_completed_with_tokens("setup-response", 60),
+                responses::ev_completed_with_tokens("setup-response", /*total_tokens*/ 60),
             ]),
             responses::sse(vec![
                 responses::ev_function_call("call-remote-mid-turn", DUMMY_FUNCTION_NAME, "{}"),
-                responses::ev_completed_with_tokens("r1", 500),
+                responses::ev_completed_with_tokens("r1", /*total_tokens*/ 500),
             ]),
             responses::sse(vec![
                 responses::ev_assistant_message("m2", "REMOTE_MID_TURN_FINAL_REPLY"),
-                responses::ev_completed_with_tokens("r2", 80),
+                responses::ev_completed_with_tokens("r2", /*total_tokens*/ 80),
             ]),
         ],
     )
@@ -1896,11 +1902,11 @@ async fn snapshot_request_shape_remote_compact_resume_restates_realtime_end() ->
         vec![
             responses::sse(vec![
                 responses::ev_assistant_message("m1", "REMOTE_FIRST_REPLY"),
-                responses::ev_completed_with_tokens("r1", 60),
+                responses::ev_completed_with_tokens("r1", /*total_tokens*/ 60),
             ]),
             responses::sse(vec![
                 responses::ev_assistant_message("m2", "REMOTE_AFTER_RESUME_REPLY"),
-                responses::ev_completed_with_tokens("r2", 80),
+                responses::ev_completed_with_tokens("r2", /*total_tokens*/ 80),
             ]),
         ],
     )
@@ -2009,15 +2015,15 @@ async fn snapshot_request_shape_remote_pre_turn_compaction_including_incoming_us
         vec![
             responses::sse(vec![
                 responses::ev_assistant_message("m1", "REMOTE_FIRST_REPLY"),
-                responses::ev_completed_with_tokens("r1", 60),
+                responses::ev_completed_with_tokens("r1", /*total_tokens*/ 60),
             ]),
             responses::sse(vec![
                 responses::ev_assistant_message("m2", "REMOTE_SECOND_REPLY"),
-                responses::ev_completed_with_tokens("r2", 500),
+                responses::ev_completed_with_tokens("r2", /*total_tokens*/ 500),
             ]),
             responses::sse(vec![
                 responses::ev_assistant_message("m3", "REMOTE_FINAL_REPLY"),
-                responses::ev_completed_with_tokens("r3", 80),
+                responses::ev_completed_with_tokens("r3", /*total_tokens*/ 80),
             ]),
         ],
     )
@@ -2096,8 +2102,8 @@ async fn snapshot_request_shape_remote_pre_turn_compaction_strips_incoming_model
 -> Result<()> {
     skip_if_no_network!(Ok(()));
 
-    let previous_model = "gpt-5.1-codex-max";
-    let next_model = "gpt-5.2-codex";
+    let previous_model = "gpt-5.1-brocode-max";
+    let next_model = "gpt-5.2-brocode";
     let harness = TestBrocodeHarness::with_builder(
         test_brocode()
             .with_auth(BrocodeAuth::create_dummy_chatgpt_auth_for_testing())
@@ -2113,7 +2119,7 @@ async fn snapshot_request_shape_remote_pre_turn_compaction_strips_incoming_model
         harness.server(),
         responses::sse(vec![
             responses::ev_assistant_message("m1", "BEFORE_SWITCH_REPLY"),
-            responses::ev_completed_with_tokens("r1", 500),
+            responses::ev_completed_with_tokens("r1", /*total_tokens*/ 500),
         ]),
     )
     .await;
@@ -2121,7 +2127,7 @@ async fn snapshot_request_shape_remote_pre_turn_compaction_strips_incoming_model
         harness.server(),
         responses::sse(vec![
             responses::ev_assistant_message("m2", "AFTER_SWITCH_REPLY"),
-            responses::ev_completed_with_tokens("r2", 80),
+            responses::ev_completed_with_tokens("r2", /*total_tokens*/ 80),
         ]),
     )
     .await;
@@ -2249,7 +2255,7 @@ async fn snapshot_request_shape_remote_pre_turn_compaction_context_window_exceed
         harness.server(),
         vec![responses::sse(vec![
             responses::ev_assistant_message("m1", "REMOTE_FIRST_REPLY"),
-            responses::ev_completed_with_tokens("r1", 500),
+            responses::ev_completed_with_tokens("r1", /*total_tokens*/ 500),
         ])],
     )
     .await;
@@ -2268,7 +2274,7 @@ async fn snapshot_request_shape_remote_pre_turn_compaction_context_window_exceed
         harness.server(),
         responses::sse(vec![
             responses::ev_assistant_message("m2", "REMOTE_POST_COMPACT_SHOULD_NOT_RUN"),
-            responses::ev_completed_with_tokens("r2", 80),
+            responses::ev_completed_with_tokens("r2", /*total_tokens*/ 80),
         ]),
     )
     .await;
@@ -2350,11 +2356,11 @@ async fn snapshot_request_shape_remote_mid_turn_continuation_compaction() -> Res
         vec![
             responses::sse(vec![
                 responses::ev_function_call("call-remote-mid-turn", DUMMY_FUNCTION_NAME, "{}"),
-                responses::ev_completed_with_tokens("r1", 500),
+                responses::ev_completed_with_tokens("r1", /*total_tokens*/ 500),
             ]),
             responses::sse(vec![
                 responses::ev_assistant_message("m2", "REMOTE_MID_TURN_FINAL_REPLY"),
-                responses::ev_completed_with_tokens("r2", 80),
+                responses::ev_completed_with_tokens("r2", /*total_tokens*/ 80),
             ]),
         ],
     )
@@ -2419,7 +2425,7 @@ async fn snapshot_request_shape_remote_mid_turn_compaction_summary_only_reinject
         harness.server(),
         responses::sse(vec![
             responses::ev_function_call("call-remote-summary-only", DUMMY_FUNCTION_NAME, "{}"),
-            responses::ev_completed_with_tokens("r1", 500),
+            responses::ev_completed_with_tokens("r1", /*total_tokens*/ 500),
         ]),
     )
     .await;
@@ -2427,7 +2433,7 @@ async fn snapshot_request_shape_remote_mid_turn_compaction_summary_only_reinject
         harness.server(),
         responses::sse(vec![
             responses::ev_assistant_message("m2", "REMOTE_SUMMARY_ONLY_FINAL_REPLY"),
-            responses::ev_completed_with_tokens("r2", 80),
+            responses::ev_completed_with_tokens("r2", /*total_tokens*/ 80),
         ]),
     )
     .await;
@@ -2502,7 +2508,7 @@ async fn snapshot_request_shape_remote_mid_turn_compaction_multi_summary_reinjec
         harness.server(),
         responses::sse(vec![
             responses::ev_assistant_message("setup", "REMOTE_SETUP_REPLY"),
-            responses::ev_completed_with_tokens("setup-response", 60),
+            responses::ev_completed_with_tokens("setup-response", /*total_tokens*/ 60),
         ]),
     )
     .await;
@@ -2510,7 +2516,7 @@ async fn snapshot_request_shape_remote_mid_turn_compaction_multi_summary_reinjec
         harness.server(),
         responses::sse(vec![
             responses::ev_shell_command_call("call-remote-multi-summary", "echo multi-summary"),
-            responses::ev_completed_with_tokens("r1", 1_000),
+            responses::ev_completed_with_tokens("r1", /*total_tokens*/ 1_000),
         ]),
     )
     .await;
@@ -2605,7 +2611,7 @@ async fn snapshot_request_shape_remote_manual_compact_without_previous_user_mess
         harness.server(),
         responses::sse(vec![
             responses::ev_assistant_message("m1", "REMOTE_MANUAL_EMPTY_FOLLOW_UP_REPLY"),
-            responses::ev_completed_with_tokens("r1", 80),
+            responses::ev_completed_with_tokens("r1", /*total_tokens*/ 80),
         ]),
     )
     .await;

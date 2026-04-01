@@ -51,7 +51,7 @@ runs:
         exclude-interactive-browser-credential: true
         cache-dependencies: false
         files: |
-          ${{ github.workspace }}/codex-rs/target/${{ inputs.target }}/release/codex.exe
-          ${{ github.workspace }}/codex-rs/target/${{ inputs.target }}/release/codex-responses-api-proxy.exe
-          ${{ github.workspace }}/codex-rs/target/${{ inputs.target }}/release/codex-windows-sandbox-setup.exe
-          ${{ github.workspace }}/codex-rs/target/${{ inputs.target }}/release/codex-command-runner.exe
+          ${{ github.workspace }}/brocode-rs/target/${{ inputs.target }}/release/brocode.exe
+          ${{ github.workspace }}/brocode-rs/target/${{ inputs.target }}/release/brocode-responses-api-proxy.exe
+          ${{ github.workspace }}/brocode-rs/target/${{ inputs.target }}/release/brocode-windows-sandbox-setup.exe
+          ${{ github.workspace }}/brocode-rs/target/${{ inputs.target }}/release/brocode-command-runner.exe

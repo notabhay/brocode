@@ -78,7 +78,6 @@ use brocode_protocol::config_types::WebSearchConfig;
 use brocode_protocol::config_types::WebSearchMode;
 use brocode_protocol::config_types::WebSearchToolConfig;
 use brocode_protocol::config_types::WindowsSandboxLevel;
-use brocode_protocol::models::MacOsSeatbeltProfileExtensions;
 use brocode_protocol::openai_models::ModelsResponse;
 use brocode_protocol::openai_models::ReasoningEffort;
 use brocode_protocol::permissions::FileSystemSandboxPolicy;
@@ -118,15 +117,20 @@ pub use brocode_config::Constrained;
 pub use brocode_config::ConstraintError;
 pub use brocode_config::ConstraintResult;
 pub use brocode_network_proxy::NetworkProxyAuditMetadata;
-
+pub use brocode_sandboxing::system_bwrap_warning;
 pub use managed_features::ManagedFeatures;
 pub use network_proxy_spec::NetworkProxySpec;
 pub use network_proxy_spec::StartedNetworkProxy;
 pub use permissions::FilesystemPermissionToml;
 pub use permissions::FilesystemPermissionsToml;
+pub use permissions::NetworkDomainPermissionToml;
+pub use permissions::NetworkDomainPermissionsToml;
 pub use permissions::NetworkToml;
+pub use permissions::NetworkUnixSocketPermissionToml;
+pub use permissions::NetworkUnixSocketPermissionsToml;
 pub use permissions::PermissionProfileToml;
 pub use permissions::PermissionsToml;
+pub(crate) use permissions::overlay_network_domain_permissions;
 pub(crate) use permissions::resolve_permission_profile;
 pub use service::ConfigService;
 pub use service::ConfigServiceError;
@@ -144,35 +148,11 @@ pub(crate) const DEFAULT_AGENT_JOB_MAX_RUNTIME_SECONDS: Option<u64> = None;
 
 pub const CONFIG_TOML_FILE: &str = "config.toml";
 const OPENAI_BASE_URL_ENV_VAR: &str = "OPENAI_BASE_URL";
-#[cfg(target_os = "linux")]
-const SYSTEM_BWRAP_PATH: &str = "/usr/bin/bwrap";
 const RESERVED_MODEL_PROVIDER_IDS: [&str; 3] = [
     OPENAI_PROVIDER_ID,
     OLLAMA_OSS_PROVIDER_ID,
     LMSTUDIO_OSS_PROVIDER_ID,
 ];
-
-#[cfg(target_os = "linux")]
-pub fn system_bwrap_warning() -> Option<String> {
-    system_bwrap_warning_for_path(Path::new(SYSTEM_BWRAP_PATH))
-}
-
-#[cfg(not(target_os = "linux"))]
-pub fn system_bwrap_warning() -> Option<String> {
-    None
-}
-
-#[cfg(target_os = "linux")]
-fn system_bwrap_warning_for_path(system_bwrap_path: &Path) -> Option<String> {
-    if !system_bwrap_path.is_file() {
-        return Some(format!(
-            "Brocode could not find system bubblewrap at {}. Please install bubblewrap with your package manager. Brocode will use the vendored bubblewrap in the meantime.",
-            system_bwrap_path.display()
-        ));
-    }
-
-    None
-}
 
 fn resolve_sqlite_home_env(resolved_cwd: &Path) -> Option<PathBuf> {
     let raw = std::env::var(brocode_state::SQLITE_HOME_ENV).ok()?;
@@ -187,6 +167,7 @@ fn resolve_sqlite_home_env(resolved_cwd: &Path) -> Option<PathBuf> {
         Some(resolved_cwd.join(path))
     }
 }
+
 #[cfg(test)]
 pub(crate) fn test_config() -> Config {
     let brocode_home = tempfile::tempdir().expect("create temp dir");
@@ -229,9 +210,6 @@ pub struct Permissions {
     pub windows_sandbox_mode: Option<WindowsSandboxModeToml>,
     /// Whether the final Windows sandboxed child should run on a private desktop.
     pub windows_sandbox_private_desktop: bool,
-    /// Optional macOS seatbelt extension profile used to extend default
-    /// seatbelt permissions when running under seatbelt.
-    pub macos_seatbelt_profile_extensions: Option<MacOsSeatbeltProfileExtensions>,
 }
 
 /// Application configuration loaded from disk and merged with overrides.
@@ -391,8 +369,8 @@ pub struct Config {
     /// Preferred store for MCP OAuth credentials.
     /// keyring: Use an OS-specific keyring service.
     ///          Credentials stored in the keyring will only be readable by Brocode unless the user explicitly grants access via OS-level keyring access.
-    ///          https://github.com/openai/codex/blob/main/codex-rs/rmcp-client/src/oauth.rs#L2
-    /// file: CODEX_HOME/.credentials.json
+    ///          https://github.com/openai/brocode/blob/main/brocode-rs/rmcp-client/src/oauth.rs#L2
+    /// file: BROCODE_HOME/.credentials.json
     ///       This file will be readable to Brocode and other applications running as the same user.
     /// auto (default): keyring if available, otherwise file.
     pub mcp_oauth_credentials_store_mode: OAuthCredentialsStoreMode,
@@ -436,13 +414,13 @@ pub struct Config {
     pub memories: MemoriesConfig,
 
     /// Directory containing all Brocode state (defaults to `~/.brocode` but can be
-    /// overridden by the `CODEX_HOME` environment variable).
+    /// overridden by the `BROCODE_HOME` environment variable).
     pub brocode_home: PathBuf,
 
     /// Directory where Brocode stores the SQLite state DB.
     pub sqlite_home: PathBuf,
 
-    /// Directory where Brocode writes log files (defaults to `$CODEX_HOME/log`).
+    /// Directory where Brocode writes log files (defaults to `$BROCODE_HOME/log`).
     pub log_dir: PathBuf,
 
     /// Settings that govern if and what will be written to `~/.brocode/history.jsonl`.
@@ -1046,7 +1024,7 @@ pub(crate) fn set_project_trust_level_inner(
     Ok(())
 }
 
-/// Patch `CODEX_HOME/config.toml` project state to set trust level.
+/// Patch `BROCODE_HOME/config.toml` project state to set trust level.
 /// Use with caution.
 pub fn set_project_trust_level(
     brocode_home: &Path,
@@ -1196,7 +1174,7 @@ pub struct ConfigToml {
 
     /// Preferred backend for storing MCP OAuth credentials.
     /// keyring: Use an OS-specific keyring service.
-    ///          https://github.com/openai/codex/blob/main/codex-rs/rmcp-client/src/oauth.rs#L2
+    ///          https://github.com/openai/brocode/blob/main/brocode-rs/rmcp-client/src/oauth.rs#L2
     /// file: Use a file in the Brocode home directory.
     /// auto (default): Use the OS-specific keyring service if available, otherwise use a file.
     #[serde(default)]
@@ -1251,11 +1229,11 @@ pub struct ConfigToml {
     pub history: Option<History>,
 
     /// Directory where Brocode stores the SQLite state DB.
-    /// Defaults to `$BROCODE_SQLITE_HOME` when set. Otherwise uses `$CODEX_HOME`.
+    /// Defaults to `$BROCODE_SQLITE_HOME` when set. Otherwise uses `$BROCODE_HOME`.
     pub sqlite_home: Option<AbsolutePathBuf>,
 
     /// Directory where Brocode writes log files, for example `brocode-tui.log`.
-    /// Defaults to `$CODEX_HOME/log`.
+    /// Defaults to `$BROCODE_HOME/log`.
     pub log_dir: Option<AbsolutePathBuf>,
 
     /// Optional URI-based file opener. If set, citations to files in the model
@@ -1859,6 +1837,18 @@ Built-in providers cannot be overridden. Rename your custom provider (for exampl
     }
 }
 
+fn validate_model_providers(
+    model_providers: &HashMap<String, ModelProviderInfo>,
+) -> Result<(), String> {
+    validate_reserved_model_provider_ids(model_providers)?;
+    for (key, provider) in model_providers {
+        provider
+            .validate()
+            .map_err(|message| format!("model_providers.{key}: {message}"))?;
+    }
+    Ok(())
+}
+
 fn deserialize_model_providers<'de, D>(
     deserializer: D,
 ) -> Result<HashMap<String, ModelProviderInfo>, D::Error>
@@ -1866,7 +1856,7 @@ where
     D: serde::Deserializer<'de>,
 {
     let model_providers = HashMap::<String, ModelProviderInfo>::deserialize(deserializer)?;
-    validate_reserved_model_provider_ids(&model_providers).map_err(serde::de::Error::custom)?;
+    validate_model_providers(&model_providers).map_err(serde::de::Error::custom)?;
     Ok(model_providers)
 }
 
@@ -1991,7 +1981,7 @@ impl Config {
         brocode_home: PathBuf,
         config_layer_stack: ConfigLayerStack,
     ) -> std::io::Result<Self> {
-        validate_reserved_model_provider_ids(&cfg.model_providers)
+        validate_model_providers(&cfg.model_providers)
             .map_err(|message| std::io::Error::new(std::io::ErrorKind::InvalidInput, message))?;
         // Ensure that every field of ConfigRequirements is applied to the final
         // Config.
@@ -2579,7 +2569,6 @@ impl Config {
                 shell_environment_policy,
                 windows_sandbox_mode,
                 windows_sandbox_private_desktop,
-                macos_seatbelt_profile_extensions: None,
             },
             approvals_reviewer,
             enforce_residency: enforce_residency.value,
@@ -2867,12 +2856,12 @@ fn toml_uses_deprecated_instructions_file(value: &TomlValue) -> bool {
 }
 
 /// Returns the path to the Brocode configuration directory, which can be
-/// specified by the `CODEX_HOME` environment variable. If not set, defaults to
+/// specified by the `BROCODE_HOME` environment variable. If not set, defaults to
 /// `~/.brocode`.
 ///
-/// - If `CODEX_HOME` is set, the value must exist and be a directory. The
+/// - If `BROCODE_HOME` is set, the value must exist and be a directory. The
 ///   value will be canonicalized and this function will Err otherwise.
-/// - If `CODEX_HOME` is not set, this function does not verify that the
+/// - If `BROCODE_HOME` is not set, this function does not verify that the
 ///   directory exists.
 pub fn find_brocode_home() -> std::io::Result<PathBuf> {
     brocode_utils_home_dir::find_brocode_home()

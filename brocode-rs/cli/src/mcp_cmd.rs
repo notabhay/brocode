@@ -251,7 +251,7 @@ async fn run_add(config_overrides: &CliConfigOverrides, add_args: AddArgs) -> Re
 
     validate_server_name(&name)?;
 
-    let brocode_home = find_brocode_home().context("failed to resolve CODEX_HOME")?;
+    let brocode_home = find_brocode_home().context("failed to resolve BROCODE_HOME")?;
     let mut servers = load_global_mcp_servers(&brocode_home)
         .await
         .with_context(|| format!("failed to load MCP servers from {}", brocode_home.display()))?;
@@ -359,7 +359,7 @@ async fn run_remove(config_overrides: &CliConfigOverrides, remove_args: RemoveAr
 
     validate_server_name(&name)?;
 
-    let brocode_home = find_brocode_home().context("failed to resolve CODEX_HOME")?;
+    let brocode_home = find_brocode_home().context("failed to resolve BROCODE_HOME")?;
     let mut servers = load_global_mcp_servers(&brocode_home)
         .await
         .with_context(|| format!("failed to load MCP servers from {}", brocode_home.display()))?;

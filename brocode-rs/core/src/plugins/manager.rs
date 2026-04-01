@@ -29,6 +29,7 @@ use super::sync_openai_plugins_repo;
 use crate::AuthManager;
 use crate::SkillMetadata;
 use crate::auth::BrocodeAuth;
+use crate::config::CONFIG_TOML_FILE;
 use crate::config::Config;
 use crate::config::ConfigService;
 use crate::config::ConfigServiceError;
@@ -326,13 +327,13 @@ impl PluginsManager {
         brocode_home: PathBuf,
         restriction_product: Option<Product>,
     ) -> Self {
-        // Product restrictions are enforced at marketplace admission time for a given CODEX_HOME:
+        // Product restrictions are enforced at marketplace admission time for a given BROCODE_HOME:
         // listing, install, and curated refresh all consult this restriction context before new
         // plugins enter local config or cache. After admission, runtime plugin loading trusts the
-        // contents of that CODEX_HOME and does not re-filter configured plugins by product, so
+        // contents of that BROCODE_HOME and does not re-filter configured plugins by product, so
         // already-admitted plugins may continue exposing MCP servers/tools from shared local state.
         //
-        // This assumes a single CODEX_HOME is only used by one product.
+        // This assumes a single BROCODE_HOME is only used by one product.
         Self {
             brocode_home: brocode_home.clone(),
             store: PluginStore::new(brocode_home),
@@ -1008,28 +1009,7 @@ impl PluginsManager {
         auth_manager: Arc<AuthManager>,
     ) {
         if config.features.enabled(Feature::Plugins) {
-            let mut configured_curated_plugin_ids =
-                configured_plugins_from_stack(&config.config_layer_stack)
-                    .into_keys()
-                    .filter_map(|plugin_key| match PluginId::parse(&plugin_key) {
-                        Ok(plugin_id)
-                            if plugin_id.marketplace_name == OPENAI_CURATED_MARKETPLACE_NAME =>
-                        {
-                            Some(plugin_id)
-                        }
-                        Ok(_) => None,
-                        Err(err) => {
-                            warn!(
-                                plugin_key,
-                                error = %err,
-                                "ignoring invalid configured plugin key during curated sync setup"
-                            );
-                            None
-                        }
-                    })
-                    .collect::<Vec<_>>();
-            configured_curated_plugin_ids.sort_unstable_by_key(PluginId::as_key);
-            self.start_curated_repo_sync(configured_curated_plugin_ids);
+            self.start_curated_repo_sync();
             start_startup_remote_plugin_sync_once(
                 Arc::clone(self),
                 self.brocode_home.clone(),
@@ -1054,7 +1034,7 @@ impl PluginsManager {
         }
     }
 
-    fn start_curated_repo_sync(self: &Arc<Self>, configured_curated_plugin_ids: Vec<PluginId>) {
+    fn start_curated_repo_sync(self: &Arc<Self>) {
         if CURATED_REPO_SYNC_STARTED.swap(true, Ordering::SeqCst) {
             return;
         }
@@ -1065,6 +1045,8 @@ impl PluginsManager {
             .spawn(
                 move || match sync_openai_plugins_repo(brocode_home.as_path()) {
                     Ok(curated_plugin_version) => {
+                        let configured_curated_plugin_ids =
+                            configured_curated_plugin_ids_from_brocode_home(brocode_home.as_path());
                         match refresh_curated_plugin_cache(
                             brocode_home.as_path(),
                             &curated_plugin_version,
@@ -1333,7 +1315,13 @@ fn configured_plugins_from_stack(
     let Some(user_layer) = config_layer_stack.get_user_layer() else {
         return HashMap::new();
     };
-    let Some(plugins_value) = user_layer.config.get("plugins") else {
+    configured_plugins_from_user_config_value(&user_layer.config)
+}
+
+fn configured_plugins_from_user_config_value(
+    user_config: &toml::Value,
+) -> HashMap<String, PluginConfig> {
+    let Some(plugins_value) = user_config.get("plugins") else {
         return HashMap::new();
     };
     match plugins_value.clone().try_into() {
@@ -1343,6 +1331,60 @@ fn configured_plugins_from_stack(
             HashMap::new()
         }
     }
+}
+
+fn configured_curated_plugin_ids(
+    configured_plugins: HashMap<String, PluginConfig>,
+) -> Vec<PluginId> {
+    let mut configured_curated_plugin_ids = configured_plugins
+        .into_keys()
+        .filter_map(|plugin_key| match PluginId::parse(&plugin_key) {
+            Ok(plugin_id) if plugin_id.marketplace_name == OPENAI_CURATED_MARKETPLACE_NAME => {
+                Some(plugin_id)
+            }
+            Ok(_) => None,
+            Err(err) => {
+                warn!(
+                    plugin_key,
+                    error = %err,
+                    "ignoring invalid configured plugin key during curated sync setup"
+                );
+                None
+            }
+        })
+        .collect::<Vec<_>>();
+    configured_curated_plugin_ids.sort_unstable_by_key(PluginId::as_key);
+    configured_curated_plugin_ids
+}
+
+fn configured_curated_plugin_ids_from_brocode_home(brocode_home: &Path) -> Vec<PluginId> {
+    let config_path = brocode_home.join(CONFIG_TOML_FILE);
+    let user_config = match fs::read_to_string(&config_path) {
+        Ok(user_config) => user_config,
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Vec::new(),
+        Err(err) => {
+            warn!(
+                path = %config_path.display(),
+                error = %err,
+                "failed to read user config while refreshing curated plugin cache"
+            );
+            return Vec::new();
+        }
+    };
+
+    let user_config = match toml::from_str::<toml::Value>(&user_config) {
+        Ok(user_config) => user_config,
+        Err(err) => {
+            warn!(
+                path = %config_path.display(),
+                error = %err,
+                "failed to parse user config while refreshing curated plugin cache"
+            );
+            return Vec::new();
+        }
+    };
+
+    configured_curated_plugin_ids(configured_plugins_from_user_config_value(&user_config))
 }
 
 fn load_plugin(

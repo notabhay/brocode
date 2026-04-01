@@ -18,7 +18,7 @@ use brocode_protocol::config_types::SandboxMode;
 use brocode_protocol::permissions::NetworkSandboxPolicy;
 use brocode_sandboxing::landlock::create_linux_sandbox_command_args_for_policies;
 #[cfg(target_os = "macos")]
-use brocode_sandboxing::seatbelt::create_seatbelt_command_args_for_policies_with_extensions;
+use brocode_sandboxing::seatbelt::create_seatbelt_command_args_for_policies;
 use brocode_utils_cli::CliConfigOverrides;
 use tokio::process::Child;
 use tokio::process::Command as TokioCommand;
@@ -164,14 +164,17 @@ async fn run_command_under_sandbox(
             let res = tokio::task::spawn_blocking(move || {
                 if use_elevated {
                     run_windows_sandbox_capture_elevated(
-                        policy_str.as_str(),
-                        &sandbox_cwd,
-                        base_dir.as_path(),
-                        command_vec,
-                        &cwd_clone,
-                        env_map,
-                        /*timeout_ms*/ None,
-                        config.permissions.windows_sandbox_private_desktop,
+                        brocode_windows_sandbox::ElevatedSandboxCaptureRequest {
+                            policy_json_or_preset: policy_str.as_str(),
+                            sandbox_policy_cwd: &sandbox_cwd,
+                            brocode_home: base_dir.as_path(),
+                            command: command_vec,
+                            cwd: &cwd_clone,
+                            env_map,
+                            timeout_ms: None,
+                            use_private_desktop: config.permissions.windows_sandbox_private_desktop,
+                            proxy_enforced: false,
+                        },
                     )
                 } else {
                     run_windows_sandbox_capture(
@@ -246,14 +249,13 @@ async fn run_command_under_sandbox(
     let mut child = match sandbox_type {
         #[cfg(target_os = "macos")]
         SandboxType::Seatbelt => {
-            let args = create_seatbelt_command_args_for_policies_with_extensions(
+            let args = create_seatbelt_command_args_for_policies(
                 command,
                 &config.permissions.file_system_sandbox_policy,
                 config.permissions.network_sandbox_policy,
                 sandbox_policy_cwd.as_path(),
                 /*enforce_managed_network*/ false,
                 network.as_ref(),
-                /*extensions*/ None,
             );
             let network_policy = config.permissions.network_sandbox_policy;
             spawn_debug_sandbox_child(
@@ -496,7 +498,7 @@ mod tests {
         let legacy_config = build_debug_sandbox_config(
             Vec::new(),
             ConfigOverrides {
-                sandbox_mode: Some(create_sandbox_mode(false)),
+                sandbox_mode: Some(create_sandbox_mode(/*full_auto*/ false)),
                 ..Default::default()
             },
             Some(brocode_home_path.clone()),
@@ -505,8 +507,8 @@ mod tests {
 
         let config = load_debug_sandbox_config_with_brocode_home(
             Vec::new(),
-            None,
-            false,
+            /*brocode_linux_sandbox_exe*/ None,
+            /*full_auto*/ false,
             Some(brocode_home_path),
         )
         .await?;
@@ -539,8 +541,8 @@ mod tests {
 
         let err = load_debug_sandbox_config_with_brocode_home(
             Vec::new(),
-            None,
-            true,
+            /*brocode_linux_sandbox_exe*/ None,
+            /*full_auto*/ true,
             Some(brocode_home.path().to_path_buf()),
         )
         .await

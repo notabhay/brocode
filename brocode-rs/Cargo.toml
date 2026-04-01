@@ -50,7 +50,7 @@ members = [
     "stdio-to-uds",
     "otel",
     "tui",
-    "tui_app_server",
+    "tools",
     "v8-poc",
     "utils/absolute-path",
     "utils/cargo-bin",
@@ -80,13 +80,12 @@ members = [
     "state",
     "terminal-detection",
     "brocode-experimental-api-macros",
-    "package-manager",
     "plugin",
 ]
 resolver = "2"
 
 [workspace.package]
-version = "0.117.0"
+version = "0.118.0"
 # Track the edition for all workspace crates in one place. Individual
 # crates can still override this value, but keeping it here means new
 # crates created with `cargo new -w ...` automatically inherit the 2024
@@ -101,7 +100,6 @@ brocode-ansi-escape = { path = "ansi-escape" }
 brocode-analytics = { path = "analytics" }
 brocode-api = { path = "brocode-api" }
 brocode-code-mode = { path = "code-mode" }
-brocode-package-manager = { path = "package-manager" }
 brocode-app-server = { path = "app-server" }
 brocode-app-server-client = { path = "app-server-client" }
 brocode-app-server-protocol = { path = "app-server-protocol" }
@@ -150,8 +148,8 @@ brocode-skills = { path = "skills" }
 brocode-state = { path = "state" }
 brocode-stdio-to-uds = { path = "stdio-to-uds" }
 brocode-terminal-detection = { path = "terminal-detection" }
+brocode-tools = { path = "tools" }
 brocode-tui = { path = "tui" }
-brocode-tui-app-server = { path = "tui_app_server" }
 brocode-v8-poc = { path = "v8-poc" }
 brocode-utils-absolute-path = { path = "utils/absolute-path" }
 brocode-utils-approval-presets = { path = "utils/approval-presets" }
@@ -211,11 +209,9 @@ dirs = "6"
 dotenvy = "0.15.7"
 dunce = "1.0.4"
 encoding_rs = "0.8.35"
-fd-lock = "4.0.4"
 env-flags = "0.1.1"
 env_logger = "0.11.9"
 eventsource-stream = "0.2.3"
-flate2 = "1.1.4"
 futures = { version = "0.3", default-features = false }
 gethostname = "1.1.0"
 globset = "0.4"
@@ -307,7 +303,6 @@ supports-color = "3.0.2"
 syntect = "5"
 sys-locale = "0.3.2"
 tempfile = "3.23.0"
-tar = "0.4.45"
 test-log = "0.2.19"
 textwrap = "0.16.2"
 thiserror = "2.0.17"
@@ -393,7 +388,6 @@ unwrap_used = "deny"
 ignored = [
     "icu_provider",
     "openssl-sys",
-    "brocode-package-manager",
     "brocode-utils-readiness",
     "brocode-utils-template",
     "brocode-v8-poc",
@@ -406,7 +400,7 @@ split-debuginfo = "off"
 # remove everything to make the binary as small as possible.
 strip = "symbols"
 
-# See https://github.com/openai/codex/issues/1411 for details.
+# See https://github.com/openai/brocode/issues/1411 for details.
 codegen-units = 1
 
 [profile.ci-test]

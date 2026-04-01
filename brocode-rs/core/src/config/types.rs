@@ -782,7 +782,7 @@ pub struct Tui {
     /// Syntax highlighting theme name (kebab-case).
     ///
     /// When set, overrides automatic light/dark theme detection.
-    /// Use `/theme` in the TUI or see `$CODEX_HOME/themes` for custom themes.
+    /// Use `/theme` in the TUI or see `$BROCODE_HOME/themes` for custom themes.
     #[serde(default)]
     pub theme: Option<String>,
 
@@ -808,7 +808,7 @@ pub struct Notice {
     pub hide_rate_limit_model_nudge: Option<bool>,
     /// Tracks whether the user has seen the model migration prompt
     pub hide_gpt5_1_migration_prompt: Option<bool>,
-    /// Tracks whether the user has seen the gpt-5.1-codex-max migration prompt
+    /// Tracks whether the user has seen the gpt-5.1-brocode-max migration prompt
     #[serde(rename = "hide_gpt-5.1-brocode-max_migration_prompt")]
     pub hide_gpt_5_1_brocode_max_migration_prompt: Option<bool>,
     /// Tracks acknowledged model migrations as old->new model slug mappings.

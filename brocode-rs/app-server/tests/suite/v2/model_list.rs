@@ -58,7 +58,7 @@ fn expected_visible_models() -> Vec<Model> {
     // Filter by supported_in_api to support testing with both ChatGPT and non-ChatGPT auth modes.
     let mut presets = ModelPreset::filter_by_auth(
         brocode_core::test_support::all_model_presets().clone(),
-        false,
+        /*chatgpt_mode*/ false,
     );
 
     // Mirror `ModelsManager::build_available_models()` default selection after auth filtering.

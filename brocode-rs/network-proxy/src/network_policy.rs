@@ -676,10 +676,11 @@ mod tests {
 
     #[tokio::test(flavor = "current_thread")]
     async fn evaluate_host_policy_emits_domain_event_for_baseline_deny() {
-        let state = network_proxy_state_for_policy(NetworkProxySettings {
-            allowed_domains: vec!["example.com".to_string()],
-            denied_domains: vec!["blocked.com".to_string()],
-            ..NetworkProxySettings::default()
+        let state = network_proxy_state_for_policy({
+            let mut network = NetworkProxySettings::default();
+            network.set_allowed_domains(vec!["example.com".to_string()]);
+            network.set_denied_domains(vec!["blocked.com".to_string()]);
+            network
         });
         let request = NetworkPolicyRequest::new(NetworkPolicyRequestArgs {
             protocol: NetworkProtocol::Http,
@@ -692,7 +693,9 @@ mod tests {
         });
 
         let (decision, events) = capture_events(|| async {
-            evaluate_host_policy(&state, None, &request).await.unwrap()
+            evaluate_host_policy(&state, /*decider*/ None, &request)
+                .await
+                .unwrap()
         })
         .await;
         assert_eq!(
@@ -768,8 +771,8 @@ mod tests {
             originator: Some("brocode_cli_rs".to_string()),
             user_email: Some("test@example.com".to_string()),
             terminal_type: Some("iTerm.app/3.6.5".to_string()),
-            model: Some("gpt-5.3-codex".to_string()),
-            slug: Some("gpt-5.3-codex".to_string()),
+            model: Some("gpt-5.3-brocode".to_string()),
+            slug: Some("gpt-5.3-brocode".to_string()),
         };
         let state = state_with_metadata(metadata);
         let request = NetworkPolicyRequest::new(NetworkPolicyRequestArgs {
@@ -783,7 +786,9 @@ mod tests {
         });
 
         let (_decision, events) = capture_events(|| async {
-            evaluate_host_policy(&state, None, &request).await.unwrap()
+            evaluate_host_policy(&state, /*decider*/ None, &request)
+                .await
+                .unwrap()
         })
         .await;
 
@@ -796,8 +801,8 @@ mod tests {
         assert_eq!(event.field("user.account_id"), Some("acct-1"));
         assert_eq!(event.field("user.email"), Some("test@example.com"));
         assert_eq!(event.field("terminal.type"), Some("iTerm.app/3.6.5"));
-        assert_eq!(event.field("model"), Some("gpt-5.3-codex"));
-        assert_eq!(event.field("slug"), Some("gpt-5.3-codex"));
+        assert_eq!(event.field("model"), Some("gpt-5.3-brocode"));
+        assert_eq!(event.field("slug"), Some("gpt-5.3-brocode"));
     }
 
     #[tokio::test(flavor = "current_thread")]
@@ -850,10 +855,11 @@ mod tests {
 
     #[tokio::test(flavor = "current_thread")]
     async fn evaluate_host_policy_still_denies_not_allowed_local_without_decider_override() {
-        let state = network_proxy_state_for_policy(NetworkProxySettings {
-            allowed_domains: vec!["example.com".to_string()],
-            allow_local_binding: false,
-            ..NetworkProxySettings::default()
+        let state = network_proxy_state_for_policy({
+            let mut network = NetworkProxySettings::default();
+            network.set_allowed_domains(vec!["example.com".to_string()]);
+            network.allow_local_binding = false;
+            network
         });
         let request = NetworkPolicyRequest::new(NetworkPolicyRequestArgs {
             protocol: NetworkProtocol::Http,
@@ -865,7 +871,9 @@ mod tests {
             exec_policy_hint: None,
         });
 
-        let decision = evaluate_host_policy(&state, None, &request).await.unwrap();
+        let decision = evaluate_host_policy(&state, /*decider*/ None, &request)
+            .await
+            .unwrap();
         assert_eq!(
             decision,
             NetworkDecision::Deny {

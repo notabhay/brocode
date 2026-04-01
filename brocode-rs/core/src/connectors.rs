@@ -16,7 +16,9 @@ pub use brocode_app_server_protocol::AppInfo;
 pub use brocode_app_server_protocol::AppMetadata;
 use brocode_connectors::AllConnectorsCacheKey;
 use brocode_connectors::DirectoryListResponse;
+use brocode_login::token_data::TokenData;
 use brocode_protocol::protocol::SandboxPolicy;
+use brocode_tools::DiscoverableTool;
 use rmcp::model::ToolAnnotations;
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
@@ -43,9 +45,6 @@ use crate::mcp_connection_manager::brocode_apps_tools_cache_key;
 use crate::plugins::AppConnectorId;
 use crate::plugins::PluginsManager;
 use crate::plugins::list_tool_suggest_discoverable_plugins;
-use crate::token_data::TokenData;
-use crate::tools::discoverable::DiscoverablePluginInfo;
-use crate::tools::discoverable::DiscoverableTool;
 use brocode_features::Feature;
 
 pub use brocode_connectors::CONNECTORS_CACHE_TTL;
@@ -133,7 +132,6 @@ pub(crate) async fn list_tool_suggest_discoverable_tools_with_auth(
     .map(DiscoverableTool::from);
     let discoverable_plugins = list_tool_suggest_discoverable_plugins(config)?
         .into_iter()
-        .map(DiscoverablePluginInfo::from)
         .map(DiscoverableTool::from);
     Ok(discoverable_connectors
         .chain(discoverable_plugins)

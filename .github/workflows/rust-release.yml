@@ -1,4 +1,4 @@
-# Release workflow for codex-rs.
+# Release workflow for brocode-rs.
 # To release, follow a workflow like:
 # ```
 # git tag -a rust-v0.1.0 -m "Release 0.1.0"
@@ -19,8 +19,8 @@ jobs:
   tag-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@1.92
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: dtolnay/rust-toolchain@c2b55edffaf41a251c410bb32bed22afefa800f1 # 1.92
       - name: Validate tag matches Cargo.toml version
         shell: bash
         run: |
@@ -35,7 +35,7 @@ jobs:
 
           # 2. Extract versions
           tag_ver="${GITHUB_REF_NAME#rust-v}"
-          cargo_ver="$(grep -m1 '^version' codex-rs/Cargo.toml \
+          cargo_ver="$(grep -m1 '^version' brocode-rs/Cargo.toml \
                         | sed -E 's/version *= *"([^"]+)".*/\1/')"
 
           # 3. Compare
@@ -55,7 +55,7 @@ jobs:
       id-token: write
     defaults:
       run:
-        working-directory: codex-rs
+        working-directory: brocode-rs
     env:
       # 2026-03-04: temporarily change releases to use thin LTO because
       # Ubuntu ARM is timing out at 60 minutes.
@@ -79,7 +79,7 @@ jobs:
             target: aarch64-unknown-linux-gnu
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Print runner specs (Linux)
         if: ${{ runner.os == 'Linux' }}
         shell: bash
@@ -125,7 +125,7 @@ jobs:
             sudo apt-get update -y
             sudo DEBIAN_FRONTEND=noninteractive apt-get install -y libubsan1
           fi
-      - uses: dtolnay/rust-toolchain@1.93.0
+      - uses: dtolnay/rust-toolchain@a0b273b48ed29de4470960879e8381ff45632f26 # 1.93.0
         with:
           targets: ${{ matrix.target }}
 
@@ -219,8 +219,8 @@ jobs:
           set -euo pipefail
           version="$(python3 "${GITHUB_WORKSPACE}/.github/scripts/rusty_v8_bazel.py" resolved-v8-crate-version)"
           release_tag="rusty-v8-v${version}"
-          base_url="https://github.com/openai/codex/releases/download/${release_tag}"
-          archive="https://github.com/openai/codex/releases/download/rusty-v8-v${version}/librusty_v8_release_${TARGET}.a.gz"
+          base_url="https://github.com/openai/brocode/releases/download/${release_tag}"
+          archive="https://github.com/openai/brocode/releases/download/rusty-v8-v${version}/librusty_v8_release_${TARGET}.a.gz"
           binding_dir="${RUNNER_TEMP}/rusty_v8"
           binding_path="${binding_dir}/src_binding_release_${TARGET}.rs"
           mkdir -p "${binding_dir}"
@@ -232,13 +232,13 @@ jobs:
         shell: bash
         run: |
           echo "CARGO_PROFILE_RELEASE_LTO: ${CARGO_PROFILE_RELEASE_LTO}"
-          cargo build --target ${{ matrix.target }} --release --timings --bin codex --bin codex-responses-api-proxy
+          cargo build --target ${{ matrix.target }} --release --timings --bin brocode --bin brocode-responses-api-proxy
 
       - name: Upload Cargo timings
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: cargo-timings-rust-release-${{ matrix.target }}
-          path: codex-rs/target/**/cargo-timings/cargo-timing.html
+          path: brocode-rs/target/**/cargo-timings/cargo-timing.html
           if-no-files-found: warn
 
       - if: ${{ contains(matrix.target, 'linux') }}
@@ -246,7 +246,7 @@ jobs:
         uses: ./.github/actions/linux-code-sign
         with:
           target: ${{ matrix.target }}
-          artifacts-dir: ${{ github.workspace }}/codex-rs/target/${{ matrix.target }}/release
+          artifacts-dir: ${{ github.workspace }}/brocode-rs/target/${{ matrix.target }}/release
 
       - if: ${{ runner.os == 'macOS' }}
         name: MacOS code signing (binaries)
@@ -269,21 +269,21 @@ jobs:
 
           target="${{ matrix.target }}"
           release_dir="target/${target}/release"
-          dmg_root="${RUNNER_TEMP}/codex-dmg-root"
-          volname="Codex (${target})"
-          dmg_path="${release_dir}/codex-${target}.dmg"
+          dmg_root="${RUNNER_TEMP}/brocode-dmg-root"
+          volname="Brocode (${target})"
+          dmg_path="${release_dir}/brocode-${target}.dmg"
 
           # The previous "MacOS code signing (binaries)" step signs + notarizes the
           # built artifacts in `${release_dir}`. This step packages *those same*
           # signed binaries into a dmg.
-          codex_binary_path="${release_dir}/codex"
-          proxy_binary_path="${release_dir}/codex-responses-api-proxy"
+          brocode_binary_path="${release_dir}/brocode"
+          proxy_binary_path="${release_dir}/brocode-responses-api-proxy"
 
           rm -rf "$dmg_root"
           mkdir -p "$dmg_root"
 
-          if [[ ! -f "$codex_binary_path" ]]; then
-            echo "Binary $codex_binary_path not found"
+          if [[ ! -f "$brocode_binary_path" ]]; then
+            echo "Binary $brocode_binary_path not found"
             exit 1
           fi
           if [[ ! -f "$proxy_binary_path" ]]; then
@@ -291,8 +291,8 @@ jobs:
             exit 1
           fi
 
-          ditto "$codex_binary_path" "${dmg_root}/codex"
-          ditto "$proxy_binary_path" "${dmg_root}/codex-responses-api-proxy"
+          ditto "$brocode_binary_path" "${dmg_root}/brocode"
+          ditto "$proxy_binary_path" "${dmg_root}/brocode-responses-api-proxy"
 
           rm -f "$dmg_path"
           hdiutil create \
@@ -326,16 +326,16 @@ jobs:
           dest="dist/${{ matrix.target }}"
           mkdir -p "$dest"
 
-          cp target/${{ matrix.target }}/release/codex "$dest/codex-${{ matrix.target }}"
-          cp target/${{ matrix.target }}/release/codex-responses-api-proxy "$dest/codex-responses-api-proxy-${{ matrix.target }}"
+          cp target/${{ matrix.target }}/release/brocode "$dest/brocode-${{ matrix.target }}"
+          cp target/${{ matrix.target }}/release/brocode-responses-api-proxy "$dest/brocode-responses-api-proxy-${{ matrix.target }}"
 
           if [[ "${{ matrix.target }}" == *linux* ]]; then
-            cp target/${{ matrix.target }}/release/codex.sigstore "$dest/codex-${{ matrix.target }}.sigstore"
-            cp target/${{ matrix.target }}/release/codex-responses-api-proxy.sigstore "$dest/codex-responses-api-proxy-${{ matrix.target }}.sigstore"
+            cp target/${{ matrix.target }}/release/brocode.sigstore "$dest/brocode-${{ matrix.target }}.sigstore"
+            cp target/${{ matrix.target }}/release/brocode-responses-api-proxy.sigstore "$dest/brocode-responses-api-proxy-${{ matrix.target }}.sigstore"
           fi
 
           if [[ "${{ matrix.target }}" == *apple-darwin ]]; then
-            cp target/${{ matrix.target }}/release/codex-${{ matrix.target }}.dmg "$dest/codex-${{ matrix.target }}.dmg"
+            cp target/${{ matrix.target }}/release/brocode-${{ matrix.target }}.dmg "$dest/brocode-${{ matrix.target }}.dmg"
           fi
 
       - name: Compress artifacts
@@ -348,8 +348,8 @@ jobs:
           # For compatibility with environments that lack the `zstd` tool we
           # additionally create a `.tar.gz` alongside every binary we publish.
           # The end result is:
-          #   codex-<target>.zst          (existing)
-          #   codex-<target>.tar.gz       (new)
+          #   brocode-<target>.zst          (existing)
+          #   brocode-<target>.tar.gz       (new)
 
           # 1. Produce a .tar.gz for every file in the directory *before* we
           #    run `zstd --rm`, because that flag deletes the original files.
@@ -374,13 +374,13 @@ jobs:
             zstd -T0 -19 --rm "$dest/$base"
           done
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: ${{ matrix.target }}
           # Upload the per-binary .zst files as well as the new .tar.gz
           # equivalents we generated in the previous step.
           path: |
-            codex-rs/dist/${{ matrix.target }}/*
+            brocode-rs/dist/${{ matrix.target }}/*
 
   build-windows:
     needs: tag-check
@@ -420,7 +420,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Generate release notes from tag commit message
         id: release_notes
@@ -442,7 +442,7 @@ jobs:
 
           echo "path=${notes_path}" >> "${GITHUB_OUTPUT}"
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           path: dist
 
@@ -462,7 +462,7 @@ jobs:
 
       - name: Add config schema release asset
         run: |
-          cp codex-rs/core/config.schema.json dist/config-schema.json
+          cp brocode-rs/core/config.schema.json dist/config-schema.json
 
       - name: Define release name
         id: release_name
@@ -492,12 +492,12 @@ jobs:
           fi
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v5
+        uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5
         with:
           run_install: false
 
       - name: Setup Node.js for npm packaging
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: 22
 
@@ -505,7 +505,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # stage_npm_packages.py requires DotSlash when staging releases.
-      - uses: facebook/install-dotslash@v2
+      - uses: facebook/install-dotslash@1e4e7b3e07eaca387acb98f1d4720e0bee8dbb6a # v2
       - name: Stage npm packages
         env:
           GH_TOKEN: ${{ github.token }}
@@ -513,9 +513,9 @@ jobs:
         run: |
           ./scripts/stage_npm_packages.py \
             --release-version "$RELEASE_VERSION" \
-            --package codex \
-            --package codex-responses-api-proxy \
-            --package codex-sdk
+            --package brocode \
+            --package brocode-responses-api-proxy \
+            --package brocode-sdk
 
       - name: Stage installer scripts
         run: |
@@ -523,7 +523,7 @@ jobs:
           cp scripts/install/install.ps1 dist/install.ps1
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2
         with:
           name: ${{ steps.release_name.outputs.name }}
           tag_name: ${{ github.ref_name }}
@@ -533,21 +533,21 @@ jobs:
           # (e.g. -alpha, -beta). Otherwise publish a normal release.
           prerelease: ${{ contains(steps.release_name.outputs.name, '-') }}
 
-      - uses: facebook/dotslash-publish-release@v2
+      - uses: facebook/dotslash-publish-release@9c9ec027515c34db9282a09a25a9cab5880b2c52 # v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag: ${{ github.ref_name }}
           config: .github/dotslash-config.json
 
-      - uses: facebook/dotslash-publish-release@v2
+      - uses: facebook/dotslash-publish-release@9c9ec027515c34db9282a09a25a9cab5880b2c52 # v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag: ${{ github.ref_name }}
           config: .github/dotslash-zsh-config.json
 
-      - uses: facebook/dotslash-publish-release@v2
+      - uses: facebook/dotslash-publish-release@9c9ec027515c34db9282a09a25a9cab5880b2c52 # v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -582,7 +582,7 @@ jobs:
 
     steps:
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: 22
           registry-url: "https://registry.npmjs.org"
@@ -603,12 +603,12 @@ jobs:
           tag="$RELEASE_TAG"
           mkdir -p dist/npm
           patterns=(
-            "codex-npm-${version}.tgz"
-            "codex-npm-linux-*-${version}.tgz"
-            "codex-npm-darwin-*-${version}.tgz"
-            "codex-npm-win32-*-${version}.tgz"
-            "codex-responses-api-proxy-npm-${version}.tgz"
-            "codex-sdk-npm-${version}.tgz"
+            "brocode-npm-${version}.tgz"
+            "brocode-npm-linux-*-${version}.tgz"
+            "brocode-npm-darwin-*-${version}.tgz"
+            "brocode-npm-win32-*-${version}.tgz"
+            "brocode-responses-api-proxy-npm-${version}.tgz"
+            "brocode-sdk-npm-${version}.tgz"
           )
           for pattern in "${patterns[@]}"; do
             gh release download "$tag" \
@@ -641,12 +641,12 @@ jobs:
             tag=""
 
             case "${filename}" in
-              codex-npm-linux-*-"${VERSION}".tgz|codex-npm-darwin-*-"${VERSION}".tgz|codex-npm-win32-*-"${VERSION}".tgz)
-                platform="${filename#codex-npm-}"
+              brocode-npm-linux-*-"${VERSION}".tgz|brocode-npm-darwin-*-"${VERSION}".tgz|brocode-npm-win32-*-"${VERSION}".tgz)
+                platform="${filename#brocode-npm-}"
                 platform="${platform%-${VERSION}.tgz}"
                 tag="${prefix}${platform}"
                 ;;
-              codex-npm-"${VERSION}".tgz|codex-responses-api-proxy-npm-"${VERSION}".tgz|codex-sdk-npm-"${VERSION}".tgz)
+              brocode-npm-"${VERSION}".tgz|brocode-responses-api-proxy-npm-"${VERSION}".tgz|brocode-sdk-npm-"${VERSION}".tgz)
                 tag="${NPM_TAG}"
                 ;;
               *)
@@ -695,11 +695,11 @@ jobs:
       - name: Publish to WinGet
         uses: vedantmgoyal9/winget-releaser@7bd472be23763def6e16bd06cc8b1cdfab0e2fd5
         with:
-          identifier: OpenAI.Codex
+          identifier: OpenAI.Brocode
           version: ${{ needs.release.outputs.version }}
           release-tag: ${{ needs.release.outputs.tag }}
           fork-user: openai-oss-forks
-          installers-regex: '^codex-(?:x86_64|aarch64)-pc-windows-msvc\.exe\.zip$'
+          installers-regex: '^brocode-(?:x86_64|aarch64)-pc-windows-msvc\.exe\.zip$'
           token: ${{ secrets.WINGET_PUBLISH_PAT }}
 
   update-branch:

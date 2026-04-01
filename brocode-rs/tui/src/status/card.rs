@@ -42,7 +42,6 @@ use super::rate_limits::format_status_limit_summary;
 use super::rate_limits::render_status_limit_progress_bar;
 use crate::wrapping::RtOptions;
 use crate::wrapping::adaptive_wrap_lines;
-use brocode_core::AuthManager;
 
 #[derive(Debug, Clone)]
 struct StatusContextWindowData {
@@ -80,14 +79,14 @@ struct StatusHistoryCell {
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn new_status_output(
     config: &Config,
-    auth_manager: &AuthManager,
+    account_display: Option<&StatusAccountDisplay>,
     token_info: Option<&TokenUsageInfo>,
     total_usage: &TokenUsage,
     session_id: &Option<ThreadId>,
     thread_name: Option<String>,
     forked_from: Option<ThreadId>,
     rate_limits: Option<&RateLimitSnapshotDisplay>,
-    plan_type: Option<PlanType>,
+    _plan_type: Option<PlanType>,
     now: DateTime<Local>,
     model_name: &str,
     collaboration_mode: Option<&str>,
@@ -96,14 +95,14 @@ pub(crate) fn new_status_output(
     let snapshots = rate_limits.map(std::slice::from_ref).unwrap_or_default();
     new_status_output_with_rate_limits(
         config,
-        auth_manager,
+        account_display,
         token_info,
         total_usage,
         session_id,
         thread_name,
         forked_from,
         snapshots,
-        plan_type,
+        _plan_type,
         now,
         model_name,
         collaboration_mode,
@@ -114,14 +113,14 @@ pub(crate) fn new_status_output(
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn new_status_output_with_rate_limits(
     config: &Config,
-    auth_manager: &AuthManager,
+    account_display: Option<&StatusAccountDisplay>,
     token_info: Option<&TokenUsageInfo>,
     total_usage: &TokenUsage,
     session_id: &Option<ThreadId>,
     thread_name: Option<String>,
     forked_from: Option<ThreadId>,
     rate_limits: &[RateLimitSnapshotDisplay],
-    plan_type: Option<PlanType>,
+    _plan_type: Option<PlanType>,
     now: DateTime<Local>,
     model_name: &str,
     collaboration_mode: Option<&str>,
@@ -130,14 +129,14 @@ pub(crate) fn new_status_output_with_rate_limits(
     let command = PlainHistoryCell::new(vec!["/status".magenta().into()]);
     let card = StatusHistoryCell::new(
         config,
-        auth_manager,
+        account_display,
         token_info,
         total_usage,
         session_id,
         thread_name,
         forked_from,
         rate_limits,
-        plan_type,
+        _plan_type,
         now,
         model_name,
         collaboration_mode,
@@ -151,14 +150,14 @@ impl StatusHistoryCell {
     #[allow(clippy::too_many_arguments)]
     fn new(
         config: &Config,
-        auth_manager: &AuthManager,
+        account_display: Option<&StatusAccountDisplay>,
         token_info: Option<&TokenUsageInfo>,
         total_usage: &TokenUsage,
         session_id: &Option<ThreadId>,
         thread_name: Option<String>,
         forked_from: Option<ThreadId>,
         rate_limits: &[RateLimitSnapshotDisplay],
-        plan_type: Option<PlanType>,
+        _plan_type: Option<PlanType>,
         now: DateTime<Local>,
         model_name: &str,
         collaboration_mode: Option<&str>,
@@ -227,7 +226,7 @@ impl StatusHistoryCell {
         };
         let agents_summary = compose_agents_summary(config);
         let model_provider = format_model_provider(config);
-        let account = compose_account_display(auth_manager, plan_type);
+        let account = compose_account_display(account_display);
         let session_id = session_id.as_ref().map(std::string::ToString::to_string);
         let forked_from = forked_from.map(|id| id.to_string());
         let default_usage = TokenUsage::default();
@@ -414,9 +413,9 @@ impl HistoryCell for StatusHistoryCell {
         let mut lines: Vec<Line<'static>> = Vec::new();
         lines.push(Line::from(vec![
             Span::from(format!("{}>_ ", FieldFormatter::INDENT)).dim(),
-            Span::from("brocode").bold(),
+            Span::from("OpenAI Brocode").bold(),
             Span::from(" ").dim(),
-            Span::from(format!("v{BROCODE_CLI_VERSION}")).dim(),
+            Span::from(format!("(v{BROCODE_CLI_VERSION})")).dim(),
         ]));
         lines.push(Line::from(Vec::<Span<'static>>::new()));
 
@@ -474,7 +473,7 @@ impl HistoryCell for StatusHistoryCell {
 
         let note_first_line = Line::from(vec![
             Span::from("Visit ").cyan(),
-            "https://chatgpt.com/codex/settings/usage"
+            "https://chatgpt.com/brocode/settings/usage"
                 .cyan()
                 .underlined(),
             Span::from(" for up-to-date").cyan(),

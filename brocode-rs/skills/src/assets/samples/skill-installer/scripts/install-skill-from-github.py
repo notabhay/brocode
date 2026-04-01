@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install a skill from a GitHub repo path into $CODEX_HOME/skills."""
+"""Install a skill from a GitHub repo path into $BROCODE_HOME/skills."""
 
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ class InstallError(Exception):
 
 
 def _brocode_home() -> str:
-    return os.environ.get("CODEX_HOME", os.path.expanduser("~/.brocode"))
+    return os.environ.get("BROCODE_HOME", os.path.expanduser("~/.brocode"))
 
 
 def _tmp_root() -> str:

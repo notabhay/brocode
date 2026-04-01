@@ -98,10 +98,7 @@ fn build_sandbox_command_prefers_configured_brocode_self_exe_for_apply_patch() {
     let command = ApplyPatchRuntime::build_sandbox_command(&request, Some(&brocode_self_exe))
         .expect("build sandbox command");
 
-    assert_eq!(
-        command.program,
-        brocode_self_exe.to_string_lossy().to_string()
-    );
+    assert_eq!(command.program, brocode_self_exe.into_os_string());
 }
 
 #[cfg(not(target_os = "windows"))]
@@ -130,13 +127,13 @@ fn build_sandbox_command_falls_back_to_current_exe_for_apply_patch() {
     };
 
     let command =
-        ApplyPatchRuntime::build_sandbox_command(&request, None).expect("build sandbox command");
+        ApplyPatchRuntime::build_sandbox_command(&request, /*brocode_self_exe*/ None)
+            .expect("build sandbox command");
 
     assert_eq!(
         command.program,
         std::env::current_exe()
             .expect("current exe")
-            .to_string_lossy()
-            .to_string()
+            .into_os_string()
     );
 }

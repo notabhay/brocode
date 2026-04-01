@@ -10,8 +10,8 @@ use brocode_core::auth::RefreshTokenError;
 use brocode_core::auth::load_auth_dot_json;
 use brocode_core::auth::save_auth;
 use brocode_core::error::RefreshTokenFailedReason;
-use brocode_core::token_data::IdTokenInfo;
-use brocode_core::token_data::TokenData;
+use brocode_login::token_data::IdTokenInfo;
+use brocode_login::token_data::TokenData;
 use chrono::Duration;
 use chrono::Utc;
 use core_test_support::skip_if_no_network;
@@ -960,7 +960,7 @@ impl RefreshTokenTestContext {
 
         let auth_manager = AuthManager::shared(
             brocode_home.path().to_path_buf(),
-            false,
+            /*enable_brocode_api_key_env*/ false,
             AuthCredentialsStoreMode::File,
         );
 

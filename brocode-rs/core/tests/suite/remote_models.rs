@@ -62,14 +62,14 @@ async fn remote_models_get_model_info_uses_longest_matching_prefix() -> Result<(
     let generic = test_remote_model_with_policy(
         "gpt-5.3",
         ModelVisibility::List,
-        1_000,
-        TruncationPolicyConfig::bytes(10_000),
+        /*priority*/ 1_000,
+        TruncationPolicyConfig::bytes(/*limit*/ 10_000),
     );
     let specific = test_remote_model_with_policy(
-        "gpt-5.3-codex",
+        "gpt-5.3-brocode",
         ModelVisibility::List,
-        1_000,
-        TruncationPolicyConfig::bytes(10_000),
+        /*priority*/ 1_000,
+        TruncationPolicyConfig::bytes(/*limit*/ 10_000),
     );
     let specific = ModelInfo {
         display_name: "GPT 5.3 Brocode".to_string(),
@@ -95,7 +95,7 @@ async fn remote_models_get_model_info_uses_longest_matching_prefix() -> Result<(
     let auth = BrocodeAuth::create_dummy_chatgpt_auth_for_testing();
     let provider = ModelProviderInfo {
         base_url: Some(format!("{}/v1", server.uri())),
-        ..built_in_model_providers(/* openai_base_url */ None)["openai"].clone()
+        ..built_in_model_providers(/* openai_base_url */ /*openai_base_url*/ None)["openai"].clone()
     };
     let manager = brocode_core::test_support::models_manager_with_provider(
         brocode_home.path().to_path_buf(),
@@ -105,9 +105,11 @@ async fn remote_models_get_model_info_uses_longest_matching_prefix() -> Result<(
 
     manager.list_models(RefreshStrategy::OnlineIfUncached).await;
 
-    let model_info = manager.get_model_info("gpt-5.3-codex-test", &config).await;
+    let model_info = manager
+        .get_model_info("gpt-5.3-brocode-test", &config)
+        .await;
 
-    assert_eq!(model_info.slug, "gpt-5.3-codex-test");
+    assert_eq!(model_info.slug, "gpt-5.3-brocode-test");
     assert_eq!(model_info.base_instructions, specific.base_instructions);
 
     Ok(())
@@ -119,13 +121,13 @@ async fn remote_models_long_model_slug_is_sent_with_high_reasoning() -> Result<(
     skip_if_sandbox!(Ok(()));
 
     let server = MockServer::start().await;
-    let requested_model = "gpt-5.3-codex-test";
-    let prefix_model = "gpt-5.3-codex";
+    let requested_model = "gpt-5.3-brocode-test";
+    let prefix_model = "gpt-5.3-brocode";
     let mut remote_model = test_remote_model_with_policy(
         prefix_model,
         ModelVisibility::List,
-        1_000,
-        TruncationPolicyConfig::bytes(10_000),
+        /*priority*/ 1_000,
+        TruncationPolicyConfig::bytes(/*limit*/ 10_000),
     );
     remote_model.default_reasoning_level = Some(ReasoningEffort::High);
     remote_model.supported_reasoning_levels = vec![
@@ -212,7 +214,7 @@ async fn namespaced_model_slug_uses_catalog_metadata_without_fallback_warning() 
     skip_if_sandbox!(Ok(()));
 
     let server = MockServer::start().await;
-    let requested_model = "custom/gpt-5.2-codex";
+    let requested_model = "custom/gpt-5.2-brocode";
     let response_mock = mount_sse_once(
         &server,
         sse(vec![ev_response_created("resp-1"), ev_completed("resp-1")]),
@@ -310,7 +312,7 @@ async fn remote_models_remote_model_uses_unified_exec() -> Result<()> {
         availability_nux: None,
         apply_patch_tool_type: None,
         web_search_tool_type: Default::default(),
-        truncation_policy: TruncationPolicyConfig::bytes(10_000),
+        truncation_policy: TruncationPolicyConfig::bytes(/*limit*/ 10_000),
         supports_parallel_tool_calls: false,
         supports_image_detail_original: false,
         context_window: Some(272_000),
@@ -440,8 +442,8 @@ async fn remote_models_truncation_policy_without_override_preserves_remote() -> 
     let remote_model = test_remote_model_with_policy(
         slug,
         ModelVisibility::List,
-        1,
-        TruncationPolicyConfig::bytes(12_000),
+        /*priority*/ 1,
+        TruncationPolicyConfig::bytes(/*limit*/ 12_000),
     );
     mount_models_once(
         &server,
@@ -464,7 +466,7 @@ async fn remote_models_truncation_policy_without_override_preserves_remote() -> 
     let model_info = models_manager.get_model_info(slug, &test.config).await;
     assert_eq!(
         model_info.truncation_policy,
-        TruncationPolicyConfig::bytes(12_000)
+        TruncationPolicyConfig::bytes(/*limit*/ 12_000)
     );
 
     Ok(())
@@ -484,8 +486,8 @@ async fn remote_models_truncation_policy_with_tool_output_override() -> Result<(
     let remote_model = test_remote_model_with_policy(
         slug,
         ModelVisibility::List,
-        1,
-        TruncationPolicyConfig::bytes(10_000),
+        /*priority*/ 1,
+        TruncationPolicyConfig::bytes(/*limit*/ 10_000),
     );
     mount_models_once(
         &server,
@@ -509,7 +511,7 @@ async fn remote_models_truncation_policy_with_tool_output_override() -> Result<(
     let model_info = models_manager.get_model_info(slug, &test.config).await;
     assert_eq!(
         model_info.truncation_policy,
-        TruncationPolicyConfig::bytes(200)
+        TruncationPolicyConfig::bytes(/*limit*/ 200)
     );
 
     Ok(())
@@ -554,7 +556,7 @@ async fn remote_models_apply_remote_base_instructions() -> Result<()> {
         availability_nux: None,
         apply_patch_tool_type: None,
         web_search_tool_type: Default::default(),
-        truncation_policy: TruncationPolicyConfig::bytes(10_000),
+        truncation_policy: TruncationPolicyConfig::bytes(/*limit*/ 10_000),
         supports_parallel_tool_calls: false,
         supports_image_detail_original: false,
         context_window: Some(272_000),
@@ -648,7 +650,8 @@ async fn remote_models_do_not_append_removed_builtin_presets() -> Result<()> {
     skip_if_sandbox!(Ok(()));
 
     let server = MockServer::start().await;
-    let remote_model = test_remote_model("remote-alpha", ModelVisibility::List, 0);
+    let remote_model =
+        test_remote_model("remote-alpha", ModelVisibility::List, /*priority*/ 0);
     let models_mock = mount_models_once(
         &server,
         ModelsResponse {
@@ -662,7 +665,7 @@ async fn remote_models_do_not_append_removed_builtin_presets() -> Result<()> {
     let auth = BrocodeAuth::create_dummy_chatgpt_auth_for_testing();
     let provider = ModelProviderInfo {
         base_url: Some(format!("{}/v1", server.uri())),
-        ..built_in_model_providers(/* openai_base_url */ None)["openai"].clone()
+        ..built_in_model_providers(/* openai_base_url */ /*openai_base_url*/ None)["openai"].clone()
     };
     let manager = brocode_core::test_support::models_manager_with_provider(
         brocode_home.path().to_path_buf(),
@@ -705,7 +708,11 @@ async fn remote_models_merge_adds_new_high_priority_first() -> Result<()> {
     skip_if_sandbox!(Ok(()));
 
     let server = MockServer::start().await;
-    let remote_model = test_remote_model("remote-top", ModelVisibility::List, -10_000);
+    let remote_model = test_remote_model(
+        "remote-top",
+        ModelVisibility::List,
+        /*priority*/ -10_000,
+    );
     let models_mock = mount_models_once(
         &server,
         ModelsResponse {
@@ -719,7 +726,7 @@ async fn remote_models_merge_adds_new_high_priority_first() -> Result<()> {
     let auth = BrocodeAuth::create_dummy_chatgpt_auth_for_testing();
     let provider = ModelProviderInfo {
         base_url: Some(format!("{}/v1", server.uri())),
-        ..built_in_model_providers(/* openai_base_url */ None)["openai"].clone()
+        ..built_in_model_providers(/* openai_base_url */ /*openai_base_url*/ None)["openai"].clone()
     };
     let manager = brocode_core::test_support::models_manager_with_provider(
         brocode_home.path().to_path_buf(),
@@ -750,7 +757,7 @@ async fn remote_models_merge_replaces_overlapping_model() -> Result<()> {
 
     let server = MockServer::start().await;
     let slug = bundled_model_slug();
-    let mut remote_model = test_remote_model(&slug, ModelVisibility::List, 0);
+    let mut remote_model = test_remote_model(&slug, ModelVisibility::List, /*priority*/ 0);
     remote_model.display_name = "Overridden".to_string();
     remote_model.description = Some("Overridden description".to_string());
     let models_mock = mount_models_once(
@@ -766,7 +773,7 @@ async fn remote_models_merge_replaces_overlapping_model() -> Result<()> {
     let auth = BrocodeAuth::create_dummy_chatgpt_auth_for_testing();
     let provider = ModelProviderInfo {
         base_url: Some(format!("{}/v1", server.uri())),
-        ..built_in_model_providers(/* openai_base_url */ None)["openai"].clone()
+        ..built_in_model_providers(/* openai_base_url */ /*openai_base_url*/ None)["openai"].clone()
     };
     let manager = brocode_core::test_support::models_manager_with_provider(
         brocode_home.path().to_path_buf(),
@@ -810,7 +817,7 @@ async fn remote_models_merge_preserves_bundled_models_on_empty_response() -> Res
     let auth = BrocodeAuth::create_dummy_chatgpt_auth_for_testing();
     let provider = ModelProviderInfo {
         base_url: Some(format!("{}/v1", server.uri())),
-        ..built_in_model_providers(/* openai_base_url */ None)["openai"].clone()
+        ..built_in_model_providers(/* openai_base_url */ /*openai_base_url*/ None)["openai"].clone()
     };
     let manager = brocode_core::test_support::models_manager_with_provider(
         brocode_home.path().to_path_buf(),
@@ -836,7 +843,8 @@ async fn remote_models_request_times_out_after_5s() -> Result<()> {
     skip_if_sandbox!(Ok(()));
 
     let server = MockServer::start().await;
-    let remote_model = test_remote_model("remote-timeout", ModelVisibility::List, 0);
+    let remote_model =
+        test_remote_model("remote-timeout", ModelVisibility::List, /*priority*/ 0);
     let models_mock = mount_models_once_with_delay(
         &server,
         ModelsResponse {
@@ -851,7 +859,7 @@ async fn remote_models_request_times_out_after_5s() -> Result<()> {
     let auth = BrocodeAuth::create_dummy_chatgpt_auth_for_testing();
     let provider = ModelProviderInfo {
         base_url: Some(format!("{}/v1", server.uri())),
-        ..built_in_model_providers(/* openai_base_url */ None)["openai"].clone()
+        ..built_in_model_providers(/* openai_base_url */ /*openai_base_url*/ None)["openai"].clone()
     };
     let manager = brocode_core::test_support::models_manager_with_provider(
         brocode_home.path().to_path_buf(),
@@ -903,7 +911,11 @@ async fn remote_models_hide_picker_only_models() -> Result<()> {
     skip_if_sandbox!(Ok(()));
 
     let server = MockServer::start().await;
-    let remote_model = test_remote_model("brocode-auto-balanced", ModelVisibility::Hide, 0);
+    let remote_model = test_remote_model(
+        "brocode-auto-balanced",
+        ModelVisibility::Hide,
+        /*priority*/ 0,
+    );
     let models_mock = mount_models_once(
         &server,
         ModelsResponse {
@@ -917,7 +929,7 @@ async fn remote_models_hide_picker_only_models() -> Result<()> {
     let auth = BrocodeAuth::create_dummy_chatgpt_auth_for_testing();
     let provider = ModelProviderInfo {
         base_url: Some(format!("{}/v1", server.uri())),
-        ..built_in_model_providers(/* openai_base_url */ None)["openai"].clone()
+        ..built_in_model_providers(/* openai_base_url */ /*openai_base_url*/ None)["openai"].clone()
     };
     let manager = brocode_core::test_support::models_manager_with_provider(
         brocode_home.path().to_path_buf(),
@@ -988,7 +1000,7 @@ fn test_remote_model(slug: &str, visibility: ModelVisibility, priority: i32) -> 
         slug,
         visibility,
         priority,
-        TruncationPolicyConfig::bytes(10_000),
+        TruncationPolicyConfig::bytes(/*limit*/ 10_000),
     )
 }
 

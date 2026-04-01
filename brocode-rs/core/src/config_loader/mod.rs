@@ -42,7 +42,11 @@ pub use brocode_config::LoaderOverrides;
 pub use brocode_config::McpServerIdentity;
 pub use brocode_config::McpServerRequirement;
 pub use brocode_config::NetworkConstraints;
+pub use brocode_config::NetworkDomainPermissionToml;
+pub use brocode_config::NetworkDomainPermissionsToml;
 pub use brocode_config::NetworkRequirementsToml;
+pub use brocode_config::NetworkUnixSocketPermissionToml;
+pub use brocode_config::NetworkUnixSocketPermissionsToml;
 pub use brocode_config::RequirementSource;
 pub use brocode_config::ResidencyRequirement;
 pub use brocode_config::SandboxModeRequirement;
@@ -97,7 +101,7 @@ pub(crate) async fn first_layer_config_error_from_entries(
 /// - admin:    managed preferences (*)
 /// - system    `/etc/brocode/config.toml` (Unix) or
 ///   `%ProgramData%\OpenAI\Brocode\config.toml` (Windows)
-/// - user      `${CODEX_HOME}/config.toml`
+/// - user      `${BROCODE_HOME}/config.toml`
 /// - cwd       `${PWD}/config.toml` (loaded but disabled when the directory is untrusted)
 /// - tree      parent directories up to root looking for `./.brocode/config.toml` (loaded but disabled when untrusted)
 /// - repo      `$(git rev-parse --show-toplevel)/.brocode/config.toml` (loaded but disabled when untrusted)
@@ -105,7 +109,7 @@ pub(crate) async fn first_layer_config_error_from_entries(
 ///
 /// (*) Only available on macOS via managed device profiles.
 ///
-/// See https://developers.openai.com/codex/security for details.
+/// See https://developers.openai.com/brocode/security for details.
 ///
 /// When loading the config stack for a thread, there should be a `cwd`
 /// associated with it such that `cwd` should be `Some(...)`. Only for
@@ -179,7 +183,7 @@ pub async fn load_config_layers_state(
         .await?;
     layers.push(system_layer);
 
-    // Add a layer for $CODEX_HOME/config.toml if it exists. Note if the file
+    // Add a layer for $BROCODE_HOME/config.toml if it exists. Note if the file
     // exists, but is malformed, then this error should be propagated to the
     // user.
     let user_file = AbsolutePathBuf::resolve_path_against_base(CONFIG_TOML_FILE, brocode_home)?;

@@ -263,7 +263,7 @@
       "description": "Determine where Brocode should store CLI auth credentials.",
       "oneOf": [
         {
-          "description": "Persist credentials in CODEX_HOME/auth.json.",
+          "description": "Persist credentials in BROCODE_HOME/auth.json.",
           "enum": [
             "file"
           ],
@@ -277,7 +277,7 @@
           "type": "string"
         },
         {
-          "description": "Use keyring when available; otherwise, fall back to a file in CODEX_HOME.",
+          "description": "Use keyring when available; otherwise, fall back to a file in BROCODE_HOME.",
           "enum": [
             "auto"
           ],
@@ -338,6 +338,12 @@
             "apps": {
               "type": "boolean"
             },
+            "brocode_git_commit": {
+              "type": "boolean"
+            },
+            "brocode_hooks": {
+              "type": "boolean"
+            },
             "child_agents_md": {
               "type": "boolean"
             },
@@ -345,12 +351,6 @@
               "type": "boolean"
             },
             "code_mode_only": {
-              "type": "boolean"
-            },
-            "brocode_git_commit": {
-              "type": "boolean"
-            },
-            "brocode_hooks": {
               "type": "boolean"
             },
             "collab": {
@@ -501,9 +501,6 @@
               "type": "boolean"
             },
             "use_linux_sandbox_bwrap": {
-              "type": "boolean"
-            },
-            "voice_transcription": {
               "type": "boolean"
             },
             "web_search": {
@@ -819,10 +816,62 @@
       },
       "type": "object"
     },
+    "ModelProviderAuthInfo": {
+      "additionalProperties": false,
+      "description": "Configuration for obtaining a provider bearer token from a command.",
+      "properties": {
+        "args": {
+          "default": [],
+          "description": "Command arguments.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "command": {
+          "description": "Command to execute. Bare names are resolved via `PATH`; paths are resolved against `cwd`.",
+          "type": "string"
+        },
+        "cwd": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/AbsolutePathBuf"
+            }
+          ],
+          "description": "Working directory used when running the token command."
+        },
+        "refresh_interval_ms": {
+          "default": 300000,
+          "description": "Maximum age for the cached token before rerunning the command.",
+          "format": "uint64",
+          "minimum": 1.0,
+          "type": "integer"
+        },
+        "timeout_ms": {
+          "default": 5000,
+          "description": "Maximum time to wait for the token command to exit successfully.",
+          "format": "uint64",
+          "minimum": 1.0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "type": "object"
+    },
     "ModelProviderInfo": {
       "additionalProperties": false,
       "description": "Serializable representation of a provider definition.",
       "properties": {
+        "auth": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/ModelProviderAuthInfo"
+            }
+          ],
+          "description": "Command-backed bearer-token configuration for this provider."
+        },
         "base_url": {
           "description": "Base URL for the provider's OpenAI-compatible API.",
           "type": "string"
@@ -913,6 +962,16 @@
       ],
       "type": "object"
     },
+    "NetworkDomainPermissionToml": {
+      "enum": [
+        "allow",
+        "deny"
+      ],
+      "type": "string"
+    },
+    "NetworkDomainPermissionsToml": {
+      "type": "object"
+    },
     "NetworkModeSchema": {
       "enum": [
         "limited",
@@ -926,20 +985,8 @@
         "allow_local_binding": {
           "type": "boolean"
         },
-        "allow_unix_sockets": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
         "allow_upstream_proxy": {
           "type": "boolean"
-        },
-        "allowed_domains": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
         },
         "dangerously_allow_all_unix_sockets": {
           "type": "boolean"
@@ -947,11 +994,8 @@
         "dangerously_allow_non_loopback_proxy": {
           "type": "boolean"
         },
-        "denied_domains": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
+        "domains": {
+          "$ref": "#/definitions/NetworkDomainPermissionsToml"
         },
         "enable_socks5": {
           "type": "boolean"
@@ -970,8 +1014,21 @@
         },
         "socks_url": {
           "type": "string"
+        },
+        "unix_sockets": {
+          "$ref": "#/definitions/NetworkUnixSocketPermissionsToml"
         }
       },
+      "type": "object"
+    },
+    "NetworkUnixSocketPermissionToml": {
+      "enum": [
+        "allow",
+        "none"
+      ],
+      "type": "string"
+    },
+    "NetworkUnixSocketPermissionsToml": {
       "type": "object"
     },
     "Notice": {
@@ -982,7 +1039,7 @@
           "type": "boolean"
         },
         "hide_gpt-5.1-brocode-max_migration_prompt": {
-          "description": "Tracks whether the user has seen the gpt-5.1-codex-max migration prompt",
+          "description": "Tracks whether the user has seen the gpt-5.1-brocode-max migration prompt",
           "type": "boolean"
         },
         "hide_gpt5_1_migration_prompt": {
@@ -1040,7 +1097,7 @@
           "type": "string"
         },
         {
-          "description": "CODEX_HOME/.credentials.json This file will be readable to Brocode and other applications running as the same user.",
+          "description": "BROCODE_HOME/.credentials.json This file will be readable to Brocode and other applications running as the same user.",
           "enum": [
             "file"
           ],
@@ -1715,7 +1772,7 @@
         },
         "theme": {
           "default": null,
-          "description": "Syntax highlighting theme name (kebab-case).\n\nWhen set, overrides automatic light/dark theme detection. Use `/theme` in the TUI or see `$CODEX_HOME/themes` for custom themes.",
+          "description": "Syntax highlighting theme name (kebab-case).\n\nWhen set, overrides automatic light/dark theme detection. Use `/theme` in the TUI or see `$BROCODE_HOME/themes` for custom themes.",
           "type": "string"
         }
       },
@@ -1975,6 +2032,12 @@
         "apps": {
           "type": "boolean"
         },
+        "brocode_git_commit": {
+          "type": "boolean"
+        },
+        "brocode_hooks": {
+          "type": "boolean"
+        },
         "child_agents_md": {
           "type": "boolean"
         },
@@ -1982,12 +2045,6 @@
           "type": "boolean"
         },
         "code_mode_only": {
-          "type": "boolean"
-        },
-        "brocode_git_commit": {
-          "type": "boolean"
-        },
-        "brocode_hooks": {
           "type": "boolean"
         },
         "collab": {
@@ -2140,9 +2197,6 @@
         "use_linux_sandbox_bwrap": {
           "type": "boolean"
         },
-        "voice_transcription": {
-          "type": "boolean"
-        },
         "web_search": {
           "type": "boolean"
         },
@@ -2232,7 +2286,7 @@
           "$ref": "#/definitions/AbsolutePathBuf"
         }
       ],
-      "description": "Directory where Brocode writes log files, for example `brocode-tui.log`. Defaults to `$CODEX_HOME/log`."
+      "description": "Directory where Brocode writes log files, for example `brocode-tui.log`. Defaults to `$BROCODE_HOME/log`."
     },
     "mcp_oauth_callback_port": {
       "description": "Optional fixed port for the local HTTP callback server used during MCP OAuth login. When unset, Brocode will bind to an ephemeral port chosen by the OS.",
@@ -2251,7 +2305,7 @@
         }
       ],
       "default": null,
-      "description": "Preferred backend for storing MCP OAuth credentials. keyring: Use an OS-specific keyring service. https://github.com/openai/codex/blob/main/codex-rs/rmcp-client/src/oauth.rs#L2 file: Use a file in the Brocode home directory. auto (default): Use the OS-specific keyring service if available, otherwise use a file."
+      "description": "Preferred backend for storing MCP OAuth credentials. keyring: Use an OS-specific keyring service. https://github.com/openai/brocode/blob/main/brocode-rs/rmcp-client/src/oauth.rs#L2 file: Use a file in the Brocode home directory. auto (default): Use the OS-specific keyring service if available, otherwise use a file."
     },
     "mcp_servers": {
       "additionalProperties": {
@@ -2498,7 +2552,7 @@
           "$ref": "#/definitions/AbsolutePathBuf"
         }
       ],
-      "description": "Directory where Brocode stores the SQLite state DB. Defaults to `$BROCODE_SQLITE_HOME` when set. Otherwise uses `$CODEX_HOME`."
+      "description": "Directory where Brocode stores the SQLite state DB. Defaults to `$BROCODE_SQLITE_HOME` when set. Otherwise uses `$BROCODE_HOME`."
     },
     "suppress_unstable_features_warning": {
       "description": "Suppress warnings about unstable (under development) features.",

@@ -12,7 +12,7 @@ use crate::markdown_render::render_markdown_text_with_width_and_cwd;
 use insta::assert_snapshot;
 
 fn render_markdown_text_for_cwd(input: &str, cwd: &Path) -> Text<'static> {
-    render_markdown_text_with_width_and_cwd(input, None, Some(cwd))
+    render_markdown_text_with_width_and_cwd(input, /*width*/ None, Some(cwd))
 }
 
 #[test]
@@ -671,7 +671,8 @@ fn file_link_hides_destination() {
         "[brocode-rs/tui/src/markdown_render.rs](/Users/example/code/brocode/brocode-rs/tui/src/markdown_render.rs)",
         Path::new("/Users/example/code/brocode"),
     );
-    let expected = Text::from(Line::from_iter(["brocode-rs/tui/src/markdown_render.rs".cyan()]));
+    let expected =
+        Text::from(Line::from_iter(["brocode-rs/tui/src/markdown_render.rs".cyan()]));
     assert_eq!(text, expected);
 }
 
@@ -681,7 +682,9 @@ fn file_link_appends_line_number_when_label_lacks_it() {
         "[markdown_render.rs](/Users/example/code/brocode/brocode-rs/tui/src/markdown_render.rs:74)",
         Path::new("/Users/example/code/brocode"),
     );
-    let expected = Text::from(Line::from_iter(["brocode-rs/tui/src/markdown_render.rs:74".cyan()]));
+    let expected = Text::from(Line::from_iter([
+        "brocode-rs/tui/src/markdown_render.rs:74".cyan(),
+    ]));
     assert_eq!(text, expected);
 }
 
@@ -702,7 +705,9 @@ fn file_link_appends_hash_anchor_when_label_lacks_it() {
         Path::new("/Users/example/code/brocode"),
     );
     let expected =
-        Text::from(Line::from_iter(["brocode-rs/tui/src/markdown_render.rs:74:3".cyan()]));
+        Text::from(Line::from_iter([
+            "brocode-rs/tui/src/markdown_render.rs:74:3".cyan(),
+        ]));
     assert_eq!(text, expected);
 }
 
@@ -713,7 +718,9 @@ fn file_link_uses_target_path_for_hash_anchor() {
         Path::new("/Users/example/code/brocode"),
     );
     let expected =
-        Text::from(Line::from_iter(["brocode-rs/tui/src/markdown_render.rs:74:3".cyan()]));
+        Text::from(Line::from_iter([
+            "brocode-rs/tui/src/markdown_render.rs:74:3".cyan(),
+        ]));
     assert_eq!(text, expected);
 }
 
@@ -724,7 +731,9 @@ fn file_link_appends_range_when_label_lacks_it() {
         Path::new("/Users/example/code/brocode"),
     );
     let expected =
-        Text::from(Line::from_iter(["brocode-rs/tui/src/markdown_render.rs:74:3-76:9".cyan()]));
+        Text::from(Line::from_iter([
+            "brocode-rs/tui/src/markdown_render.rs:74:3-76:9".cyan(),
+        ]));
     assert_eq!(text, expected);
 }
 
@@ -735,7 +744,9 @@ fn file_link_uses_target_path_for_range() {
         Path::new("/Users/example/code/brocode"),
     );
     let expected =
-        Text::from(Line::from_iter(["brocode-rs/tui/src/markdown_render.rs:74:3-76:9".cyan()]));
+        Text::from(Line::from_iter([
+            "brocode-rs/tui/src/markdown_render.rs:74:3-76:9".cyan(),
+        ]));
     assert_eq!(text, expected);
 }
 
@@ -746,7 +757,9 @@ fn file_link_appends_hash_range_when_label_lacks_it() {
         Path::new("/Users/example/code/brocode"),
     );
     let expected =
-        Text::from(Line::from_iter(["brocode-rs/tui/src/markdown_render.rs:74:3-76:9".cyan()]));
+        Text::from(Line::from_iter([
+            "brocode-rs/tui/src/markdown_render.rs:74:3-76:9".cyan(),
+        ]));
     assert_eq!(text, expected);
 }
 
@@ -771,7 +784,9 @@ fn file_link_uses_target_path_for_hash_range() {
         Path::new("/Users/example/code/brocode"),
     );
     let expected =
-        Text::from(Line::from_iter(["brocode-rs/tui/src/markdown_render.rs:74:3-76:9".cyan()]));
+        Text::from(Line::from_iter([
+            "brocode-rs/tui/src/markdown_render.rs:74:3-76:9".cyan(),
+        ]));
     assert_eq!(text, expected);
 }
 
@@ -878,9 +893,9 @@ fn consecutive_unordered_list_local_file_links_do_not_detach_paths() {
     assert_eq!(
         rendered,
         vec![
-            "- brocode-rs/README.md:93: cli is the top-level multitool binary.".to_string(),
-            "- brocode-rs/core/README.md:1: brocode-core owns the real runtime".to_string(),
-            "  behavior.".to_string(),
+            "- brocode-rs/README.md:93: cli is the top-level multitool binary.",
+            "- brocode-rs/core/README.md:1: brocode-core owns the real runtime",
+            "  behavior.",
         ]
     );
 }

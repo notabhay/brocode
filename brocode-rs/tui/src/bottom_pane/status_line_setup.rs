@@ -75,7 +75,7 @@ pub(crate) enum StatusLineItem {
     /// Remaining usage on the weekly rate limit.
     WeeklyLimit,
 
-    /// brocode application version.
+    /// Brocode application version.
     BrocodeVersion,
 
     /// Total context window size in tokens.
@@ -118,7 +118,7 @@ impl StatusLineItem {
             StatusLineItem::WeeklyLimit => {
                 "Remaining usage on weekly usage limit (omitted when unavailable)"
             }
-            StatusLineItem::BrocodeVersion => "brocode application version",
+            StatusLineItem::BrocodeVersion => "Brocode application version",
             StatusLineItem::ContextWindowSize => {
                 "Total context window size in tokens (omitted when unknown)"
             }
@@ -355,7 +355,7 @@ mod tests {
                 StatusLineItem::GitBranch.to_string(),
             ]),
             StatusLinePreviewData::from_iter([
-                (StatusLineItem::ModelName, "gpt-5-codex".to_string()),
+                (StatusLineItem::ModelName, "gpt-5-brocode".to_string()),
                 (StatusLineItem::CurrentDir, "~/brocode-rs".to_string()),
                 (
                     StatusLineItem::GitBranch,
@@ -366,7 +366,7 @@ mod tests {
             AppEventSender::new(tx_raw),
         );
 
-        assert_snapshot!(render_lines(&view, 72));
+        assert_snapshot!(render_lines(&view, /*width*/ 72));
     }
 
     fn render_lines(view: &StatusLineSetupView, width: u16) -> String {

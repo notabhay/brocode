@@ -14,6 +14,7 @@ chrono = { workspace = true }
 brocode-app-server-protocol = { workspace = true }
 brocode-core = { workspace = true }
 brocode-features = { workspace = true }
+brocode-login = { workspace = true }
 brocode-protocol = { workspace = true }
 brocode-utils-cargo-bin = { workspace = true }
 serde = { workspace = true }

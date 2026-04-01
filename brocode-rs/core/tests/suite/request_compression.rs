@@ -26,7 +26,7 @@ async fn request_body_is_zstd_compressed_for_brocode_backend_when_enabled() -> a
     )
     .await;
 
-    let base_url = format!("{}/backend-api/codex/v1", server.uri());
+    let base_url = format!("{}/backend-api/brocode/v1", server.uri());
     let mut builder = test_brocode()
         .with_auth(BrocodeAuth::create_dummy_chatgpt_auth_for_testing())
         .with_config(move |config| {
@@ -75,7 +75,7 @@ async fn request_body_is_not_compressed_for_api_key_auth_even_when_enabled() -> 
     )
     .await;
 
-    let base_url = format!("{}/backend-api/codex/v1", server.uri());
+    let base_url = format!("{}/backend-api/brocode/v1", server.uri());
     let mut builder = test_brocode().with_config(move |config| {
         config
             .features

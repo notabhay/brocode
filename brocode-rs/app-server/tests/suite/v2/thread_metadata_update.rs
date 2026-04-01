@@ -184,7 +184,7 @@ async fn thread_metadata_update_repairs_missing_sqlite_row_for_stored_thread() -
         "2025-01-05T12:00:00Z",
         preview,
         Some("mock_provider"),
-        None,
+        /*git_info*/ None,
     )?;
 
     let mut mcp = McpProcess::new(brocode_home.path()).await?;
@@ -237,7 +237,7 @@ async fn thread_metadata_update_repairs_loaded_thread_without_resetting_summary(
         "2025-01-06T08:30:00Z",
         preview,
         Some("mock_provider"),
-        None,
+        /*git_info*/ None,
     )?;
     let thread_uuid = ThreadId::from_string(&thread_id)?;
     let rollout_path = rollout_path(brocode_home.path(), "2025-01-06T08-30-00", &thread_id);
@@ -245,10 +245,10 @@ async fn thread_metadata_update_repairs_loaded_thread_without_resetting_summary(
         Some(&state_db),
         rollout_path.as_path(),
         "mock_provider",
-        None,
+        /*builder*/ None,
         &[],
-        None,
-        None,
+        /*archived_only*/ None,
+        /*new_thread_memory_mode*/ None,
     )
     .await;
 
@@ -317,7 +317,7 @@ async fn thread_metadata_update_repairs_missing_sqlite_row_for_archived_thread()
         "2025-01-06T08:30:00Z",
         preview,
         Some("mock_provider"),
-        None,
+        /*git_info*/ None,
     )?;
 
     let archived_dir = brocode_home.path().join(ARCHIVED_SESSIONS_SUBDIR);
@@ -381,7 +381,7 @@ async fn thread_metadata_update_can_clear_stored_git_fields() -> Result<()> {
         Some(RolloutGitInfo {
             commit_hash: Some(GitSha::new("abc123")),
             branch: Some("feature/sidebar-pr".to_string()),
-            repository_url: Some("git@example.com:openai/codex.git".to_string()),
+            repository_url: Some("git@example.com:openai/brocode.git".to_string()),
         }),
     )?;
     let _state_db = init_state_db(brocode_home.path()).await?;
@@ -430,7 +430,9 @@ async fn thread_metadata_update_can_clear_stored_git_fields() -> Result<()> {
 
 async fn init_state_db(brocode_home: &Path) -> Result<Arc<StateRuntime>> {
     let state_db = StateRuntime::init(brocode_home.to_path_buf(), "mock_provider".into()).await?;
-    state_db.mark_backfill_complete(None).await?;
+    state_db
+        .mark_backfill_complete(/*last_watermark*/ None)
+        .await?;
     Ok(state_db)
 }
 

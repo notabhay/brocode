@@ -1,11 +1,11 @@
 ---
 source: tui/src/chatwidget/tests.rs
-expression: terminal.backend()
+expression: normalized_backend_snapshot(terminal.backend())
 ---
 "                                                                                "
 "• Analyzing (0s • esc to interrupt)                                             "
 "                                                                                "
 "                                                                                "
-"› [PROMPT HERE]                                                                 "
+"› Ask Brocode to do anything                                                    "
 "                                                                                "
-"  ? for shortcuts                                            100% context left  "
+"  gpt-5.3-brocode default · 100% left · /tmp/project                            "

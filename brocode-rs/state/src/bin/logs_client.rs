@@ -14,8 +14,8 @@ use owo_colors::OwoColorize;
 #[command(name = "brocode-state-logs")]
 #[command(about = "Tail Brocode logs from the dedicated logs SQLite DB with simple filters")]
 struct Args {
-    /// Path to CODEX_HOME. Defaults to $CODEX_HOME or ~/.brocode.
-    #[arg(long, env = "CODEX_HOME")]
+    /// Path to BROCODE_HOME. Defaults to $BROCODE_HOME or ~/.brocode.
+    #[arg(long, env = "BROCODE_HOME")]
     brocode_home: Option<PathBuf>,
 
     /// Direct path to the logs SQLite database. Overrides --brocode-home.

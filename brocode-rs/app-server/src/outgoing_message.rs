@@ -815,7 +815,7 @@ mod tests {
         let notification = ServerNotification::ModelRerouted(ModelReroutedNotification {
             thread_id: "thread-1".to_string(),
             turn_id: "turn-1".to_string(),
-            from_model: "gpt-5.3-codex".to_string(),
+            from_model: "gpt-5.3-brocode".to_string(),
             to_model: "gpt-5.2".to_string(),
             reason: ModelRerouteReason::HighRiskCyberActivity,
         });
@@ -827,7 +827,7 @@ mod tests {
                 "params": {
                     "threadId": "thread-1",
                     "turnId": "turn-1",
-                    "fromModel": "gpt-5.3-codex",
+                    "fromModel": "gpt-5.3-brocode",
                     "toModel": "gpt-5.2",
                     "reason": "highRiskCyberActivity",
                 },
@@ -886,7 +886,7 @@ mod tests {
             .register_request_context(RequestContext::new(
                 request_id.clone(),
                 tracing::info_span!("app_server.request", rpc.method = "thread/start"),
-                None,
+                /*parent_trace*/ None,
             ))
             .await;
         assert_eq!(outgoing.request_context_count().await, 1);
@@ -947,7 +947,7 @@ mod tests {
                     ServerNotification::ModelRerouted(ModelReroutedNotification {
                         thread_id: "thread-1".to_string(),
                         turn_id: "turn-1".to_string(),
-                        from_model: "gpt-5.3-codex".to_string(),
+                        from_model: "gpt-5.3-brocode".to_string(),
                         to_model: "gpt-5.2".to_string(),
                         reason: ModelRerouteReason::HighRiskCyberActivity,
                     }),
@@ -997,14 +997,14 @@ mod tests {
             .register_request_context(RequestContext::new(
                 closed_connection_request,
                 tracing::info_span!("app_server.request", rpc.method = "turn/interrupt"),
-                None,
+                /*parent_trace*/ None,
             ))
             .await;
         outgoing
             .register_request_context(RequestContext::new(
                 open_connection_request,
                 tracing::info_span!("app_server.request", rpc.method = "turn/start"),
-                None,
+                /*parent_trace*/ None,
             ))
             .await;
         assert_eq!(outgoing.request_context_count().await, 2);

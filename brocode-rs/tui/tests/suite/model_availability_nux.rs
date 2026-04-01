@@ -89,7 +89,7 @@ trust_level = "trusted"
         .arg("-C")
         .arg(&repo_root)
         .arg("seed session for resume")
-        .env("CODEX_HOME", brocode_home.path())
+        .env("BROCODE_HOME", brocode_home.path())
         .env("OPENAI_API_KEY", "dummy")
         .env("BROCODE_RS_SSE_FIXTURE", fixture_path)
         .env("OPENAI_BASE_URL", "http://unused.local")
@@ -103,7 +103,7 @@ trust_level = "trusted"
 
     let mut env = HashMap::new();
     env.insert(
-        "CODEX_HOME".to_string(),
+        "BROCODE_HOME".to_string(),
         brocode_home.path().display().to_string(),
     );
     env.insert("OPENAI_API_KEY".to_string(), "dummy".to_string());
@@ -112,8 +112,6 @@ trust_level = "trusted"
         "resume".to_string(),
         "--last".to_string(),
         "--no-alt-screen".to_string(),
-        "--disable".to_string(),
-        "tui_app_server".to_string(),
         "-C".to_string(),
         repo_root.display().to_string(),
         "-c".to_string(),

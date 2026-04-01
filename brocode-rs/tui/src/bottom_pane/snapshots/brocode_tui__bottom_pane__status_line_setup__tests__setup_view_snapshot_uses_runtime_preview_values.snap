@@ -1,6 +1,5 @@
 ---
 source: tui/src/bottom_pane/status_line_setup.rs
-assertion_line: 369
 expression: "render_lines(&view, 72)"
 ---
                                                                         
@@ -18,5 +17,5 @@ expression: "render_lines(&view, 72)"
   [ ] context-used          Percentage of context window used (omitte…  
   [ ] five-hour-limit       Remaining usage on 5-hour usage limit (om…  
                                                                         
-  gpt-5-codex · ~/brocode-rs · jif/statusline-preview                   
+  gpt-5-brocode · ~/brocode-rs · jif/statusline-preview                 
   Use ↑↓ to navigate, ←→ to move, space to select, enter to confirm, esc

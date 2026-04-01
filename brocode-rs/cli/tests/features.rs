@@ -7,7 +7,7 @@ use tempfile::TempDir;
 
 fn brocode_command(brocode_home: &Path) -> Result<assert_cmd::Command> {
     let mut cmd = assert_cmd::Command::new(brocode_utils_cargo_bin::cargo_bin("brocode")?);
-    cmd.env("CODEX_HOME", brocode_home);
+    cmd.env("BROCODE_HOME", brocode_home);
     Ok(cmd)
 }
 

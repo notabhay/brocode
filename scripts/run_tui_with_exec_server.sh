@@ -58,4 +58,4 @@ export BROCODE_EXEC_SERVER_URL="$exec_server_url"
 echo "Starting brocode-tui with BROCODE_EXEC_SERVER_URL=$BROCODE_EXEC_SERVER_URL" >&2
 
 cd "$cargo_root"
-cargo run -p brocode-tui --bin brocode-tui -- -c features.tui_app_server=true -c mcp_oauth_credentials_store=file "$@"
+cargo run -p brocode-tui --bin brocode-tui -- -c mcp_oauth_credentials_store=file "$@"

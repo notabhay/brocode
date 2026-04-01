@@ -24,7 +24,7 @@ brocode-client = { workspace = true }
 brocode-core = { path = "../core" }
 brocode-git-utils = { workspace = true }
 brocode-login = { path = "../login" }
-brocode-tui = { path = "../tui" }
+brocode-tui = { workspace = true }
 brocode-utils-cli = { workspace = true }
 crossterm = { workspace = true, features = ["event-stream"] }
 ratatui = { workspace = true }

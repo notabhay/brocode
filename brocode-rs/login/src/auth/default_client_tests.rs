@@ -14,6 +14,7 @@ fn test_get_brocode_user_agent() {
 #[test]
 fn is_first_party_originator_matches_known_values() {
     assert_eq!(is_first_party_originator(DEFAULT_ORIGINATOR), true);
+    assert_eq!(is_first_party_originator("brocode-tui"), true);
     assert_eq!(is_first_party_originator("brocode_vscode"), true);
     assert_eq!(is_first_party_originator("Brocode Something Else"), true);
     assert_eq!(is_first_party_originator("brocode_cli"), false);
@@ -85,7 +86,7 @@ async fn test_create_client_sets_default_headers() {
         .expect("residency header missing");
     assert_eq!(residency_header.to_str().unwrap(), "us");
 
-    set_default_client_residency_requirement(None);
+    set_default_client_residency_requirement(/*enforce_residency*/ None);
 }
 
 #[test]

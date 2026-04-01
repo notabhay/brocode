@@ -1,6 +1,5 @@
 ---
 source: tui/src/chatwidget/tests.rs
-assertion_line: 3482
 expression: "format!(\"{buf:?}\")"
 ---
 Buffer {
@@ -16,7 +15,7 @@ Buffer {
         "  $ echo hello world                                                            ",
         "                                                                                ",
         "› 1. Yes, proceed (y)                                                           ",
-        "  2. No, and tell brocode what to do differently (esc)                          ",
+        "  2. No, and tell Brocode what to do differently (esc)                          ",
         "                                                                                ",
         "  Press enter to confirm or esc to cancel                                       ",
     ],

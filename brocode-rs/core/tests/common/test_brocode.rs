@@ -54,7 +54,7 @@ use wiremock::matchers::path_regex;
 
 type ConfigMutator = dyn FnOnce(&mut Config) + Send;
 type PreBuildHook = dyn FnOnce(&Path) + Send + 'static;
-const TEST_MODEL_WITH_EXPERIMENTAL_TOOLS: &str = "test-gpt-5.1-codex";
+const TEST_MODEL_WITH_EXPERIMENTAL_TOOLS: &str = "test-gpt-5.1-brocode";
 const REMOTE_EXEC_SERVER_START_TIMEOUT: Duration = Duration::from_secs(5);
 const REMOTE_EXEC_SERVER_POLL_INTERVAL: Duration = Duration::from_millis(25);
 static REMOTE_EXEC_SERVER_INSTANCE_COUNTER: AtomicU64 = AtomicU64::new(0);
@@ -624,9 +624,9 @@ fn ensure_test_model_catalog(config: &mut Config) -> Result<()> {
     let mut model = bundled_models
         .models
         .iter()
-        .find(|candidate| candidate.slug == "gpt-5.1-codex")
+        .find(|candidate| candidate.slug == "gpt-5.1-brocode")
         .cloned()
-        .unwrap_or_else(|| panic!("missing bundled model gpt-5.1-codex"));
+        .unwrap_or_else(|| panic!("missing bundled model gpt-5.1-brocode"));
     model.slug = TEST_MODEL_WITH_EXPERIMENTAL_TOOLS.to_string();
     model.display_name = TEST_MODEL_WITH_EXPERIMENTAL_TOOLS.to_string();
     model.experimental_supported_tools = vec!["test_sync_tool".to_string()];

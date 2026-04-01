@@ -1,6 +1,6 @@
 #!/usr/bin/env -S NODE_NO_WARNINGS=1 pnpm ts-node-esm --files
 
-import { Brocode } from "@openai/codex-sdk";
+import { Brocode } from "@openai/brocode-sdk";
 
 import { brocodePathOverride } from "./helpers.ts";
 

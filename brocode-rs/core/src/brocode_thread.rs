@@ -74,6 +74,16 @@ impl BrocodeThread {
         self.brocode.shutdown_and_wait().await
     }
 
+    #[doc(hidden)]
+    pub async fn ensure_rollout_materialized(&self) {
+        self.brocode.session.ensure_rollout_materialized().await;
+    }
+
+    #[doc(hidden)]
+    pub async fn flush_rollout(&self) {
+        self.brocode.session.flush_rollout().await;
+    }
+
     pub async fn submit_with_trace(
         &self,
         op: Op,
@@ -170,10 +180,7 @@ impl BrocodeThread {
                 .session
                 .queue_response_items_for_next_turn(items)
                 .await;
-            self.brocode
-                .session
-                .ensure_task_for_queued_response_items()
-                .await;
+            self.brocode.session.ensure_task_for_pending_inputs().await;
         }
 
         Ok(submission_id)

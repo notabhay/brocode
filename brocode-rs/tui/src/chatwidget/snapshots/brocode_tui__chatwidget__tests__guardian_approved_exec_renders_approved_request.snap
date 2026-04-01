@@ -1,17 +1,11 @@
 ---
 source: tui/src/chatwidget/tests.rs
-assertion_line: 9237
 expression: term.backend().vt100().screen().contents()
 ---
-
-
-
-
-
 ✔ Auto-reviewer approved brocode to run rm -f /tmp/guardian-approved.sqlite this
   time
 
 
-› [PROMPT HERE]
+› Ask Brocode to do anything
 
-  ? for shortcuts                                                                                    100% context left
+  gpt-5.3-brocode default · 100% left · /tmp/project

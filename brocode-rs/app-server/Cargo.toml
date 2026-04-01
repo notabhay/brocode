@@ -49,6 +49,7 @@ brocode-feedback = { workspace = true }
 brocode-rmcp-client = { workspace = true }
 brocode-sandboxing = { workspace = true }
 brocode-state = { workspace = true }
+brocode-tools = { workspace = true }
 brocode-utils-absolute-path = { workspace = true }
 brocode-utils-json-to-toml = { workspace = true }
 chrono = { workspace = true }

@@ -50,7 +50,7 @@ rustPlatform.buildRustPackage (_: {
   meta = with lib; {
     description = "OpenAI Brocode command‑line interface rust implementation";
     license = licenses.asl20;
-    homepage = "https://github.com/openai/codex";
+    homepage = "https://github.com/openai/brocode";
     mainProgram = "brocode";
   };
 })

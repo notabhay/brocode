@@ -7,7 +7,7 @@ pub struct EnvironmentRow {
     pub id: String,
     pub label: Option<String>,
     pub is_pinned: bool,
-    pub repo_hints: Option<String>, // e.g., "openai/codex"
+    pub repo_hints: Option<String>, // e.g., "openai/brocode"
 }
 
 #[derive(Clone, Debug, Default)]
@@ -408,7 +408,7 @@ mod tests {
             &self,
             id: TaskId,
         ) -> brocode_cloud_tasks_client::Result<TaskSummary> {
-            self.list_tasks(None, None, None)
+            self.list_tasks(/*env*/ None, /*limit*/ None, /*cursor*/ None)
                 .await?
                 .tasks
                 .into_iter()
@@ -498,7 +498,7 @@ mod tests {
         let backend = FakeBackend { by_env };
 
         // Act + Assert
-        let root = load_tasks(&backend, None).await.unwrap();
+        let root = load_tasks(&backend, /*env*/ None).await.unwrap();
         assert_eq!(root.len(), 2);
         assert_eq!(root[0].title, "root-1");
 

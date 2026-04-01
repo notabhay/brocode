@@ -9,6 +9,7 @@ use crate::auth::AuthMode;
 use crate::error::EnvVarError;
 use brocode_api::Provider as ApiProvider;
 use brocode_api::provider::RetryConfig as ApiRetryConfig;
+use brocode_protocol::config_types::ModelProviderAuthInfo;
 use http::HeaderMap;
 use http::header::HeaderName;
 use http::header::HeaderValue;
@@ -30,9 +31,9 @@ const MAX_REQUEST_MAX_RETRIES: u64 = 100;
 
 const OPENAI_PROVIDER_NAME: &str = "OpenAI";
 pub const OPENAI_PROVIDER_ID: &str = "openai";
-const CHAT_WIRE_API_REMOVED_ERROR: &str = "`wire_api = \"chat\"` is no longer supported.\nHow to fix: set `wire_api = \"responses\"` in your provider config.\nMore info: https://github.com/openai/codex/discussions/7782";
+const CHAT_WIRE_API_REMOVED_ERROR: &str = "`wire_api = \"chat\"` is no longer supported.\nHow to fix: set `wire_api = \"responses\"` in your provider config.\nMore info: https://github.com/openai/brocode/discussions/7782";
 pub(crate) const LEGACY_OLLAMA_CHAT_PROVIDER_ID: &str = "ollama-chat";
-pub(crate) const OLLAMA_CHAT_PROVIDER_REMOVED_ERROR: &str = "`ollama-chat` is no longer supported.\nHow to fix: replace `ollama-chat` with `ollama` in `model_provider`, `oss_provider`, or `--local-provider`.\nMore info: https://github.com/openai/codex/discussions/7782";
+pub(crate) const OLLAMA_CHAT_PROVIDER_REMOVED_ERROR: &str = "`ollama-chat` is no longer supported.\nHow to fix: replace `ollama-chat` with `ollama` in `model_provider`, `oss_provider`, or `--local-provider`.\nMore info: https://github.com/openai/brocode/discussions/7782";
 
 /// Wire protocol that the provider speaks.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, JsonSchema)]
@@ -86,6 +87,9 @@ pub struct ModelProviderInfo {
     /// this may be necessary when using this programmatically.
     pub experimental_bearer_token: Option<String>,
 
+    /// Command-backed bearer-token configuration for this provider.
+    pub auth: Option<ModelProviderAuthInfo>,
+
     /// Which wire protocol this provider expects.
     #[serde(default)]
     pub wire_api: WireApi,
@@ -130,6 +134,36 @@ pub struct ModelProviderInfo {
 }
 
 impl ModelProviderInfo {
+    pub(crate) fn validate(&self) -> std::result::Result<(), String> {
+        let Some(auth) = self.auth.as_ref() else {
+            return Ok(());
+        };
+
+        if auth.command.trim().is_empty() {
+            return Err("provider auth.command must not be empty".to_string());
+        }
+
+        let mut conflicts = Vec::new();
+        if self.env_key.is_some() {
+            conflicts.push("env_key");
+        }
+        if self.experimental_bearer_token.is_some() {
+            conflicts.push("experimental_bearer_token");
+        }
+        if self.requires_openai_auth {
+            conflicts.push("requires_openai_auth");
+        }
+
+        if conflicts.is_empty() {
+            Ok(())
+        } else {
+            Err(format!(
+                "provider auth cannot be combined with {}",
+                conflicts.join(", ")
+            ))
+        }
+    }
+
     fn build_header_map(&self) -> crate::error::Result<HeaderMap> {
         let capacity = self.http_headers.as_ref().map_or(0, HashMap::len)
             + self.env_http_headers.as_ref().map_or(0, HashMap::len);
@@ -162,7 +196,7 @@ impl ModelProviderInfo {
         auth_mode: Option<AuthMode>,
     ) -> crate::error::Result<ApiProvider> {
         let default_base_url = if matches!(auth_mode, Some(AuthMode::Chatgpt)) {
-            "https://chatgpt.com/backend-api/codex"
+            "https://chatgpt.com/backend-api/brocode"
         } else {
             "https://api.openai.com/v1"
         };
@@ -246,6 +280,7 @@ impl ModelProviderInfo {
             env_key: None,
             env_key_instructions: None,
             experimental_bearer_token: None,
+            auth: None,
             wire_api: WireApi::Responses,
             query_params: None,
             http_headers: Some(
@@ -276,6 +311,10 @@ impl ModelProviderInfo {
 
     pub fn is_openai(&self) -> bool {
         self.name == OPENAI_PROVIDER_NAME
+    }
+
+    pub(crate) fn has_command_auth(&self) -> bool {
+        self.auth.is_some()
     }
 }
 
@@ -338,6 +377,7 @@ pub fn create_oss_provider_with_base_url(base_url: &str, wire_api: WireApi) -> M
         env_key: None,
         env_key_instructions: None,
         experimental_bearer_token: None,
+        auth: None,
         wire_api,
         query_params: None,
         http_headers: None,

@@ -130,7 +130,7 @@ impl McpProcess {
         cmd.stdout(Stdio::piped());
         cmd.stderr(Stdio::piped());
         cmd.current_dir(brocode_home);
-        cmd.env("CODEX_HOME", brocode_home);
+        cmd.env("BROCODE_HOME", brocode_home);
         cmd.env("RUST_LOG", "info");
         cmd.env_remove(BROCODE_INTERNAL_ORIGINATOR_OVERRIDE_ENV_VAR);
         cmd.args(args);
@@ -836,6 +836,14 @@ impl McpProcess {
     pub async fn send_login_account_chatgpt_request(&mut self) -> anyhow::Result<i64> {
         let params = serde_json::json!({
             "type": "chatgpt"
+        });
+        self.send_request("account/login/start", Some(params)).await
+    }
+
+    /// Send an `account/login/start` JSON-RPC request for ChatGPT device code login.
+    pub async fn send_login_account_chatgpt_device_code_request(&mut self) -> anyhow::Result<i64> {
+        let params = serde_json::json!({
+            "type": "chatgptDeviceCode"
         });
         self.send_request("account/login/start", Some(params)).await
     }

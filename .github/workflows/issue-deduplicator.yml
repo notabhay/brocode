@@ -10,7 +10,7 @@ jobs:
   gather-duplicates-all:
     name: Identify potential duplicates (all issues)
     # Prevent runs on forks (requires OpenAI API key, wastes Actions minutes)
-    if: github.repository == 'openai/codex' && (github.event.action == 'opened' || (github.event.action == 'labeled' && github.event.label.name == 'codex-deduplicate'))
+    if: github.repository == 'openai/brocode' && (github.event.action == 'opened' || (github.event.action == 'labeled' && github.event.label.name == 'brocode-deduplicate'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -19,9 +19,9 @@ jobs:
       reason: ${{ steps.normalize-all.outputs.reason }}
       has_matches: ${{ steps.normalize-all.outputs.has_matches }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - name: Prepare Codex inputs
+      - name: Prepare Brocode inputs
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
@@ -29,8 +29,8 @@ jobs:
         run: |
           set -eo pipefail
 
-          CURRENT_ISSUE_FILE=codex-current-issue.json
-          EXISTING_ALL_FILE=codex-existing-issues-all.json
+          CURRENT_ISSUE_FILE=brocode-current-issue.json
+          EXISTING_ALL_FILE=brocode-existing-issues-all.json
 
           gh issue list --repo "$REPO" \
             --json number,title,body,createdAt,updatedAt,state,labels \
@@ -59,18 +59,18 @@ jobs:
 
       # Prompt instructions are intentionally inline in this workflow. The old
       # .github/prompts/issue-deduplicator.txt file is obsolete and removed.
-      - id: codex-all
+      - id: brocode-all
         name: Find duplicates (pass 1, all issues)
-        uses: openai/codex-action@main
+        uses: openai/brocode-action@0b91f4a2703c23df3102c3f0967d3c6db34eedef # v1
         with:
-          openai-api-key: ${{ secrets.CODEX_OPENAI_API_KEY }}
+          openai-api-key: ${{ secrets.BROCODE_OPENAI_API_KEY }}
           allow-users: "*"
           prompt: |
             You are an assistant that triages new GitHub issues by identifying potential duplicates.
 
             You will receive the following JSON files located in the current working directory:
-            - `codex-current-issue.json`: JSON object describing the newly created issue (fields: number, title, body).
-            - `codex-existing-issues-all.json`: JSON array of recent issues with states, timestamps, and labels.
+            - `brocode-current-issue.json`: JSON object describing the newly created issue (fields: number, title, body).
+            - `brocode-existing-issues-all.json`: JSON array of recent issues with states, timestamps, and labels.
 
             Instructions:
             - Compare the current issue against the existing issues to find up to five that appear to describe the same underlying problem or request.
@@ -101,12 +101,12 @@ jobs:
       - id: normalize-all
         name: Normalize pass 1 output
         env:
-          CODEX_OUTPUT: ${{ steps.codex-all.outputs.final-message }}
+          BROCODE_OUTPUT: ${{ steps.brocode-all.outputs.final-message }}
           CURRENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           set -eo pipefail
 
-          raw=${CODEX_OUTPUT//$'\r'/}
+          raw=${BROCODE_OUTPUT//$'\r'/}
           parsed=false
           issues='[]'
           reason=''
@@ -155,9 +155,9 @@ jobs:
       reason: ${{ steps.normalize-open.outputs.reason }}
       has_matches: ${{ steps.normalize-open.outputs.has_matches }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - name: Prepare Codex inputs
+      - name: Prepare Brocode inputs
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
@@ -165,8 +165,8 @@ jobs:
         run: |
           set -eo pipefail
 
-          CURRENT_ISSUE_FILE=codex-current-issue.json
-          EXISTING_OPEN_FILE=codex-existing-issues-open.json
+          CURRENT_ISSUE_FILE=brocode-current-issue.json
+          EXISTING_OPEN_FILE=brocode-existing-issues-open.json
 
           gh issue list --repo "$REPO" \
             --json number,title,body,createdAt,updatedAt,state,labels \
@@ -193,11 +193,11 @@ jobs:
           echo "Prepared fallback duplicate detection input files."
           echo "open_issue_count=$(jq 'length' "$EXISTING_OPEN_FILE")"
 
-      - id: codex-open
+      - id: brocode-open
         name: Find duplicates (pass 2, open issues)
-        uses: openai/codex-action@main
+        uses: openai/brocode-action@0b91f4a2703c23df3102c3f0967d3c6db34eedef # v1
         with:
-          openai-api-key: ${{ secrets.CODEX_OPENAI_API_KEY }}
+          openai-api-key: ${{ secrets.BROCODE_OPENAI_API_KEY }}
           allow-users: "*"
           prompt: |
             You are an assistant that triages new GitHub issues by identifying potential duplicates.
@@ -205,8 +205,8 @@ jobs:
             This is a fallback pass because a broad search did not find convincing matches.
 
             You will receive the following JSON files located in the current working directory:
-            - `codex-current-issue.json`: JSON object describing the newly created issue (fields: number, title, body).
-            - `codex-existing-issues-open.json`: JSON array of open issues only.
+            - `brocode-current-issue.json`: JSON object describing the newly created issue (fields: number, title, body).
+            - `brocode-existing-issues-open.json`: JSON array of open issues only.
 
             Instructions:
             - Search only these active unresolved issues for duplicates of the current issue.
@@ -235,12 +235,12 @@ jobs:
       - id: normalize-open
         name: Normalize pass 2 output
         env:
-          CODEX_OUTPUT: ${{ steps.codex-open.outputs.final-message }}
+          BROCODE_OUTPUT: ${{ steps.brocode-open.outputs.final-message }}
           CURRENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           set -eo pipefail
 
-          raw=${CODEX_OUTPUT//$'\r'/}
+          raw=${BROCODE_OUTPUT//$'\r'/}
           parsed=false
           issues='[]'
           reason=''
@@ -286,7 +286,7 @@ jobs:
     permissions:
       contents: read
     outputs:
-      codex_output: ${{ steps.select-final.outputs.codex_output }}
+      brocode_output: ${{ steps.select-final.outputs.brocode_output }}
     steps:
       - id: select-final
         name: Select final duplicate set
@@ -327,7 +327,7 @@ jobs:
           echo "Final reason: $(jq -r '.reason' <<< "$final_json")"
 
           {
-            echo "codex_output<<EOF"
+            echo "brocode_output<<EOF"
             echo "$final_json"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
@@ -342,18 +342,18 @@ jobs:
       issues: write
     steps:
       - name: Comment on issue
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
-          CODEX_OUTPUT: ${{ needs.select-final.outputs.codex_output }}
+          BROCODE_OUTPUT: ${{ needs.select-final.outputs.brocode_output }}
         with:
           github-token: ${{ github.token }}
           script: |
-            const raw = process.env.CODEX_OUTPUT ?? '';
+            const raw = process.env.BROCODE_OUTPUT ?? '';
             let parsed;
             try {
               parsed = JSON.parse(raw);
             } catch (error) {
-              core.info(`Codex output was not valid JSON. Raw output: ${raw}`);
+              core.info(`Brocode output was not valid JSON. Raw output: ${raw}`);
               core.info(`Parse error: ${error.message}`);
               return;
             }
@@ -373,7 +373,7 @@ jobs:
             const filteredIssues = [...new Set(issues.map((value) => String(value)))].filter((value) => value !== currentIssueNumber).slice(0, 5);
 
             if (filteredIssues.length === 0) {
-              core.info('Codex reported no potential duplicates.');
+              core.info('Brocode reported no potential duplicates.');
               return;
             }
 
@@ -382,7 +382,7 @@ jobs:
               '',
               ...filteredIssues.map((value) => `- #${String(value)}`),
               '',
-              '*Powered by [Codex Action](https://github.com/openai/codex-action)*'];
+              '*Powered by [Brocode Action](https://github.com/openai/brocode-action)*'];
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
@@ -391,12 +391,12 @@ jobs:
               body: lines.join("\n"),
             });
 
-      - name: Remove codex-deduplicate label
-        if: ${{ always() && github.event.action == 'labeled' && github.event.label.name == 'codex-deduplicate' }}
+      - name: Remove brocode-deduplicate label
+        if: ${{ always() && github.event.action == 'labeled' && github.event.label.name == 'brocode-deduplicate' }}
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          gh issue edit "$ISSUE_NUMBER" --remove-label codex-deduplicate || true
-          echo "Attempted to remove label: codex-deduplicate"
+          gh issue edit "$ISSUE_NUMBER" --remove-label brocode-deduplicate || true
+          echo "Attempted to remove label: brocode-deduplicate"

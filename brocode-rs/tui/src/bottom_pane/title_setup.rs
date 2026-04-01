@@ -25,10 +25,14 @@ use crate::bottom_pane::multi_select_picker::MultiSelectPicker;
 use crate::render::renderable::Renderable;
 
 /// Available items that can be displayed in the terminal title.
+///
+/// Variants serialize to kebab-case identifiers (e.g. `AppName` -> `"app-name"`)
+/// via strum. These identifiers are persisted in user config files, so renaming
+/// or removing a variant is a breaking config change.
 #[derive(EnumIter, EnumString, Display, Debug, Clone, Copy, Eq, PartialEq, Hash)]
-#[strum(serialize_all = "kebab_case")]
+#[strum(serialize_all = "kebab-case")]
 pub(crate) enum TerminalTitleItem {
-    /// brocode app name.
+    /// Brocode app name.
     AppName,
     /// Project root name, or a compact cwd fallback.
     Project,
@@ -49,7 +53,7 @@ pub(crate) enum TerminalTitleItem {
 impl TerminalTitleItem {
     pub(crate) fn description(self) -> &'static str {
         match self {
-            TerminalTitleItem::AppName => "brocode app name",
+            TerminalTitleItem::AppName => "Brocode app name",
             TerminalTitleItem::Project => "Project name (falls back to current directory name)",
             TerminalTitleItem::Spinner => {
                 "Animated task spinner (omitted while idle or when animations are off)"
@@ -76,11 +80,16 @@ impl TerminalTitleItem {
             TerminalTitleItem::Status => "Working",
             TerminalTitleItem::Thread => "Investigate flaky test",
             TerminalTitleItem::GitBranch => "feat/awesome-feature",
-            TerminalTitleItem::Model => "gpt-5.2-codex",
+            TerminalTitleItem::Model => "gpt-5.2-brocode",
             TerminalTitleItem::TaskProgress => "Tasks 2/5",
         }
     }
 
+    /// Returns the separator to place before this item in a rendered title.
+    ///
+    /// The spinner gets a plain space on either side so it reads as
+    /// `my-project <spinner> Working` rather than `my-project | <spinner> | Working`.
+    /// All other adjacent items are joined with ` | `.
     pub(crate) fn separator_from_previous(self, previous: Option<Self>) -> &'static str {
         match previous {
             None => "",
@@ -272,7 +281,10 @@ mod tests {
             "thread".to_string(),
         ];
         let view = TerminalTitleSetupView::new(Some(&selected), tx);
-        assert_snapshot!("terminal_title_setup_basic", render_lines(&view, 84));
+        assert_snapshot!(
+            "terminal_title_setup_basic",
+            render_lines(&view, /*width*/ 84)
+        );
     }
 
     #[test]
@@ -294,5 +306,17 @@ mod tests {
     fn parse_terminal_title_items_rejects_invalid_ids() {
         let items = parse_terminal_title_items(["project", "not-a-title-item"].into_iter());
         assert_eq!(items, None);
+    }
+
+    #[test]
+    fn parse_terminal_title_items_accepts_kebab_case_variants() {
+        let items = parse_terminal_title_items(["app-name", "git-branch"].into_iter());
+        assert_eq!(
+            items,
+            Some(vec![
+                TerminalTitleItem::AppName,
+                TerminalTitleItem::GitBranch,
+            ])
+        );
     }
 }

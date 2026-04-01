@@ -13,6 +13,7 @@ path = "src/lib.rs"
 workspace = true
 
 [dependencies]
+brocode-app-server-protocol = { workspace = true }
 brocode-git-utils = { workspace = true }
 brocode-login = { workspace = true }
 brocode-plugin = { workspace = true }

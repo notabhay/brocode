@@ -13,8 +13,16 @@ fn send_builds_payload_with_tags_and_histograms() -> Result<()> {
     let (metrics, exporter) =
         build_metrics_with_defaults(&[("service", "brocode-cli"), ("env", "prod")])?;
 
-    metrics.counter("brocode.turns", 1, &[("model", "gpt-5.1"), ("env", "dev")])?;
-    metrics.histogram("brocode.tool_latency", 25, &[("tool", "shell")])?;
+    metrics.counter(
+        "brocode.turns",
+        /*inc*/ 1,
+        &[("model", "gpt-5.1"), ("env", "dev")],
+    )?;
+    metrics.histogram(
+        "brocode.tool_latency",
+        /*value*/ 25,
+        &[("tool", "shell")],
+    )?;
     metrics.shutdown()?;
 
     let resource_metrics = latest_metrics(&exporter);
@@ -84,12 +92,12 @@ fn send_merges_default_tags_per_line() -> Result<()> {
 
     metrics.counter(
         "brocode.alpha",
-        1,
+        /*inc*/ 1,
         &[("env", "dev"), ("component", "alpha")],
     )?;
     metrics.counter(
         "brocode.beta",
-        2,
+        /*inc*/ 2,
         &[("service", "worker"), ("component", "beta")],
     )?;
     metrics.shutdown()?;
@@ -149,7 +157,7 @@ fn send_merges_default_tags_per_line() -> Result<()> {
 fn client_sends_enqueued_metric() -> Result<()> {
     let (metrics, exporter) = build_metrics_with_defaults(&[])?;
 
-    metrics.counter("brocode.turns", 1, &[("model", "gpt-5.1")])?;
+    metrics.counter("brocode.turns", /*inc*/ 1, &[("model", "gpt-5.1")])?;
     metrics.shutdown()?;
 
     let resource_metrics = latest_metrics(&exporter);
@@ -177,7 +185,7 @@ fn client_sends_enqueued_metric() -> Result<()> {
 fn shutdown_flushes_in_memory_exporter() -> Result<()> {
     let (metrics, exporter) = build_metrics_with_defaults(&[])?;
 
-    metrics.counter("brocode.turns", 1, &[])?;
+    metrics.counter("brocode.turns", /*inc*/ 1, &[])?;
     metrics.shutdown()?;
 
     let resource_metrics = latest_metrics(&exporter);

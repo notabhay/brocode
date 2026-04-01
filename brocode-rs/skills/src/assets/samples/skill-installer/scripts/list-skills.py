@@ -32,7 +32,7 @@ def _request(url: str) -> bytes:
 
 
 def _brocode_home() -> str:
-    return os.environ.get("CODEX_HOME", os.path.expanduser("~/.brocode"))
+    return os.environ.get("BROCODE_HOME", os.path.expanduser("~/.brocode"))
 
 
 def _installed_skills() -> set[str]:

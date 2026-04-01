@@ -51,13 +51,24 @@ Before finalizing a large change to `brocode-rs`, run `just fix -p <project>` (i
 
 Also run `just argument-comment-lint` to ensure the codebase is clean of comment lint errors.
 
+## The `brocode-core` crate
+
+Over time, the `brocode-core` crate (defined in `brocode-rs/core/`) has become bloated because it is the largest crate, so it is often easier to add something new to `brocode-core` rather than refactor out the library code you need so your new code neither takes a dependency on, nor contributes to the size of, `brocode-core`.
+
+To that end: **resist adding code to brocode-core**!
+
+Particularly when introducing a new concept/feature/API, before adding to `brocode-core`, consider whether:
+
+- There is an existing crate other than `brocode-core` that is an appropriate place for your new code to live.
+- It is time to introduce a new crate to the Cargo workspace for your new functionality. Refactor existing code as necessary to make this happen.
+
+Likewise, when reviewing code, do not hesitate to push back on PRs that would unnecessarily add code to `brocode-core`.
+
 ## TUI style conventions
 
 See `brocode-rs/tui/styles.md`.
 
 ## TUI code conventions
-
-- When a change lands in `brocode-rs/tui` and `brocode-rs/tui_app_server` has a parallel implementation of the same behavior, reflect the change in `brocode-rs/tui_app_server` too unless there is a documented reason not to.
 
 - Use concise styling helpers from ratatui’s Stylize trait.
   - Basic spans: use "text".into()

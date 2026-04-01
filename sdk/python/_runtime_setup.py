@@ -17,7 +17,7 @@ from pathlib import Path
 
 PACKAGE_NAME = "brocode-cli-bin"
 PINNED_RUNTIME_VERSION = "0.116.0-alpha.1"
-REPO_SLUG = "openai/codex"
+REPO_SLUG = "openai/brocode"
 
 
 class RuntimeSetupError(RuntimeError):

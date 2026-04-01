@@ -1,5 +1,7 @@
 use super::*;
+use crate::AuthManager;
 use crate::BrocodeAuth;
+use crate::ModelProviderAuthInfo;
 use crate::auth::AuthCredentialsStoreMode;
 use crate::config::ConfigBuilder;
 use crate::model_provider_info::WireApi;
@@ -13,8 +15,10 @@ use http::StatusCode;
 use pretty_assertions::assert_eq;
 use serde_json::json;
 use std::collections::BTreeMap;
+use std::num::NonZeroU64;
 use std::sync::Arc;
 use std::sync::Mutex;
+use tempfile::TempDir;
 use tempfile::tempdir;
 use tracing::Event;
 use tracing::Subscriber;
@@ -24,7 +28,12 @@ use tracing_subscriber::layer::Context;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::registry::LookupSpan;
 use tracing_subscriber::util::SubscriberInitExt;
+use wiremock::Mock;
 use wiremock::MockServer;
+use wiremock::ResponseTemplate;
+use wiremock::matchers::header_regex;
+use wiremock::matchers::method;
+use wiremock::matchers::path;
 
 fn remote_model(slug: &str, display: &str, priority: i32) -> ModelInfo {
     remote_model_with_visibility(slug, display, priority, "list")
@@ -79,6 +88,7 @@ fn provider_for(base_url: String) -> ModelProviderInfo {
         env_key: None,
         env_key_instructions: None,
         experimental_bearer_token: None,
+        auth: None,
         wire_api: WireApi::Responses,
         query_params: None,
         http_headers: None,
@@ -89,6 +99,95 @@ fn provider_for(base_url: String) -> ModelProviderInfo {
         websocket_connect_timeout_ms: None,
         requires_openai_auth: false,
         supports_websockets: false,
+    }
+}
+
+struct ProviderAuthScript {
+    tempdir: TempDir,
+    command: String,
+    args: Vec<String>,
+}
+
+impl ProviderAuthScript {
+    fn new(tokens: &[&str]) -> std::io::Result<Self> {
+        let tempdir = tempfile::tempdir()?;
+        let tokens_file = tempdir.path().join("tokens.txt");
+        let mut token_file_contents = String::new();
+        for token in tokens {
+            token_file_contents.push_str(token);
+            token_file_contents.push('\n');
+        }
+        std::fs::write(&tokens_file, token_file_contents)?;
+
+        #[cfg(unix)]
+        let (command, args) = {
+            let script_path = tempdir.path().join("print-token.sh");
+            std::fs::write(
+                &script_path,
+                r#"#!/bin/sh
+first_line=$(sed -n '1p' tokens.txt)
+printf '%s\n' "$first_line"
+tail -n +2 tokens.txt > tokens.next
+mv tokens.next tokens.txt
+"#,
+            )?;
+            let mut permissions = std::fs::metadata(&script_path)?.permissions();
+            {
+                use std::os::unix::fs::PermissionsExt;
+                permissions.set_mode(0o755);
+            }
+            std::fs::set_permissions(&script_path, permissions)?;
+            ("./print-token.sh".to_string(), Vec::new())
+        };
+
+        #[cfg(windows)]
+        let (command, args) = {
+            let script_path = tempdir.path().join("print-token.ps1");
+            std::fs::write(
+                &script_path,
+                r#"$lines = Get-Content -Path tokens.txt
+if ($lines.Count -eq 0) { exit 1 }
+Write-Output $lines[0]
+$lines | Select-Object -Skip 1 | Set-Content -Path tokens.txt
+"#,
+            )?;
+            (
+                "powershell".to_string(),
+                vec![
+                    "-NoProfile".to_string(),
+                    "-ExecutionPolicy".to_string(),
+                    "Bypass".to_string(),
+                    "-File".to_string(),
+                    ".\\print-token.ps1".to_string(),
+                ],
+            )
+        };
+
+        Ok(Self {
+            tempdir,
+            command,
+            args,
+        })
+    }
+
+    fn auth_config(&self) -> ModelProviderAuthInfo {
+        ModelProviderAuthInfo {
+            command: self.command.clone(),
+            args: self.args.clone(),
+            timeout_ms: non_zero_u64(/*value*/ 1_000),
+            refresh_interval_ms: non_zero_u64(/*value*/ 60_000),
+            cwd: match brocode_utils_absolute_path::AbsolutePathBuf::try_from(self.tempdir.path()) {
+                Ok(cwd) => cwd,
+                Err(err) => panic!("tempdir should be absolute: {err}"),
+            },
+        }
+    }
+}
+
+fn non_zero_u64(value: u64) -> NonZeroU64 {
+    match NonZeroU64::new(value) {
+        Some(value) => value,
+        None => panic!("expected non-zero value: {value}"),
     }
 }
 
@@ -146,7 +245,7 @@ async fn get_model_info_tracks_fallback_usage() {
     let manager = ModelsManager::new(
         brocode_home.path().to_path_buf(),
         auth_manager,
-        None,
+        /*model_catalog*/ None,
         CollaborationModesConfig::default(),
     );
     let known_slug = manager
@@ -176,7 +275,7 @@ async fn get_model_info_uses_custom_catalog() {
         .build()
         .await
         .expect("load default test config");
-    let mut overlay = remote_model("gpt-overlay", "Overlay", 0);
+    let mut overlay = remote_model("gpt-overlay", "Overlay", /*priority*/ 0);
     overlay.supports_image_detail_original = true;
 
     let auth_manager =
@@ -210,7 +309,7 @@ async fn get_model_info_matches_namespaced_suffix() {
         .build()
         .await
         .expect("load default test config");
-    let mut remote = remote_model("gpt-image", "Image", 0);
+    let mut remote = remote_model("gpt-image", "Image", /*priority*/ 0);
     remote.supports_image_detail_original = true;
     let auth_manager =
         AuthManager::from_auth_for_testing(BrocodeAuth::from_api_key("Test API Key"));
@@ -244,7 +343,7 @@ async fn get_model_info_rejects_multi_segment_namespace_suffix_matching() {
     let manager = ModelsManager::new(
         brocode_home.path().to_path_buf(),
         auth_manager,
-        None,
+        /*model_catalog*/ None,
         CollaborationModesConfig::default(),
     );
     let known_slug = manager
@@ -266,8 +365,8 @@ async fn get_model_info_rejects_multi_segment_namespace_suffix_matching() {
 async fn refresh_available_models_sorts_by_priority() {
     let server = MockServer::start().await;
     let remote_models = vec![
-        remote_model("priority-low", "Low", 1),
-        remote_model("priority-high", "High", 0),
+        remote_model("priority-low", "Low", /*priority*/ 1),
+        remote_model("priority-high", "High", /*priority*/ 0),
     ];
     let models_mock = mount_models_once(
         &server,
@@ -315,9 +414,53 @@ async fn refresh_available_models_sorts_by_priority() {
 }
 
 #[tokio::test]
+async fn refresh_available_models_uses_provider_auth_token() {
+    let server = MockServer::start().await;
+    let auth_script = ProviderAuthScript::new(&["provider-token"]).unwrap();
+    let remote_models = vec![remote_model(
+        "provider-model",
+        "Provider",
+        /*priority*/ 0,
+    )];
+
+    Mock::given(method("GET"))
+        .and(path("/models"))
+        .and(header_regex("Authorization", "Bearer provider-token"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .insert_header("content-type", "application/json")
+                .set_body_json(ModelsResponse {
+                    models: remote_models.clone(),
+                }),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let brocode_home = tempdir().expect("temp dir");
+    let auth_manager = AuthManager::from_auth_for_testing(BrocodeAuth::from_api_key("unused"));
+    let provider = ModelProviderInfo {
+        auth: Some(auth_script.auth_config()),
+        ..provider_for(server.uri())
+    };
+    let manager = ModelsManager::with_provider_for_tests(
+        brocode_home.path().to_path_buf(),
+        auth_manager,
+        provider,
+    );
+
+    manager
+        .refresh_available_models(RefreshStrategy::Online)
+        .await
+        .expect("refresh succeeds");
+
+    assert_models_contain(&manager.get_remote_models().await, &remote_models);
+}
+
+#[tokio::test]
 async fn refresh_available_models_uses_cache_when_fresh() {
     let server = MockServer::start().await;
-    let remote_models = vec![remote_model("cached", "Cached", 5)];
+    let remote_models = vec![remote_model("cached", "Cached", /*priority*/ 5)];
     let models_mock = mount_models_once(
         &server,
         ModelsResponse {
@@ -358,7 +501,7 @@ async fn refresh_available_models_uses_cache_when_fresh() {
 #[tokio::test]
 async fn refresh_available_models_refetches_when_cache_stale() {
     let server = MockServer::start().await;
-    let initial_models = vec![remote_model("stale", "Stale", 1)];
+    let initial_models = vec![remote_model("stale", "Stale", /*priority*/ 1)];
     let initial_mock = mount_models_once(
         &server,
         ModelsResponse {
@@ -391,7 +534,7 @@ async fn refresh_available_models_refetches_when_cache_stale() {
         .await
         .expect("cache manipulation succeeds");
 
-    let updated_models = vec![remote_model("fresh", "Fresh", 9)];
+    let updated_models = vec![remote_model("fresh", "Fresh", /*priority*/ 9)];
     server.reset().await;
     let refreshed_mock = mount_models_once(
         &server,
@@ -421,7 +564,7 @@ async fn refresh_available_models_refetches_when_cache_stale() {
 #[tokio::test]
 async fn refresh_available_models_refetches_when_version_mismatch() {
     let server = MockServer::start().await;
-    let initial_models = vec![remote_model("old", "Old", 1)];
+    let initial_models = vec![remote_model("old", "Old", /*priority*/ 1)];
     let initial_mock = mount_models_once(
         &server,
         ModelsResponse {
@@ -454,7 +597,7 @@ async fn refresh_available_models_refetches_when_version_mismatch() {
         .await
         .expect("cache mutation succeeds");
 
-    let updated_models = vec![remote_model("new", "New", 2)];
+    let updated_models = vec![remote_model("new", "New", /*priority*/ 2)];
     server.reset().await;
     let refreshed_mock = mount_models_once(
         &server,
@@ -484,7 +627,11 @@ async fn refresh_available_models_refetches_when_version_mismatch() {
 #[tokio::test]
 async fn refresh_available_models_drops_removed_remote_models() {
     let server = MockServer::start().await;
-    let initial_models = vec![remote_model("remote-old", "Remote Old", 1)];
+    let initial_models = vec![remote_model(
+        "remote-old",
+        "Remote Old",
+        /*priority*/ 1,
+    )];
     let initial_mock = mount_models_once(
         &server,
         ModelsResponse {
@@ -510,7 +657,11 @@ async fn refresh_available_models_drops_removed_remote_models() {
         .expect("initial refresh succeeds");
 
     server.reset().await;
-    let refreshed_models = vec![remote_model("remote-new", "Remote New", 1)];
+    let refreshed_models = vec![remote_model(
+        "remote-new",
+        "Remote New",
+        /*priority*/ 1,
+    )];
     let refreshed_mock = mount_models_once(
         &server,
         ModelsResponse {
@@ -554,7 +705,7 @@ async fn refresh_available_models_skips_network_without_chatgpt_auth() {
     let models_mock = mount_models_once(
         &server,
         ModelsResponse {
-            models: vec![remote_model(dynamic_slug, "No Auth", 1)],
+            models: vec![remote_model(dynamic_slug, "No Auth", /*priority*/ 1)],
         },
     )
     .await;
@@ -562,7 +713,7 @@ async fn refresh_available_models_skips_network_without_chatgpt_auth() {
     let brocode_home = tempdir().expect("temp dir");
     let auth_manager = Arc::new(AuthManager::new(
         brocode_home.path().to_path_buf(),
-        false,
+        /*enable_brocode_api_key_env*/ false,
         AuthCredentialsStoreMode::File,
     ));
     let provider = provider_for(server.uri());
@@ -625,7 +776,7 @@ fn models_request_telemetry_emits_auth_env_feedback_tags_on_failure() {
             .unwrap(),
     );
     telemetry.on_request(
-        1,
+        /*attempt*/ 1,
         Some(StatusCode::UNAUTHORIZED),
         Some(&TransportError::Http {
             status: StatusCode::UNAUTHORIZED,
@@ -700,8 +851,10 @@ fn build_available_models_picks_default_after_hiding_hidden_models() {
         provider,
     );
 
-    let hidden_model = remote_model_with_visibility("hidden", "Hidden", 0, "hide");
-    let visible_model = remote_model_with_visibility("visible", "Visible", 1, "list");
+    let hidden_model =
+        remote_model_with_visibility("hidden", "Hidden", /*priority*/ 0, "hide");
+    let visible_model =
+        remote_model_with_visibility("visible", "Visible", /*priority*/ 1, "list");
 
     let expected_hidden = ModelPreset::from(hidden_model.clone());
     let mut expected_visible = ModelPreset::from(visible_model.clone());

@@ -1,8 +1,10 @@
 ---
 source: tui/src/app.rs
-assertion_line: 7012
 expression: rendered
 ---
-╭───────────────────────╮
-│ >_ brocode v<VERSION> │
-╰───────────────────────╯
+╭────────────────────────────────────────────────────╮
+│ >_ OpenAI Brocode (v<VERSION>)                     │
+│                                                    │
+│ model:     gpt-5.4 xhigh   fast   /model to change │
+│ directory: /tmp/project                            │
+╰────────────────────────────────────────────────────╯

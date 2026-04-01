@@ -16,9 +16,9 @@ fn blocking_set_model_top_level() {
 
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::SetModel {
-            model: Some("gpt-5.1-codex".to_string()),
+            model: Some("gpt-5.1-brocode".to_string()),
             effort: Some(ReasoningEffort::High),
         }],
     )
@@ -26,7 +26,7 @@ fn blocking_set_model_top_level() {
 
     let contents =
         std::fs::read_to_string(brocode_home.join(CONFIG_TOML_FILE)).expect("read config");
-    let expected = r#"model = "gpt-5.1-codex"
+    let expected = r#"model = "gpt-5.1-brocode"
 model_reasoning_effort = "high"
 "#;
     assert_eq!(contents, expected);
@@ -156,7 +156,7 @@ profiles = { fast = { model = "gpt-4o", sandbox_mode = "strict" } }
 
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::SetModel {
             model: Some("o4-mini".to_string()),
             effort: None,
@@ -201,9 +201,9 @@ fn blocking_set_model_writes_through_symlink_chain() {
 
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::SetModel {
-            model: Some("gpt-5.1-codex".to_string()),
+            model: Some("gpt-5.1-brocode".to_string()),
             effort: Some(ReasoningEffort::High),
         }],
     )
@@ -213,7 +213,7 @@ fn blocking_set_model_writes_through_symlink_chain() {
     assert!(meta.file_type().is_symlink());
 
     let contents = std::fs::read_to_string(&target_path).expect("read target");
-    let expected = r#"model = "gpt-5.1-codex"
+    let expected = r#"model = "gpt-5.1-brocode"
 model_reasoning_effort = "high"
 "#;
     assert_eq!(contents, expected);
@@ -234,9 +234,9 @@ fn blocking_set_model_replaces_symlink_on_cycle() {
 
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::SetModel {
-            model: Some("gpt-5.1-codex".to_string()),
+            model: Some("gpt-5.1-brocode".to_string()),
             effort: None,
         }],
     )
@@ -246,7 +246,7 @@ fn blocking_set_model_replaces_symlink_on_cycle() {
     assert!(!meta.file_type().is_symlink());
 
     let contents = std::fs::read_to_string(&config_path).expect("read config");
-    let expected = r#"model = "gpt-5.1-codex"
+    let expected = r#"model = "gpt-5.1-brocode"
 "#;
     assert_eq!(contents, expected);
 }
@@ -273,7 +273,7 @@ network_access = false
 
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[
             ConfigEdit::SetPath {
                 segments: vec![
@@ -329,7 +329,7 @@ profiles = { fast = { model = "gpt-4o", sandbox_mode = "strict" } }
 
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::SetModel {
             model: None,
             effort: Some(ReasoningEffort::High),
@@ -364,7 +364,7 @@ model_reasoning_effort = "low"
 
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::SetModel {
             model: Some("o5-preview".to_string()),
             effort: Some(ReasoningEffort::Minimal),
@@ -390,7 +390,7 @@ fn blocking_set_model_with_explicit_profile() {
     std::fs::write(
         brocode_home.join(CONFIG_TOML_FILE),
         r#"[profiles."team a"]
-model = "gpt-5.1-codex"
+model = "gpt-5.1-brocode"
 "#,
     )
     .expect("seed");
@@ -430,7 +430,7 @@ existing = "value"
 
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::SetNoticeHideFullAccessWarning(true)],
     )
     .expect("persist");
@@ -461,7 +461,7 @@ existing = "value"
 
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::SetNoticeHideRateLimitModelNudge(true)],
     )
     .expect("persist");
@@ -488,7 +488,7 @@ existing = "value"
     .expect("seed");
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::SetNoticeHideModelMigrationPrompt(
             "hide_gpt5_1_migration_prompt".to_string(),
             true,
@@ -518,7 +518,7 @@ existing = "value"
     .expect("seed");
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::SetNoticeHideModelMigrationPrompt(
             "hide_gpt-5.1-brocode-max_migration_prompt".to_string(),
             true,
@@ -548,7 +548,7 @@ existing = "value"
     .expect("seed");
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::RecordModelMigrationSeen {
             from: "gpt-5".to_string(),
             to: "gpt-5.1".to_string(),
@@ -631,7 +631,7 @@ fn blocking_replace_mcp_servers_round_trips() {
 
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::ReplaceMcpServers(servers.clone())],
     )
     .expect("persist");
@@ -698,7 +698,7 @@ fn blocking_replace_mcp_servers_serializes_tool_approval_overrides() {
 
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::ReplaceMcpServers(servers)],
     )
     .expect("persist");
@@ -753,7 +753,7 @@ foo = { command = "cmd" }
 
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::ReplaceMcpServers(servers)],
     )
     .expect("persist");
@@ -805,7 +805,7 @@ foo = { command = "cmd" } # keep me
 
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::ReplaceMcpServers(servers)],
     )
     .expect("persist");
@@ -856,7 +856,7 @@ foo = { command = "cmd", args = ["--flag"] } # keep me
 
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::ReplaceMcpServers(servers)],
     )
     .expect("persist");
@@ -908,7 +908,7 @@ foo = { command = "cmd" }
 
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::ReplaceMcpServers(servers)],
     )
     .expect("persist");
@@ -929,7 +929,7 @@ fn blocking_clear_path_noop_when_missing() {
 
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::ClearPath {
             segments: vec!["missing".to_string()],
         }],
@@ -950,7 +950,7 @@ fn blocking_set_path_updates_notifications() {
     let item = value(false);
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::SetPath {
             segments: vec!["tui".to_string(), "notifications".to_string()],
             value: item,
@@ -974,14 +974,14 @@ async fn async_builder_set_model_persists() {
     let brocode_home = tmp.path().to_path_buf();
 
     ConfigEditsBuilder::new(&brocode_home)
-        .set_model(Some("gpt-5.1-codex"), Some(ReasoningEffort::High))
+        .set_model(Some("gpt-5.1-brocode"), Some(ReasoningEffort::High))
         .apply()
         .await
         .expect("persist");
 
     let contents =
         std::fs::read_to_string(brocode_home.join(CONFIG_TOML_FILE)).expect("read config");
-    let expected = r#"model = "gpt-5.1-codex"
+    let expected = r#"model = "gpt-5.1-brocode"
 model_reasoning_effort = "high"
 "#;
     assert_eq!(contents, expected);
@@ -1003,11 +1003,11 @@ model_reasoning_effort = "low"
         std::fs::read_to_string(brocode_home.join(CONFIG_TOML_FILE)).expect("read config");
     assert_eq!(contents, initial_expected);
 
-    let updated_expected = r#"model = "gpt-5.1-codex"
+    let updated_expected = r#"model = "gpt-5.1-brocode"
 model_reasoning_effort = "high"
 "#;
     ConfigEditsBuilder::new(brocode_home)
-        .set_model(Some("gpt-5.1-codex"), Some(ReasoningEffort::High))
+        .set_model(Some("gpt-5.1-brocode"), Some(ReasoningEffort::High))
         .apply_blocking()
         .expect("persist update");
     contents = std::fs::read_to_string(brocode_home.join(CONFIG_TOML_FILE)).expect("read config");
@@ -1027,7 +1027,7 @@ async fn blocking_set_asynchronous_helpers_available() {
     let brocode_home = tmp.path().to_path_buf();
 
     ConfigEditsBuilder::new(&brocode_home)
-        .set_hide_full_access_warning(true)
+        .set_hide_full_access_warning(/*acknowledged*/ true)
         .apply()
         .await
         .expect("persist");
@@ -1069,7 +1069,7 @@ fn blocking_builder_set_realtime_audio_persists_and_clears() {
     );
 
     ConfigEditsBuilder::new(brocode_home)
-        .set_realtime_microphone(None)
+        .set_realtime_microphone(/*microphone*/ None)
         .apply_blocking()
         .expect("clear realtime microphone");
 
@@ -1098,7 +1098,7 @@ fn replace_mcp_servers_blocking_clears_table_when_empty() {
 
     apply_blocking(
         brocode_home,
-        None,
+        /*profile*/ None,
         &[ConfigEdit::ReplaceMcpServers(BTreeMap::new())],
     )
     .expect("persist");

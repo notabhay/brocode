@@ -2,12 +2,12 @@
 
 Embed the Brocode agent in your workflows and apps.
 
-The TypeScript SDK wraps the `brocode` CLI from `@openai/codex`. It spawns the CLI and exchanges JSONL events over stdin/stdout.
+The TypeScript SDK wraps the `brocode` CLI from `@openai/brocode`. It spawns the CLI and exchanges JSONL events over stdin/stdout.
 
 ## Installation
 
 ```bash
-npm install @openai/codex-sdk
+npm install @openai/brocode-sdk
 ```
 
 Requires Node.js 18+.
@@ -15,7 +15,7 @@ Requires Node.js 18+.
 ## Quickstart
 
 ```typescript
-import { Brocode } from "@openai/codex-sdk";
+import { Brocode } from "@openai/brocode-sdk";
 
 const brocode = new Brocode();
 const thread = brocode.startThread();

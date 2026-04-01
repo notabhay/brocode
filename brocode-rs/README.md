@@ -7,11 +7,11 @@ We provide Brocode CLI as a standalone, native executable to ensure a zero-depen
 Today, the easiest way to install Brocode is via `npm`:
 
 ```shell
-npm i -g @openai/codex
+npm i -g @openai/brocode
 brocode
 ```
 
-You can also install via Homebrew (`brew install --cask brocode`) or download a platform-specific release directly from our [GitHub Releases](https://github.com/openai/codex/releases).
+You can also install via Homebrew (`brew install --cask brocode`) or download a platform-specific release directly from our [GitHub Releases](https://github.com/openai/brocode/releases).
 
 ## Documentation quickstart
 
@@ -50,7 +50,7 @@ You can enable notifications by configuring a script that is run whenever the ag
 
 ### `brocode exec` to run Brocode programmatically/non-interactively
 
-To run Brocode non-interactively, run `brocode exec PROMPT` (you can also pass the prompt via `stdin`) and Brocode will work on your task until it decides that it is done and exits. Output is printed to the terminal directly. You can set the `RUST_LOG` environment variable to see more about what's going on.
+To run Brocode non-interactively, run `brocode exec PROMPT` (you can also pass the prompt via `stdin`) and Brocode will work on your task until it decides that it is done and exits. If you provide both a prompt argument and piped stdin, Brocode appends stdin as a `<stdin>` block after the prompt so patterns like `echo "my output" | brocode exec "Summarize this concisely"` work naturally. Output is printed to the terminal directly. You can set the `RUST_LOG` environment variable to see more about what's going on.
 Use `brocode exec --ephemeral ...` to run without persisting session rollout files to disk.
 
 ### Experimenting with the Brocode Sandbox

@@ -131,7 +131,12 @@ impl ActionKind {
                     "from pathlib import Path; path = Path({path_str:?}); content = {content:?}; path.write_text(content, encoding='utf-8'); print(path.read_text(encoding='utf-8'), end='')",
                 );
                 let command = format!("python3 -c {script:?}");
-                let event = shell_event(call_id, &command, 5_000, sandbox_permissions)?;
+                let event = shell_event(
+                    call_id,
+                    &command,
+                    /*timeout_ms*/ 5_000,
+                    sandbox_permissions,
+                )?;
                 Ok((event, Some(command)))
             }
             ActionKind::FetchUrl {
@@ -153,7 +158,12 @@ impl ActionKind {
                 );
 
                 let command = format!("python3 -c \"{script}\"");
-                let event = shell_event(call_id, &command, 5_000, sandbox_permissions)?;
+                let event = shell_event(
+                    call_id,
+                    &command,
+                    /*timeout_ms*/ 5_000,
+                    sandbox_permissions,
+                )?;
                 Ok((event, Some(command)))
             }
             ActionKind::FetchUrlNoProxy {
@@ -175,11 +185,21 @@ impl ActionKind {
                 );
 
                 let command = format!("python3 -c \"{script}\"");
-                let event = shell_event(call_id, &command, 5_000, sandbox_permissions)?;
+                let event = shell_event(
+                    call_id,
+                    &command,
+                    /*timeout_ms*/ 5_000,
+                    sandbox_permissions,
+                )?;
                 Ok((event, Some(command)))
             }
             ActionKind::RunCommand { command } => {
-                let event = shell_event(call_id, command, 1_000, sandbox_permissions)?;
+                let event = shell_event(
+                    call_id,
+                    command,
+                    /*timeout_ms*/ 2_000,
+                    sandbox_permissions,
+                )?;
                 Ok((event, Some(command.to_string())))
             }
             ActionKind::RunUnifiedExecCommand {
@@ -206,7 +226,12 @@ impl ActionKind {
                 let _ = fs::remove_file(&path);
                 let patch = build_add_file_patch(&patch_path, content);
                 let command = shell_apply_patch_command(&patch);
-                let event = shell_event(call_id, &command, 5_000, sandbox_permissions)?;
+                let event = shell_event(
+                    call_id,
+                    &command,
+                    /*timeout_ms*/ 5_000,
+                    sandbox_permissions,
+                )?;
                 Ok((event, Some(command)))
             }
         }
@@ -233,7 +258,13 @@ fn shell_event(
     timeout_ms: u64,
     sandbox_permissions: SandboxPermissions,
 ) -> Result<Value> {
-    shell_event_with_prefix_rule(call_id, command, timeout_ms, sandbox_permissions, None)
+    shell_event_with_prefix_rule(
+        call_id,
+        command,
+        timeout_ms,
+        sandbox_permissions,
+        /*prefix_rule*/ None,
+    )
 }
 
 fn shell_event_with_prefix_rule(
@@ -1193,7 +1224,7 @@ fn scenarios() -> Vec<ScenarioSpec> {
             },
             sandbox_permissions: SandboxPermissions::UseDefault,
             features: vec![],
-            model_override: Some("gpt-5.1-codex"),
+            model_override: Some("gpt-5.1-brocode"),
             outcome: Outcome::Auto,
             expectation: Expectation::PatchApplied {
                 target: TargetPath::Workspace("apply_patch_function.txt"),
@@ -1210,7 +1241,7 @@ fn scenarios() -> Vec<ScenarioSpec> {
             },
             sandbox_permissions: SandboxPermissions::UseDefault,
             features: vec![Feature::ApplyPatchFreeform],
-            model_override: Some("gpt-5.1-codex"),
+            model_override: Some("gpt-5.1-brocode"),
             outcome: Outcome::Auto,
             expectation: Expectation::PatchApplied {
                 target: TargetPath::OutsideWorkspace("apply_patch_function_danger.txt"),
@@ -1227,7 +1258,7 @@ fn scenarios() -> Vec<ScenarioSpec> {
             },
             sandbox_permissions: SandboxPermissions::UseDefault,
             features: vec![],
-            model_override: Some("gpt-5.1-codex"),
+            model_override: Some("gpt-5.1-brocode"),
             outcome: Outcome::PatchApproval {
                 decision: ReviewDecision::Approved,
                 expected_reason: None,
@@ -1247,7 +1278,7 @@ fn scenarios() -> Vec<ScenarioSpec> {
             },
             sandbox_permissions: SandboxPermissions::UseDefault,
             features: vec![],
-            model_override: Some("gpt-5.1-codex"),
+            model_override: Some("gpt-5.1-brocode"),
             outcome: Outcome::PatchApproval {
                 decision: ReviewDecision::Denied,
                 expected_reason: None,
@@ -1287,7 +1318,7 @@ fn scenarios() -> Vec<ScenarioSpec> {
             },
             sandbox_permissions: SandboxPermissions::UseDefault,
             features: vec![],
-            model_override: Some("gpt-5.1-codex"),
+            model_override: Some("gpt-5.1-brocode"),
             outcome: Outcome::PatchApproval {
                 decision: ReviewDecision::Approved,
                 expected_reason: None,
@@ -1307,7 +1338,7 @@ fn scenarios() -> Vec<ScenarioSpec> {
             },
             sandbox_permissions: SandboxPermissions::UseDefault,
             features: vec![],
-            model_override: Some("gpt-5.1-codex"),
+            model_override: Some("gpt-5.1-brocode"),
             outcome: Outcome::Auto,
             expectation: Expectation::FileNotCreated {
                 target: TargetPath::OutsideWorkspace("apply_patch_function_never.txt"),
@@ -1624,12 +1655,58 @@ fn scenarios() -> Vec<ScenarioSpec> {
     ]
 }
 
+const APPROVAL_MATRIX_CHUNK_SIZE: usize = 8;
+const APPROVAL_MATRIX_TEST_CHUNKS: usize = 6;
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn approval_matrix_covers_all_modes() -> Result<()> {
+async fn approval_matrix_covers_all_modes_1_of_6() -> Result<()> {
+    run_approval_matrix_chunk(/*chunk_index*/ 0).await
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn approval_matrix_covers_all_modes_2_of_6() -> Result<()> {
+    run_approval_matrix_chunk(/*chunk_index*/ 1).await
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn approval_matrix_covers_all_modes_3_of_6() -> Result<()> {
+    run_approval_matrix_chunk(/*chunk_index*/ 2).await
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn approval_matrix_covers_all_modes_4_of_6() -> Result<()> {
+    run_approval_matrix_chunk(/*chunk_index*/ 3).await
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn approval_matrix_covers_all_modes_5_of_6() -> Result<()> {
+    run_approval_matrix_chunk(/*chunk_index*/ 4).await
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn approval_matrix_covers_all_modes_6_of_6() -> Result<()> {
+    run_approval_matrix_chunk(/*chunk_index*/ 5).await
+}
+
+async fn run_approval_matrix_chunk(chunk_index: usize) -> Result<()> {
     skip_if_no_network!(Ok(()));
 
-    for scenario in scenarios() {
-        run_scenario(&scenario).await?;
+    let scenarios = scenarios();
+    let total_chunks = scenarios.len().div_ceil(APPROVAL_MATRIX_CHUNK_SIZE);
+    assert!(
+        total_chunks <= APPROVAL_MATRIX_TEST_CHUNKS,
+        "approval matrix now needs more chunk tests: {} scenarios at chunk size {} exceed {} chunks",
+        scenarios.len(),
+        APPROVAL_MATRIX_CHUNK_SIZE,
+        APPROVAL_MATRIX_TEST_CHUNKS,
+    );
+
+    let start = chunk_index * APPROVAL_MATRIX_CHUNK_SIZE;
+    let end = ((chunk_index + 1) * APPROVAL_MATRIX_CHUNK_SIZE).min(scenarios.len());
+    assert!(start < end, "approval matrix chunk {chunk_index} is empty");
+
+    for scenario in &scenarios[start..end] {
+        run_scenario(scenario).await?;
     }
 
     Ok(())
@@ -1771,7 +1848,7 @@ async fn approving_apply_patch_for_session_skips_future_prompts_for_same_file() 
     let sandbox_policy_for_config = sandbox_policy.clone();
 
     let mut builder = test_brocode()
-        .with_model("gpt-5.1-codex")
+        .with_model("gpt-5.1-brocode")
         .with_config(move |config| {
             config.permissions.approval_policy = Constrained::allow_any(approval_policy);
             config.permissions.sandbox_policy = Constrained::allow_any(sandbox_policy_for_config);
@@ -2259,7 +2336,12 @@ async fn matched_prefix_rule_runs_unsandboxed_under_zsh_fork() -> Result<()> {
     .await?;
 
     let call_id = "zsh-fork-prefix-rule-unsandboxed";
-    let event = shell_event(call_id, &command, 1_000, SandboxPermissions::UseDefault)?;
+    let event = shell_event(
+        call_id,
+        &command,
+        /*timeout_ms*/ 1_000,
+        SandboxPermissions::UseDefault,
+    )?;
     let _ = mount_sse_once(
         &server,
         sse(vec![
@@ -2317,7 +2399,7 @@ async fn invalid_requested_prefix_rule_falls_back_for_compound_command() -> Resu
     let event = shell_event_with_prefix_rule(
         call_id,
         command,
-        1_000,
+        /*timeout_ms*/ 1_000,
         SandboxPermissions::RequireEscalated,
         Some(vec!["touch".to_string()]),
     )?;
@@ -2367,7 +2449,7 @@ async fn approving_fallback_rule_for_compound_command_works() -> Result<()> {
     let event = shell_event_with_prefix_rule(
         call_id,
         command,
-        1_000,
+        /*timeout_ms*/ 1_000,
         SandboxPermissions::RequireEscalated,
         Some(vec!["touch".to_string()]),
     )?;
@@ -2413,7 +2495,7 @@ async fn approving_fallback_rule_for_compound_command_works() -> Result<()> {
     let event = shell_event_with_prefix_rule(
         call_id,
         command,
-        1_000,
+        /*timeout_ms*/ 1_000,
         SandboxPermissions::RequireEscalated,
         Some(vec!["touch".to_string()]),
     )?;
@@ -2495,7 +2577,10 @@ allow_local_binding = true
         config.permissions.sandbox_policy = Constrained::allow_any(sandbox_policy_for_config);
         let layers = config
             .config_layer_stack
-            .get_layers(ConfigLayerStackOrdering::LowestPrecedenceFirst, true)
+            .get_layers(
+                ConfigLayerStackOrdering::LowestPrecedenceFirst,
+                /*include_disabled*/ true,
+            )
             .into_iter()
             .cloned()
             .collect();
@@ -2534,12 +2619,12 @@ allow_local_binding = true
     let call_id_first = "allow-network-first";
     // Use urllib without overriding proxy settings so managed-network sessions
     // continue to exercise the env-based proxy routing path under bubblewrap.
-    let fetch_command = r#"python3 -c "import urllib.request; opener = urllib.request.build_opener(urllib.request.ProxyHandler()); print('OK:' + opener.open('http://codex-network-test.invalid', timeout=30).read().decode(errors='replace'))""#
+    let fetch_command = r#"python3 -c "import urllib.request; opener = urllib.request.build_opener(urllib.request.ProxyHandler()); print('OK:' + opener.open('http://brocode-network-test.invalid', timeout=30).read().decode(errors='replace'))""#
         .to_string();
     let first_event = shell_event(
         call_id_first,
         &fetch_command,
-        30_000,
+        /*timeout_ms*/ 30_000,
         SandboxPermissions::UseDefault,
     )?;
 
@@ -2679,7 +2764,7 @@ allow_local_binding = true
     let second_event = shell_event(
         call_id_second,
         &fetch_command,
-        30_000,
+        /*timeout_ms*/ 30_000,
         SandboxPermissions::UseDefault,
     )?;
 

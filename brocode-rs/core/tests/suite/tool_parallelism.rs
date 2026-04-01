@@ -68,7 +68,7 @@ async fn run_turn_and_measure(test: &TestBrocode, prompt: &str) -> anyhow::Resul
 async fn build_brocode_with_test_tool(
     server: &wiremock::MockServer,
 ) -> anyhow::Result<TestBrocode> {
-    let mut builder = test_brocode().with_model("test-gpt-5.1-codex");
+    let mut builder = test_brocode().with_model("test-gpt-5.1-brocode");
     builder.build(server).await
 }
 

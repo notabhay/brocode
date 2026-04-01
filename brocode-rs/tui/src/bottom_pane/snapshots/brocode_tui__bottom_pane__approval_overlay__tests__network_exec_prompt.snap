@@ -1,6 +1,5 @@
 ---
 source: tui/src/bottom_pane/approval_overlay.rs
-assertion_line: 1474
 expression: "format!(\"{buf:?}\")"
 ---
 Buffer {
@@ -15,7 +14,7 @@ Buffer {
         "› 1. Yes, just this once (y)                                                                        ",
         "  2. Yes, and allow this host for this conversation (a)                                             ",
         "  3. Yes, and allow this host in the future (p)                                                     ",
-        "  4. No, and tell brocode what to do differently (esc)                                              ",
+        "  4. No, and tell Brocode what to do differently (esc)                                              ",
         "                                                                                                    ",
         "  Press enter to confirm or esc to cancel                                                           ",
     ],

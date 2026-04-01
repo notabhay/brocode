@@ -1,16 +1,15 @@
 ---
 source: tui/src/model_migration.rs
-assertion_line: 507
 expression: terminal.backend()
 ---
 
-> brocode just got an upgrade. Introducing gpt-5.1-codex-max
+> Brocode just got an upgrade. Introducing gpt-5.1-brocode-m
 
-  We recommend switching from gpt-5-codex to
-  gpt-5.1-codex-max.
+  We recommend switching from gpt-5-brocode to
+  gpt-5.1-brocode-max.
 
-  brocode-optimized flagship for deep and fast reasoning.
-  Learn more about gpt-5.1-codex-max at
-  https://www.codex.com/models/gpt-5.1-codex-max
+  Brocode-optimized flagship for deep and fast reasoning.
+  Learn more about gpt-5.1-brocode-max at
+  https://www.brocode.com/models/gpt-5.1-brocode-max
 
   Press enter to continue

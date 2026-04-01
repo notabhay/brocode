@@ -35,7 +35,7 @@ async fn brocode_returns_json_result_for_gpt5() -> anyhow::Result<()> {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn brocode_returns_json_result_for_gpt5_brocode() -> anyhow::Result<()> {
-    brocode_returns_json_result("gpt-5.1-codex".to_string()).await
+    brocode_returns_json_result("gpt-5.1-brocode".to_string()).await
 }
 
 async fn brocode_returns_json_result(model: String) -> anyhow::Result<()> {

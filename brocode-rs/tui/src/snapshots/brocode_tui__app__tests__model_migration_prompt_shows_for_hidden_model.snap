@@ -1,12 +1,11 @@
 ---
 source: tui/src/app.rs
-assertion_line: 7481
 expression: model_migration_copy_to_plain_text(&copy)
 ---
-**brocode just got an upgrade. Introducing gpt-5.3-codex.**
+**Brocode just got an upgrade. Introducing gpt-5.3-brocode.**
 
-Brocode is now powered by gpt-5.3-codex, our most capable agentic coding model yet. It's built for long-running, project-scale work, with mid-turn steering + frequent progress updates so you can collaborate while it runs (and it's faster too).
+Brocode is now powered by gpt-5.3-brocode, our most capable agentic coding model yet. It's built for long-running, project-scale work, with mid-turn steering + frequent progress updates so you can collaborate while it runs (and it's faster too).
 
-Learn more: https://openai.com/index/introducing-gpt-5-3-codex/
+Learn more: https://openai.com/index/introducing-gpt-5-3-brocode/
 
-You can keep using gpt-5.1-codex if you prefer.
+You can keep using gpt-5.1-brocode if you prefer.

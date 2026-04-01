@@ -2,20 +2,11 @@
 source: tui/src/chatwidget/tests.rs
 expression: term.backend().vt100().screen().contents()
 ---
-
-
-
-
-
-
-
-
-
 • Working (0s • esc to interrupt)
 
 • Messages to be submitted at end of turn
   ↳ Steer submitted while /compact was running.
 
-› [PROMPT HERE]
+› Ask Brocode to do anything
 
-  ? for shortcuts                                            100% context left
+  gpt-5.3-brocode default · 100% left · /tmp/project

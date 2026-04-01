@@ -1,0 +1,24 @@
+[package]
+edition.workspace = true
+license.workspace = true
+name = "brocode-tools"
+version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+brocode-app-server-protocol = { workspace = true }
+brocode-code-mode = { workspace = true }
+brocode-protocol = { workspace = true }
+rmcp = { workspace = true, default-features = false, features = [
+    "base64",
+    "macros",
+    "schemars",
+    "server",
+] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+pretty_assertions = { workspace = true }

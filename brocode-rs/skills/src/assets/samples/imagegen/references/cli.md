@@ -12,11 +12,11 @@ This file is for the fallback CLI mode only. Read it only after the user explici
 Real API calls require **network access** + `OPENAI_API_KEY`. `--dry-run` does not.
 
 ## Quick start (works from any repo)
-Set a stable path to the skill CLI (default `CODEX_HOME` is `~/.brocode`):
+Set a stable path to the skill CLI (default `BROCODE_HOME` is `~/.brocode`):
 
 ```
-export CODEX_HOME="${CODEX_HOME:-$HOME/.brocode}"
-export IMAGE_GEN="$CODEX_HOME/skills/imagegen/scripts/image_gen.py"
+export BROCODE_HOME="${BROCODE_HOME:-$HOME/.brocode}"
+export IMAGE_GEN="$BROCODE_HOME/skills/imagegen/scripts/image_gen.py"
 ```
 
 Install dependencies into that environment with its package manager. In uv-managed environments, `uv pip install ...` remains the preferred path.

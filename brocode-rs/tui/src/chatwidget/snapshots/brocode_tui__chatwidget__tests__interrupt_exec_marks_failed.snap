@@ -2,4 +2,5 @@
 source: tui/src/chatwidget/tests.rs
 expression: exec_blob
 ---
-■ Conversation interrupted - tell the model what to do differently. Something went wrong? Hit `/feedback` to report the issue.
+• Ran sleep 1
+  └ (no output)

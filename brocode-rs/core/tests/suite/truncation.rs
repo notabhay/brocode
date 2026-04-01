@@ -187,7 +187,7 @@ async fn tool_call_output_exceeds_limit_truncated_for_model() -> Result<()> {
     let server = start_mock_server().await;
 
     // Use a model that exposes the shell_command tool.
-    let mut builder = test_brocode().with_model("gpt-5.1-codex");
+    let mut builder = test_brocode().with_model("gpt-5.1-brocode");
     let fixture = builder.build(&server).await?;
 
     let call_id = "shell-too-large";
@@ -263,7 +263,7 @@ async fn tool_call_output_truncated_only_once() -> Result<()> {
 
     let server = start_mock_server().await;
 
-    let mut builder = test_brocode().with_model("gpt-5.1-codex");
+    let mut builder = test_brocode().with_model("gpt-5.1-brocode");
     let fixture = builder.build(&server).await?;
     let call_id = "shell-single-truncation";
     let command = if cfg!(windows) {
@@ -525,7 +525,7 @@ async fn token_policy_marker_reports_tokens() -> Result<()> {
 
     let server = start_mock_server().await;
     let mut builder = test_brocode()
-        .with_model("gpt-5.1-codex")
+        .with_model("gpt-5.1-brocode")
         .with_config(|config| {
             config.tool_output_token_limit = Some(50); // small budget to force truncation
         });
@@ -629,7 +629,7 @@ async fn shell_command_output_not_truncated_with_custom_limit() -> Result<()> {
 
     let server = start_mock_server().await;
     let mut builder = test_brocode()
-        .with_model("gpt-5.1-codex")
+        .with_model("gpt-5.1-brocode")
         .with_config(|config| {
             config.tool_output_token_limit = Some(50_000); // ample budget
         });

@@ -178,7 +178,7 @@ fn otlp_http_exporter_sends_metrics_to_collector() -> Result<()> {
         },
     ))?;
 
-    metrics.counter("brocode.turns", 1, &[("source", "test")])?;
+    metrics.counter("brocode.turns", /*inc*/ 1, &[("source", "test")])?;
     metrics.shutdown()?;
 
     server.join().expect("server join");

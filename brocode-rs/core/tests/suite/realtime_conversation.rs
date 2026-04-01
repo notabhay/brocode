@@ -172,7 +172,11 @@ async fn conversation_start_audio_text_close_round_trip() -> Result<()> {
 
     let mut builder = test_brocode();
     let test = builder.build_with_websocket_server(&server).await?;
-    assert!(server.wait_for_handshakes(1, Duration::from_secs(2)).await);
+    assert!(
+        server
+            .wait_for_handshakes(/*expected*/ 1, Duration::from_secs(2))
+            .await
+    );
 
     test.brocode
         .submit(Op::RealtimeConversationStart(ConversationStartParams {
@@ -311,7 +315,11 @@ async fn conversation_start_uses_openai_env_key_fallback_with_chatgpt_auth() -> 
     let mut builder =
         test_brocode().with_auth(BrocodeAuth::create_dummy_chatgpt_auth_for_testing());
     let test = builder.build_with_websocket_server(&server).await?;
-    assert!(server.wait_for_handshakes(1, Duration::from_secs(2)).await);
+    assert!(
+        server
+            .wait_for_handshakes(/*expected*/ 1, Duration::from_secs(2))
+            .await
+    );
 
     test.brocode
         .submit(Op::RealtimeConversationStart(ConversationStartParams {
@@ -366,7 +374,11 @@ async fn conversation_transport_close_emits_closed_event() -> Result<()> {
 
     let mut builder = test_brocode();
     let test = builder.build_with_websocket_server(&server).await?;
-    assert!(server.wait_for_handshakes(1, Duration::from_secs(2)).await);
+    assert!(
+        server
+            .wait_for_handshakes(/*expected*/ 1, Duration::from_secs(2))
+            .await
+    );
 
     test.brocode
         .submit(Op::RealtimeConversationStart(ConversationStartParams {
@@ -574,7 +586,11 @@ async fn conversation_second_start_replaces_runtime() -> Result<()> {
     .await;
     let mut builder = test_brocode();
     let test = builder.build_with_websocket_server(&server).await?;
-    assert!(server.wait_for_handshakes(1, Duration::from_secs(2)).await);
+    assert!(
+        server
+            .wait_for_handshakes(/*expected*/ 1, Duration::from_secs(2))
+            .await
+    );
 
     test.brocode
         .submit(Op::RealtimeConversationStart(ConversationStartParams {
@@ -674,7 +690,7 @@ async fn conversation_uses_experimental_realtime_ws_base_url_override() -> Resul
     let test = builder.build_with_websocket_server(&startup_server).await?;
     assert!(
         startup_server
-            .wait_for_handshakes(1, Duration::from_secs(2))
+            .wait_for_handshakes(/*expected*/ 1, Duration::from_secs(2))
             .await
     );
 
@@ -726,7 +742,11 @@ async fn conversation_uses_experimental_realtime_ws_backend_prompt_override() ->
         config.experimental_realtime_ws_backend_prompt = Some("prompt from config".to_string());
     });
     let test = builder.build_with_websocket_server(&server).await?;
-    assert!(server.wait_for_handshakes(1, Duration::from_secs(2)).await);
+    assert!(
+        server
+            .wait_for_handshakes(/*expected*/ 1, Duration::from_secs(2))
+            .await
+    );
 
     test.brocode
         .submit(Op::RealtimeConversationStart(ConversationStartParams {
@@ -786,7 +806,7 @@ async fn conversation_uses_experimental_realtime_ws_startup_context_override() -
     fs::write(test.workspace_path("README.md"), "workspace marker")?;
     assert!(
         startup_server
-            .wait_for_handshakes(1, Duration::from_secs(2))
+            .wait_for_handshakes(/*expected*/ 1, Duration::from_secs(2))
             .await
     );
 
@@ -846,7 +866,7 @@ async fn conversation_disables_realtime_startup_context_with_empty_override() ->
     fs::write(test.workspace_path("README.md"), "workspace marker")?;
     assert!(
         startup_server
-            .wait_for_handshakes(1, Duration::from_secs(2))
+            .wait_for_handshakes(/*expected*/ 1, Duration::from_secs(2))
             .await
     );
 
@@ -1240,7 +1260,9 @@ async fn conversation_handoff_persists_across_item_done_until_turn_complete() ->
     })
     .await;
 
-    let first_append = realtime_server.wait_for_request(0, 1).await;
+    let first_append = realtime_server
+        .wait_for_request(/*connection_index*/ 0, /*request_index*/ 1)
+        .await;
     assert_eq!(
         first_append.body_json()["type"].as_str(),
         Some("conversation.handoff.append")
@@ -1264,7 +1286,9 @@ async fn conversation_handoff_persists_across_item_done_until_turn_complete() ->
 
     let _ = gate_second_message_tx.send(());
 
-    let second_append = realtime_server.wait_for_request(0, 2).await;
+    let second_append = realtime_server
+        .wait_for_request(/*connection_index*/ 0, /*request_index*/ 2)
+        .await;
     assert_eq!(
         second_append.body_json()["type"].as_str(),
         Some("conversation.handoff.append")
@@ -1779,7 +1803,9 @@ async fn delegated_turn_user_role_echo_does_not_redelegate_and_still_forwards_au
         "delegate now"
     );
 
-    let mirrored_request = realtime_server.wait_for_request(0, 1).await;
+    let mirrored_request = realtime_server
+        .wait_for_request(/*connection_index*/ 0, /*request_index*/ 1)
+        .await;
     let mirrored_request_body = mirrored_request.body_json();
     eprintln!(
         "[realtime test +{}ms] saw mirrored request type={:?} handoff_id={:?} text={:?}",

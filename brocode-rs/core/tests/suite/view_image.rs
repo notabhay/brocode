@@ -352,7 +352,7 @@ async fn view_image_tool_can_preserve_original_resolution_when_requested_on_gpt5
 
     let server = start_mock_server().await;
     let mut builder = test_brocode()
-        .with_model("gpt-5.3-codex")
+        .with_model("gpt-5.3-brocode")
         .with_config(|config| {
             config
                 .features
@@ -460,7 +460,7 @@ async fn view_image_tool_errors_clearly_for_unsupported_detail_values() -> anyho
 
     let server = start_mock_server().await;
     let mut builder = test_brocode()
-        .with_model("gpt-5.3-codex")
+        .with_model("gpt-5.3-brocode")
         .with_config(|config| {
             config
                 .features
@@ -476,7 +476,14 @@ async fn view_image_tool_errors_clearly_for_unsupported_detail_values() -> anyho
     } = &test;
 
     let rel_path = "assets/unsupported-detail.png";
-    write_workspace_png(&test, rel_path, 256, 128, [0u8, 80, 255, 255]).await?;
+    write_workspace_png(
+        &test,
+        rel_path,
+        /*width*/ 256,
+        /*height*/ 128,
+        [0u8, 80, 255, 255],
+    )
+    .await?;
 
     let call_id = "view-image-unsupported-detail";
     let arguments = serde_json::json!({ "path": rel_path, "detail": "low" }).to_string();
@@ -543,7 +550,7 @@ async fn view_image_tool_treats_null_detail_as_omitted() -> anyhow::Result<()> {
 
     let server = start_mock_server().await;
     let mut builder = test_brocode()
-        .with_model("gpt-5.3-codex")
+        .with_model("gpt-5.3-brocode")
         .with_config(|config| {
             config
                 .features
@@ -754,7 +761,7 @@ async fn view_image_tool_does_not_force_original_resolution_with_capability_feat
 
     let server = start_mock_server().await;
     let mut builder = test_brocode()
-        .with_model("gpt-5.3-codex")
+        .with_model("gpt-5.3-brocode")
         .with_config(|config| {
             config
                 .features
@@ -1352,7 +1359,7 @@ async fn view_image_tool_returns_unsupported_message_for_text_only_model() -> an
         availability_nux: None,
         apply_patch_tool_type: None,
         web_search_tool_type: Default::default(),
-        truncation_policy: TruncationPolicyConfig::bytes(10_000),
+        truncation_policy: TruncationPolicyConfig::bytes(/*limit*/ 10_000),
         supports_parallel_tool_calls: false,
         supports_image_detail_original: false,
         context_window: Some(272_000),
@@ -1379,7 +1386,14 @@ async fn view_image_tool_returns_unsupported_message_for_text_only_model() -> an
     } = &test;
 
     let rel_path = "assets/example.png";
-    write_workspace_png(&test, rel_path, 20, 20, [255u8, 0, 0, 255]).await?;
+    write_workspace_png(
+        &test,
+        rel_path,
+        /*width*/ 20,
+        /*height*/ 20,
+        [255u8, 0, 0, 255],
+    )
+    .await?;
 
     let call_id = "view-image-unsupported-model";
     let arguments = serde_json::json!({ "path": rel_path }).to_string();

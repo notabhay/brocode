@@ -4,8 +4,13 @@ mod firewall;
 
 use anyhow::Context;
 use anyhow::Result;
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
+use brocode_windows_sandbox::LOG_FILE_NAME;
+use brocode_windows_sandbox::SETUP_VERSION;
+use brocode_windows_sandbox::SetupErrorCode;
+use brocode_windows_sandbox::SetupErrorReport;
+use brocode_windows_sandbox::SetupFailure;
 use brocode_windows_sandbox::canonicalize_path;
 use brocode_windows_sandbox::convert_string_sid_to_sid;
 use brocode_windows_sandbox::ensure_allow_mask_aces_with_inheritance;
@@ -25,16 +30,11 @@ use brocode_windows_sandbox::string_from_sid_bytes;
 use brocode_windows_sandbox::to_wide;
 use brocode_windows_sandbox::workspace_cap_sid_for_cwd;
 use brocode_windows_sandbox::write_setup_error_report;
-use brocode_windows_sandbox::SetupErrorCode;
-use brocode_windows_sandbox::SetupErrorReport;
-use brocode_windows_sandbox::SetupFailure;
-use brocode_windows_sandbox::LOG_FILE_NAME;
-use brocode_windows_sandbox::SETUP_VERSION;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashSet;
-use std::ffi::c_void;
 use std::ffi::OsStr;
+use std::ffi::c_void;
 use std::fs::File;
 use std::io::Write;
 use std::os::windows::process::CommandExt;
@@ -44,17 +44,17 @@ use std::process::Command;
 use std::process::Stdio;
 use std::sync::mpsc;
 use windows_sys::Win32::Foundation::GetLastError;
-use windows_sys::Win32::Foundation::LocalFree;
 use windows_sys::Win32::Foundation::HLOCAL;
+use windows_sys::Win32::Foundation::LocalFree;
+use windows_sys::Win32::Security::ACL;
 use windows_sys::Win32::Security::Authorization::ConvertStringSidToSidW;
-use windows_sys::Win32::Security::Authorization::SetEntriesInAclW;
-use windows_sys::Win32::Security::Authorization::SetNamedSecurityInfoW;
 use windows_sys::Win32::Security::Authorization::EXPLICIT_ACCESS_W;
 use windows_sys::Win32::Security::Authorization::GRANT_ACCESS;
 use windows_sys::Win32::Security::Authorization::SE_FILE_OBJECT;
+use windows_sys::Win32::Security::Authorization::SetEntriesInAclW;
+use windows_sys::Win32::Security::Authorization::SetNamedSecurityInfoW;
 use windows_sys::Win32::Security::Authorization::TRUSTEE_IS_SID;
 use windows_sys::Win32::Security::Authorization::TRUSTEE_W;
-use windows_sys::Win32::Security::ACL;
 use windows_sys::Win32::Security::CONTAINER_INHERIT_ACE;
 use windows_sys::Win32::Security::DACL_SECURITY_INFORMATION;
 use windows_sys::Win32::Security::OBJECT_INHERIT_ACE;
@@ -84,6 +84,10 @@ struct Payload {
     command_cwd: PathBuf,
     read_roots: Vec<PathBuf>,
     write_roots: Vec<PathBuf>,
+    #[serde(default)]
+    proxy_ports: Vec<u16>,
+    #[serde(default)]
+    allow_local_binding: bool,
     real_user: String,
     #[serde(default)]
     mode: SetupMode,
@@ -344,7 +348,7 @@ pub fn main() -> Result<()> {
     let ret = real_main();
     if let Err(e) = &ret {
         // Best-effort: log unexpected top-level errors.
-        if let Ok(brocode_home) = std::env::var("CODEX_HOME") {
+        if let Ok(brocode_home) = std::env::var("BROCODE_HOME") {
             let sbx_dir = sandbox_dir(Path::new(&brocode_home));
             let _ = std::fs::create_dir_all(&sbx_dir);
             let log_path = sbx_dir.join(LOG_FILE_NAME);
@@ -510,6 +514,8 @@ fn run_setup_full(payload: &Payload, log: &mut File, sbx_dir: &Path) -> Result<(
             &payload.brocode_home,
             &payload.offline_username,
             &payload.online_username,
+            &payload.proxy_ports,
+            payload.allow_local_binding,
             log,
         );
         if let Err(err) = provision_result {
@@ -572,6 +578,21 @@ fn run_setup_full(payload: &Payload, log: &mut File, sbx_dir: &Path) -> Result<(
     };
     let mut refresh_errors: Vec<String> = Vec::new();
     if !refresh_only {
+        let proxy_allowlist_result = firewall::ensure_offline_proxy_allowlist(
+            &offline_sid_str,
+            &payload.proxy_ports,
+            payload.allow_local_binding,
+            log,
+        );
+        if let Err(err) = proxy_allowlist_result {
+            if extract_setup_failure(&err).is_some() {
+                return Err(err);
+            }
+            return Err(anyhow::Error::new(SetupFailure::new(
+                SetupErrorCode::HelperFirewallRuleCreateOrAddFailed,
+                format!("ensure offline proxy allowlist failed: {err}"),
+            )));
+        }
         let firewall_result = firewall::ensure_offline_outbound_block(&offline_sid_str, log);
         if let Err(err) = firewall_result {
             if extract_setup_failure(&err).is_some() {

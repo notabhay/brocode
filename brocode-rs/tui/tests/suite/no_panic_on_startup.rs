@@ -4,7 +4,7 @@ use std::time::Duration;
 use tokio::select;
 use tokio::time::timeout;
 
-/// Regression test for https://github.com/openai/codex/issues/8803.
+/// Regression test for https://github.com/openai/brocode/issues/8803.
 #[tokio::test]
 #[ignore = "TODO(mbolin): flaky"]
 async fn malformed_rules_should_not_panic() -> anyhow::Result<()> {
@@ -36,7 +36,7 @@ model_provider = "ollama"
     std::fs::write(brocode_home.join("config.toml"), config_contents)?;
 
     let BrocodeCliOutput { exit_code, output } = run_brocode_cli(brocode_home, cwd).await?;
-    assert_ne!(0, exit_code, "brocode CLI should exit nonzero.");
+    assert_ne!(0, exit_code, "Brocode CLI should exit nonzero.");
     assert!(
         output.contains("ERROR: Failed to initialize brocode:"),
         "expected startup error in output, got: {output}"
@@ -60,7 +60,7 @@ async fn run_brocode_cli(
     let brocode_cli = brocode_utils_cargo_bin::cargo_bin("brocode")?;
     let mut env = HashMap::new();
     env.insert(
-        "CODEX_HOME".to_string(),
+        "BROCODE_HOME".to_string(),
         brocode_home.as_ref().display().to_string(),
     );
 

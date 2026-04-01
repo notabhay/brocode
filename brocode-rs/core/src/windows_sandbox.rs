@@ -180,13 +180,15 @@ pub fn run_elevated_setup(
     brocode_home: &Path,
 ) -> anyhow::Result<()> {
     brocode_windows_sandbox::run_elevated_setup(
-        policy,
-        policy_cwd,
-        command_cwd,
-        env_map,
-        brocode_home,
-        /*read_roots_override*/ None,
-        /*write_roots_override*/ None,
+        brocode_windows_sandbox::SandboxSetupRequest {
+            policy,
+            policy_cwd,
+            command_cwd,
+            env_map,
+            brocode_home,
+            proxy_enforced: false,
+        },
+        brocode_windows_sandbox::SetupRootOverrides::default(),
     )
 }
 
@@ -234,6 +236,7 @@ pub fn run_setup_refresh_with_extra_read_roots(
         env_map,
         brocode_home,
         extra_read_roots,
+        /*proxy_enforced*/ false,
     )
 }
 

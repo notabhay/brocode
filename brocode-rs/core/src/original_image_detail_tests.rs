@@ -9,7 +9,7 @@ use pretty_assertions::assert_eq;
 fn image_detail_original_feature_enables_explicit_original_without_force() {
     let config = test_config();
     let mut model_info =
-        ModelsManager::construct_model_info_offline_for_tests("gpt-5-codex", &config);
+        ModelsManager::construct_model_info_offline_for_tests("gpt-5-brocode", &config);
     model_info.supports_image_detail_original = true;
     let mut features = Features::with_defaults();
     features.enable(Feature::ImageDetailOriginal);
@@ -20,7 +20,7 @@ fn image_detail_original_feature_enables_explicit_original_without_force() {
         Some(ImageDetail::Original)
     );
     assert_eq!(
-        normalize_output_image_detail(&features, &model_info, None),
+        normalize_output_image_detail(&features, &model_info, /*detail*/ None),
         None
     );
 }
@@ -29,7 +29,7 @@ fn image_detail_original_feature_enables_explicit_original_without_force() {
 fn explicit_original_is_dropped_without_feature_or_model_support() {
     let config = test_config();
     let mut model_info =
-        ModelsManager::construct_model_info_offline_for_tests("gpt-5-codex", &config);
+        ModelsManager::construct_model_info_offline_for_tests("gpt-5-brocode", &config);
     model_info.supports_image_detail_original = true;
     let features = Features::with_defaults();
 
@@ -51,7 +51,7 @@ fn explicit_original_is_dropped_without_feature_or_model_support() {
 fn unsupported_non_original_detail_is_dropped() {
     let config = test_config();
     let mut model_info =
-        ModelsManager::construct_model_info_offline_for_tests("gpt-5-codex", &config);
+        ModelsManager::construct_model_info_offline_for_tests("gpt-5-brocode", &config);
     model_info.supports_image_detail_original = true;
     let mut features = Features::with_defaults();
     features.enable(Feature::ImageDetailOriginal);

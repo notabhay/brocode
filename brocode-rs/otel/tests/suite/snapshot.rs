@@ -28,7 +28,7 @@ fn snapshot_collects_metrics_without_shutdown() -> Result<()> {
 
     metrics.counter(
         "brocode.tool.call",
-        1,
+        /*inc*/ 1,
         &[("tool", "shell"), ("success", "true")],
     )?;
 
@@ -75,10 +75,10 @@ fn manager_snapshot_metrics_collects_without_shutdown() -> Result<()> {
         "gpt-5.1",
         "gpt-5.1",
         Some("account-id".to_string()),
-        None,
+        /*account_email*/ None,
         Some(TelemetryAuthMode::ApiKey),
         "test_originator".to_string(),
-        true,
+        /*log_user_prompts*/ true,
         "tty".to_string(),
         SessionSource::Cli,
     )
@@ -86,7 +86,7 @@ fn manager_snapshot_metrics_collects_without_shutdown() -> Result<()> {
 
     manager.counter(
         "brocode.tool.call",
-        1,
+        /*inc*/ 1,
         &[("tool", "shell"), ("success", "true")],
     );
 

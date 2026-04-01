@@ -69,7 +69,7 @@ async fn base_instructions_override_disables_personality_template() {
     config.base_instructions = Some("override instructions".to_string());
 
     let model_info =
-        brocode_core::test_support::construct_model_info_offline("gpt-5.2-codex", &config);
+        brocode_core::test_support::construct_model_info_offline("gpt-5.2-brocode", &config);
 
     assert_eq!(model_info.base_instructions, "override instructions");
     assert_eq!(
@@ -85,7 +85,7 @@ async fn user_turn_personality_none_does_not_add_update_message() -> anyhow::Res
     let server = start_mock_server().await;
     let resp_mock = mount_sse_once(&server, sse_completed("resp-1")).await;
     let mut builder = test_brocode()
-        .with_model("gpt-5.2-codex")
+        .with_model("gpt-5.2-brocode")
         .with_config(|config| {
             config
                 .features
@@ -135,7 +135,7 @@ async fn config_personality_some_sets_instructions_template() -> anyhow::Result<
     let server = start_mock_server().await;
     let resp_mock = mount_sse_once(&server, sse_completed("resp-1")).await;
     let mut builder = test_brocode()
-        .with_model("gpt-5.2-codex")
+        .with_model("gpt-5.2-brocode")
         .with_config(|config| {
             config
                 .features
@@ -193,7 +193,7 @@ async fn config_personality_none_sends_no_personality() -> anyhow::Result<()> {
     let server = start_mock_server().await;
     let resp_mock = mount_sse_once(&server, sse_completed("resp-1")).await;
     let mut builder = test_brocode()
-        .with_model("gpt-5.2-codex")
+        .with_model("gpt-5.2-brocode")
         .with_config(|config| {
             config
                 .features
@@ -258,7 +258,7 @@ async fn default_personality_is_pragmatic_without_config_toml() -> anyhow::Resul
     let server = start_mock_server().await;
     let resp_mock = mount_sse_once(&server, sse_completed("resp-1")).await;
     let mut builder = test_brocode()
-        .with_model("gpt-5.2-codex")
+        .with_model("gpt-5.2-brocode")
         .with_config(|config| {
             config
                 .features
@@ -310,7 +310,7 @@ async fn user_turn_personality_some_adds_update_message() -> anyhow::Result<()> 
     )
     .await;
     let mut builder = test_brocode()
-        .with_model("exp-codex-personality")
+        .with_model("exp-brocode-personality")
         .with_config(|config| {
             config
                 .features
@@ -414,7 +414,7 @@ async fn user_turn_personality_same_value_does_not_add_update_message() -> anyho
     )
     .await;
     let mut builder = test_brocode()
-        .with_model("exp-codex-personality")
+        .with_model("exp-brocode-personality")
         .with_config(|config| {
             config
                 .features
@@ -513,7 +513,7 @@ async fn instructions_uses_base_if_feature_disabled() -> anyhow::Result<()> {
     config.personality = Some(Personality::Friendly);
 
     let model_info =
-        brocode_core::test_support::construct_model_info_offline("gpt-5.2-codex", &config);
+        brocode_core::test_support::construct_model_info_offline("gpt-5.2-brocode", &config);
     assert_eq!(
         model_info.get_model_instructions(config.personality),
         model_info.base_instructions
@@ -533,7 +533,7 @@ async fn user_turn_personality_skips_if_feature_disabled() -> anyhow::Result<()>
     )
     .await;
     let mut builder = test_brocode()
-        .with_model("exp-codex-personality")
+        .with_model("exp-brocode-personality")
         .with_config(|config| {
             config
                 .features
@@ -661,7 +661,7 @@ async fn remote_model_friendly_personality_instructions_with_feature() -> anyhow
         availability_nux: None,
         apply_patch_tool_type: None,
         web_search_tool_type: Default::default(),
-        truncation_policy: TruncationPolicyConfig::bytes(10_000),
+        truncation_policy: TruncationPolicyConfig::bytes(/*limit*/ 10_000),
         supports_parallel_tool_calls: false,
         supports_image_detail_original: false,
         context_window: Some(128_000),
@@ -777,7 +777,7 @@ async fn user_turn_personality_remote_model_template_includes_update_message() -
         availability_nux: None,
         apply_patch_tool_type: None,
         web_search_tool_type: Default::default(),
-        truncation_policy: TruncationPolicyConfig::bytes(10_000),
+        truncation_policy: TruncationPolicyConfig::bytes(/*limit*/ 10_000),
         supports_parallel_tool_calls: false,
         supports_image_detail_original: false,
         context_window: Some(128_000),
@@ -810,7 +810,7 @@ async fn user_turn_personality_remote_model_template_includes_update_message() -
                 .features
                 .enable(Feature::Personality)
                 .expect("test config should allow feature update");
-            config.model = Some("gpt-5.2-codex".to_string());
+            config.model = Some("gpt-5.2-brocode".to_string());
         });
     let test = builder.build(&server).await?;
 

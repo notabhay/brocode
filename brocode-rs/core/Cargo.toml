@@ -52,6 +52,7 @@ brocode-rmcp-client = { workspace = true }
 brocode-sandboxing = { workspace = true }
 brocode-state = { workspace = true }
 brocode-terminal-detection = { workspace = true }
+brocode-tools = { workspace = true }
 brocode-utils-absolute-path = { workspace = true }
 brocode-utils-cache = { workspace = true }
 brocode-utils-image = { workspace = true }

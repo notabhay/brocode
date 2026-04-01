@@ -29,7 +29,7 @@ jobs:
       contents: read
     defaults:
       run:
-        working-directory: codex-rs
+        working-directory: brocode-rs
     env:
       CARGO_PROFILE_RELEASE_LTO: ${{ inputs.release-lto }}
 
@@ -40,34 +40,34 @@ jobs:
           - runner: windows-x64
             target: x86_64-pc-windows-msvc
             bundle: primary
-            build_args: --bin codex --bin codex-responses-api-proxy
+            build_args: --bin brocode --bin brocode-responses-api-proxy
             runs_on:
-              group: codex-runners
-              labels: codex-windows-x64
+              group: brocode-runners
+              labels: brocode-windows-x64
           - runner: windows-arm64
             target: aarch64-pc-windows-msvc
             bundle: primary
-            build_args: --bin codex --bin codex-responses-api-proxy
+            build_args: --bin brocode --bin brocode-responses-api-proxy
             runs_on:
-              group: codex-runners
-              labels: codex-windows-arm64
+              group: brocode-runners
+              labels: brocode-windows-arm64
           - runner: windows-x64
             target: x86_64-pc-windows-msvc
             bundle: helpers
-            build_args: --bin codex-windows-sandbox-setup --bin codex-command-runner
+            build_args: --bin brocode-windows-sandbox-setup --bin brocode-command-runner
             runs_on:
-              group: codex-runners
-              labels: codex-windows-x64
+              group: brocode-runners
+              labels: brocode-windows-x64
           - runner: windows-arm64
             target: aarch64-pc-windows-msvc
             bundle: helpers
-            build_args: --bin codex-windows-sandbox-setup --bin codex-command-runner
+            build_args: --bin brocode-windows-sandbox-setup --bin brocode-command-runner
             runs_on:
-              group: codex-runners
-              labels: codex-windows-arm64
+              group: brocode-runners
+              labels: brocode-windows-arm64
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Print runner specs (Windows)
         shell: powershell
         run: |
@@ -82,7 +82,7 @@ jobs:
           Write-Host "Total RAM: $ramGiB GiB"
           Write-Host "Disk usage:"
           Get-PSDrive -PSProvider FileSystem | Format-Table -AutoSize Name, @{Name='Size(GB)';Expression={[math]::Round(($_.Used + $_.Free) / 1GB, 1)}}, @{Name='Free(GB)';Expression={[math]::Round($_.Free / 1GB, 1)}}
-      - uses: dtolnay/rust-toolchain@1.93.0
+      - uses: dtolnay/rust-toolchain@a0b273b48ed29de4470960879e8381ff45632f26 # 1.93.0
         with:
           targets: ${{ matrix.target }}
 
@@ -92,10 +92,10 @@ jobs:
           cargo build --target ${{ matrix.target }} --release --timings ${{ matrix.build_args }}
 
       - name: Upload Cargo timings
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: cargo-timings-rust-release-windows-${{ matrix.target }}-${{ matrix.bundle }}
-          path: codex-rs/target/**/cargo-timings/cargo-timing.html
+          path: brocode-rs/target/**/cargo-timings/cargo-timing.html
           if-no-files-found: warn
 
       - name: Stage Windows binaries
@@ -104,19 +104,19 @@ jobs:
           output_dir="target/${{ matrix.target }}/release/staged-${{ matrix.bundle }}"
           mkdir -p "$output_dir"
           if [[ "${{ matrix.bundle }}" == "primary" ]]; then
-            cp target/${{ matrix.target }}/release/codex.exe "$output_dir/codex.exe"
-            cp target/${{ matrix.target }}/release/codex-responses-api-proxy.exe "$output_dir/codex-responses-api-proxy.exe"
+            cp target/${{ matrix.target }}/release/brocode.exe "$output_dir/brocode.exe"
+            cp target/${{ matrix.target }}/release/brocode-responses-api-proxy.exe "$output_dir/brocode-responses-api-proxy.exe"
           else
-            cp target/${{ matrix.target }}/release/codex-windows-sandbox-setup.exe "$output_dir/codex-windows-sandbox-setup.exe"
-            cp target/${{ matrix.target }}/release/codex-command-runner.exe "$output_dir/codex-command-runner.exe"
+            cp target/${{ matrix.target }}/release/brocode-windows-sandbox-setup.exe "$output_dir/brocode-windows-sandbox-setup.exe"
+            cp target/${{ matrix.target }}/release/brocode-command-runner.exe "$output_dir/brocode-command-runner.exe"
           fi
 
       - name: Upload Windows binaries
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: windows-binaries-${{ matrix.target }}-${{ matrix.bundle }}
           path: |
-            codex-rs/target/${{ matrix.target }}/release/staged-${{ matrix.bundle }}/*
+            brocode-rs/target/${{ matrix.target }}/release/staged-${{ matrix.bundle }}/*
 
   build-windows:
     needs:
@@ -129,7 +129,7 @@ jobs:
       id-token: write
     defaults:
       run:
-        working-directory: codex-rs
+        working-directory: brocode-rs
 
     strategy:
       fail-fast: false
@@ -138,37 +138,37 @@ jobs:
           - runner: windows-x64
             target: x86_64-pc-windows-msvc
             runs_on:
-              group: codex-runners
-              labels: codex-windows-x64
+              group: brocode-runners
+              labels: brocode-windows-x64
           - runner: windows-arm64
             target: aarch64-pc-windows-msvc
             runs_on:
-              group: codex-runners
-              labels: codex-windows-arm64
+              group: brocode-runners
+              labels: brocode-windows-arm64
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Download prebuilt Windows primary binaries
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: windows-binaries-${{ matrix.target }}-primary
-          path: codex-rs/target/${{ matrix.target }}/release
+          path: brocode-rs/target/${{ matrix.target }}/release
 
       - name: Download prebuilt Windows helper binaries
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: windows-binaries-${{ matrix.target }}-helpers
-          path: codex-rs/target/${{ matrix.target }}/release
+          path: brocode-rs/target/${{ matrix.target }}/release
 
       - name: Verify binaries
         shell: bash
         run: |
           set -euo pipefail
-          ls -lh target/${{ matrix.target }}/release/codex.exe
-          ls -lh target/${{ matrix.target }}/release/codex-responses-api-proxy.exe
-          ls -lh target/${{ matrix.target }}/release/codex-windows-sandbox-setup.exe
-          ls -lh target/${{ matrix.target }}/release/codex-command-runner.exe
+          ls -lh target/${{ matrix.target }}/release/brocode.exe
+          ls -lh target/${{ matrix.target }}/release/brocode-responses-api-proxy.exe
+          ls -lh target/${{ matrix.target }}/release/brocode-windows-sandbox-setup.exe
+          ls -lh target/${{ matrix.target }}/release/brocode-command-runner.exe
 
       - name: Sign Windows binaries with Azure Trusted Signing
         uses: ./.github/actions/windows-code-sign
@@ -187,13 +187,13 @@ jobs:
           dest="dist/${{ matrix.target }}"
           mkdir -p "$dest"
 
-          cp target/${{ matrix.target }}/release/codex.exe "$dest/codex-${{ matrix.target }}.exe"
-          cp target/${{ matrix.target }}/release/codex-responses-api-proxy.exe "$dest/codex-responses-api-proxy-${{ matrix.target }}.exe"
-          cp target/${{ matrix.target }}/release/codex-windows-sandbox-setup.exe "$dest/codex-windows-sandbox-setup-${{ matrix.target }}.exe"
-          cp target/${{ matrix.target }}/release/codex-command-runner.exe "$dest/codex-command-runner-${{ matrix.target }}.exe"
+          cp target/${{ matrix.target }}/release/brocode.exe "$dest/brocode-${{ matrix.target }}.exe"
+          cp target/${{ matrix.target }}/release/brocode-responses-api-proxy.exe "$dest/brocode-responses-api-proxy-${{ matrix.target }}.exe"
+          cp target/${{ matrix.target }}/release/brocode-windows-sandbox-setup.exe "$dest/brocode-windows-sandbox-setup-${{ matrix.target }}.exe"
+          cp target/${{ matrix.target }}/release/brocode-command-runner.exe "$dest/brocode-command-runner-${{ matrix.target }}.exe"
 
       - name: Install DotSlash
-        uses: facebook/install-dotslash@v2
+        uses: facebook/install-dotslash@1e4e7b3e07eaca387acb98f1d4720e0bee8dbb6a # v2
 
       - name: Compress artifacts
         shell: bash
@@ -206,9 +206,9 @@ jobs:
           # For compatibility with environments that lack the `zstd` tool we
           # additionally create a `.tar.gz` and `.zip` for every Windows binary.
           # The end result is:
-          #   codex-<target>.zst
-          #   codex-<target>.tar.gz
-          #   codex-<target>.zip
+          #   brocode-<target>.zst
+          #   brocode-<target>.tar.gz
+          #   brocode-<target>.zip
           for f in "$dest"/*; do
             base="$(basename "$f")"
             # Skip files that are already archives (shouldn't happen, but be
@@ -228,18 +228,18 @@ jobs:
             # Create zip archive for Windows binaries.
             # Must run from inside the dest dir so 7z won't embed the
             # directory path inside the zip.
-            if [[ "$base" == "codex-${{ matrix.target }}.exe" ]]; then
-              # Bundle the sandbox helper binaries into the main codex zip so
-              # WinGet installs include the required helpers next to codex.exe.
+            if [[ "$base" == "brocode-${{ matrix.target }}.exe" ]]; then
+              # Bundle the sandbox helper binaries into the main brocode zip so
+              # WinGet installs include the required helpers next to brocode.exe.
               # Fall back to the single-binary zip if the helpers are missing
               # to avoid breaking releases.
               bundle_dir="$(mktemp -d)"
-              runner_src="$dest/codex-command-runner-${{ matrix.target }}.exe"
-              setup_src="$dest/codex-windows-sandbox-setup-${{ matrix.target }}.exe"
+              runner_src="$dest/brocode-command-runner-${{ matrix.target }}.exe"
+              setup_src="$dest/brocode-windows-sandbox-setup-${{ matrix.target }}.exe"
               if [[ -f "$runner_src" && -f "$setup_src" ]]; then
                 cp "$dest/$base" "$bundle_dir/$base"
-                cp "$runner_src" "$bundle_dir/codex-command-runner.exe"
-                cp "$setup_src" "$bundle_dir/codex-windows-sandbox-setup.exe"
+                cp "$runner_src" "$bundle_dir/brocode-command-runner.exe"
+                cp "$setup_src" "$bundle_dir/brocode-windows-sandbox-setup.exe"
                 # Use an absolute path so bundle zips land in the real dist
                 # dir even when 7z runs from a temp directory.
                 (cd "$bundle_dir" && 7z a "$repo_root/$dest/${base}.zip" .)
@@ -257,8 +257,8 @@ jobs:
             "${GITHUB_WORKSPACE}/.github/workflows/zstd" -T0 -19 "$dest/$base"
           done
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: ${{ matrix.target }}
           path: |
-            codex-rs/dist/${{ matrix.target }}/*
+            brocode-rs/dist/${{ matrix.target }}/*

@@ -105,7 +105,8 @@ pub struct Cli {
     pub last_message_file: Option<PathBuf>,
 
     /// Initial instructions for the agent. If not provided as an argument (or
-    /// if `-` is used), instructions are read from stdin.
+    /// if `-` is used), instructions are read from stdin. If stdin is piped and
+    /// a prompt is also provided, stdin is appended as a `<stdin>` block.
     #[arg(value_name = "PROMPT", value_hint = clap::ValueHint::Other)]
     pub prompt: Option<String>,
 }
@@ -268,7 +269,7 @@ mod tests {
             "--last",
             "--json",
             "--model",
-            "gpt-5.2-codex",
+            "gpt-5.2-brocode",
             "--dangerously-bypass-approvals-and-sandbox",
             "--skip-git-repo-check",
             "--ephemeral",

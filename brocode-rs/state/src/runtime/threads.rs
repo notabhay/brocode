@@ -1038,7 +1038,10 @@ mod tests {
         })];
 
         runtime
-            .apply_rollout_items(&builder, &items, None, None)
+            .apply_rollout_items(
+                &builder, &items, /*new_thread_memory_mode*/ None,
+                /*updated_at_override*/ None,
+            )
             .await
             .expect("apply_rollout_items should succeed");
 
@@ -1092,12 +1095,15 @@ mod tests {
             git: Some(GitInfo {
                 commit_hash: Some(brocode_git_utils::GitSha::new("rollout-sha")),
                 branch: Some("rollout-branch".to_string()),
-                repository_url: Some("git@example.com:openai/codex.git".to_string()),
+                repository_url: Some("git@example.com:openai/brocode.git".to_string()),
             }),
         })];
 
         runtime
-            .apply_rollout_items(&builder, &items, None, None)
+            .apply_rollout_items(
+                &builder, &items, /*new_thread_memory_mode*/ None,
+                /*updated_at_override*/ None,
+            )
             .await
             .expect("apply_rollout_items should succeed");
 
@@ -1110,7 +1116,7 @@ mod tests {
         assert_eq!(persisted.git_branch.as_deref(), Some("sqlite-branch"));
         assert_eq!(
             persisted.git_origin_url.as_deref(),
-            Some("git@example.com:openai/codex.git")
+            Some("git@example.com:openai/brocode.git")
         );
     }
 
@@ -1148,7 +1154,7 @@ mod tests {
                 thread_id,
                 Some(Some("abc123")),
                 Some(Some("feature/branch")),
-                Some(Some("git@example.com:openai/codex.git")),
+                Some(Some("git@example.com:openai/brocode.git")),
             )
             .await
             .expect("git info update should succeed");
@@ -1169,7 +1175,7 @@ mod tests {
         assert_eq!(persisted.git_branch.as_deref(), Some("feature/branch"));
         assert_eq!(
             persisted.git_origin_url.as_deref(),
-            Some("git@example.com:openai/codex.git")
+            Some("git@example.com:openai/brocode.git")
         );
     }
 
@@ -1229,7 +1235,7 @@ mod tests {
         let mut metadata = test_thread_metadata(&brocode_home, thread_id, brocode_home.clone());
         metadata.git_sha = Some("abc123".to_string());
         metadata.git_branch = Some("feature/branch".to_string());
-        metadata.git_origin_url = Some("git@example.com:openai/codex.git".to_string());
+        metadata.git_origin_url = Some("git@example.com:openai/brocode.git".to_string());
 
         runtime
             .upsert_thread(&metadata)
@@ -1330,7 +1336,12 @@ mod tests {
             DateTime::<Utc>::from_timestamp(1_700_001_234, 0).expect("timestamp");
 
         runtime
-            .apply_rollout_items(&builder, &items, None, Some(override_updated_at))
+            .apply_rollout_items(
+                &builder,
+                &items,
+                /*new_thread_memory_mode*/ None,
+                Some(override_updated_at),
+            )
             .await
             .expect("apply_rollout_items should succeed");
 

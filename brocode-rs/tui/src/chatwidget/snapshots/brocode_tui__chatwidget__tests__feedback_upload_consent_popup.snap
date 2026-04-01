@@ -12,7 +12,7 @@ expression: popup
     - OPENAI_BASE_URL is set and may affect connectivity.
       - OPENAI_BASE_URL = hello
 
-› 1. Yes  Share the current brocode session logs with the team for
+› 1. Yes  Share the current Brocode session logs with the team for
           troubleshooting.
   2. No
 

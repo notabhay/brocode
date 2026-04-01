@@ -3,13 +3,13 @@
 version: 2
 updates:
   - package-ecosystem: bun
-    directory: .github/actions/codex
+    directory: .github/actions/brocode
     schedule:
       interval: weekly
   - package-ecosystem: cargo
     directories:
-      - codex-rs
-      - codex-rs/*
+      - brocode-rs
+      - brocode-rs/*
     schedule:
       interval: weekly
   - package-ecosystem: devcontainers
@@ -17,7 +17,7 @@ updates:
     schedule:
       interval: weekly
   - package-ecosystem: docker
-    directory: codex-cli
+    directory: brocode-cli
     schedule:
       interval: weekly
   - package-ecosystem: github-actions
@@ -25,6 +25,6 @@ updates:
     schedule:
       interval: weekly
   - package-ecosystem: rust-toolchain
-    directory: codex-rs
+    directory: brocode-rs
     schedule:
       interval: weekly

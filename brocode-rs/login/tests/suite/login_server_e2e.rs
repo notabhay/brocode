@@ -281,7 +281,7 @@ async fn oauth_access_denied_missing_entitlement_blocks_login_with_clear_error()
 
     let client = reqwest::Client::new();
     let url = format!(
-        "http://127.0.0.1:{login_port}/auth/callback?state={state}&error=access_denied&error_description=missing_codex_entitlement"
+        "http://127.0.0.1:{login_port}/auth/callback?state={state}&error=access_denied&error_description=missing_brocode_entitlement"
     );
     let resp = client.get(&url).send().await?;
     assert!(resp.status().is_success());

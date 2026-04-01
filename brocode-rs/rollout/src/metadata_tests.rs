@@ -186,14 +186,14 @@ async fn backfill_sessions_resumes_from_watermark_and_marks_complete() {
         "2026-01-27T12-34-56",
         "2026-01-27T12:34:56Z",
         first_uuid,
-        None,
+        /*git*/ None,
     );
     let second_path = write_rollout_in_sessions(
         brocode_home.as_path(),
         "2026-01-27T12-35-56",
         "2026-01-27T12:35:56Z",
         second_uuid,
-        None,
+        /*git*/ None,
     );
 
     let runtime =
@@ -259,7 +259,7 @@ async fn backfill_sessions_preserves_existing_git_branch_and_fills_missing_git_f
         Some(GitInfo {
             commit_hash: Some(brocode_git_utils::GitSha::new("rollout-sha")),
             branch: Some("rollout-branch".to_string()),
-            repository_url: Some("git@example.com:openai/codex.git".to_string()),
+            repository_url: Some("git@example.com:openai/brocode.git".to_string()),
         }),
     );
 
@@ -292,7 +292,7 @@ async fn backfill_sessions_preserves_existing_git_branch_and_fills_missing_git_f
     assert_eq!(persisted.git_branch.as_deref(), Some("sqlite-branch"));
     assert_eq!(
         persisted.git_origin_url.as_deref(),
-        Some("git@example.com:openai/codex.git")
+        Some("git@example.com:openai/brocode.git")
     );
 }
 
@@ -308,7 +308,7 @@ async fn backfill_sessions_normalizes_cwd_before_upsert() {
         "2026-01-27T12:34:56Z",
         thread_uuid,
         session_cwd.clone(),
-        None,
+        /*git*/ None,
     );
 
     let runtime =

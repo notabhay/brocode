@@ -15,7 +15,7 @@ struct TestBrocodeAliasesGuard {
     _previous_brocode_home: Option<OsString>,
 }
 
-const BROCODE_HOME_ENV_VAR: &str = "CODEX_HOME";
+const BROCODE_HOME_ENV_VAR: &str = "BROCODE_HOME";
 
 // This code runs before any other tests are run.
 // It allows the test binary to behave like brocode and dispatch to apply_patch and brocode-linux-sandbox
@@ -31,7 +31,7 @@ pub static BROCODE_ALIASES_TEMP_DIR: Option<TestBrocodeAliasesGuard> = {
         .unwrap_or("");
     let argv1 = args.next().unwrap_or_default();
     // Helper re-execs inherit this ctor too, but they may run inside a sandbox
-    // where creating another CODEX_HOME tempdir under /tmp is not allowed.
+    // where creating another BROCODE_HOME tempdir under /tmp is not allowed.
     if exe_name == BROCODE_LINUX_SANDBOX_ARG0 || argv1 == BROCODE_CORE_APPLY_PATCH_ARG1 {
         return None;
     }
@@ -42,7 +42,7 @@ pub static BROCODE_ALIASES_TEMP_DIR: Option<TestBrocodeAliasesGuard> = {
         .tempdir()
         .unwrap();
     let previous_brocode_home = std::env::var_os(BROCODE_HOME_ENV_VAR);
-    // arg0_dispatch() creates helper links under CODEX_HOME/tmp. Point it at a
+    // arg0_dispatch() creates helper links under BROCODE_HOME/tmp. Point it at a
     // test-owned temp dir so startup never mutates the developer's real ~/.brocode.
     //
     // Safety: #[ctor] runs before tests start, so no test threads exist yet.
@@ -53,7 +53,7 @@ pub static BROCODE_ALIASES_TEMP_DIR: Option<TestBrocodeAliasesGuard> = {
     #[allow(clippy::unwrap_used)]
     let arg0 = arg0_dispatch().unwrap();
     // Restore the process environment immediately so later tests observe the
-    // same CODEX_HOME state they started with.
+    // same BROCODE_HOME state they started with.
     match previous_brocode_home.as_ref() {
         Some(value) => unsafe {
             std::env::set_var(BROCODE_HOME_ENV_VAR, value);

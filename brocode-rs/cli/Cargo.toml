@@ -41,7 +41,6 @@ brocode-state = { workspace = true }
 brocode-stdio-to-uds = { workspace = true }
 brocode-terminal-detection = { workspace = true }
 brocode-tui = { workspace = true }
-brocode-tui-app-server = { workspace = true }
 libc = { workspace = true }
 owo-colors = { workspace = true }
 regex-lite = { workspace = true }

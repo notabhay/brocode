@@ -16,7 +16,7 @@ impl TestBrocodeExecBuilder {
                 .expect("should find binary for brocode-exec"),
         );
         cmd.current_dir(self.cwd.path())
-            .env("CODEX_HOME", self.home.path())
+            .env("BROCODE_HOME", self.home.path())
             .env(BROCODE_API_KEY_ENV_VAR, "dummy");
         cmd
     }

@@ -15,15 +15,27 @@ filter = 'test(rmcp_client) | test(humanlike_typing_1000_chars_appears_live_no_p
 slow-timeout = { period = "1m", terminate-after = 4 }
 
 [[profile.default.overrides]]
-filter = 'test(approval_matrix_covers_all_modes)'
-slow-timeout = { period = "30s", terminate-after = 2 }
+filter = 'package(brocode-core) & kind(test)'
+slow-timeout = { period = "30s", terminate-after = 4 }
 
 [[profile.default.overrides]]
-filter = 'package(codex-app-server-protocol) & (test(typescript_schema_fixtures_match_generated) | test(json_schema_fixtures_match_generated) | test(generate_ts_with_experimental_api_retains_experimental_entries) | test(generated_ts_optional_nullable_fields_only_in_params) | test(generate_json_filters_experimental_fields_and_methods))'
+filter = 'test(approval_matrix_covers_all_modes_)'
+slow-timeout = { period = "30s", terminate-after = 6 }
+
+[[profile.default.overrides]]
+filter = 'test(apply_patch_cli)'
+slow-timeout = { period = "30s", terminate-after = 4 }
+
+[[profile.default.overrides]]
+filter = 'test(js_repl_failed_cells_var_persistence_boundaries) | test(emits_deprecation_notice_for_web_search_feature_flag_values)'
+slow-timeout = { period = "30s", terminate-after = 4 }
+
+[[profile.default.overrides]]
+filter = 'package(brocode-app-server-protocol) & (test(typescript_schema_fixtures_match_generated) | test(json_schema_fixtures_match_generated) | test(generate_ts_with_experimental_api_retains_experimental_entries) | test(generated_ts_optional_nullable_fields_only_in_params) | test(generate_json_filters_experimental_fields_and_methods))'
 test-group = 'app_server_protocol_codegen'
 
 [[profile.default.overrides]]
 # These integration tests spawn a fresh app-server subprocess per case.
 # Keep the library unit tests parallel.
-filter = 'package(codex-app-server) & kind(test)'
+filter = 'package(brocode-app-server) & kind(test)'
 test-group = 'app_server_integration'

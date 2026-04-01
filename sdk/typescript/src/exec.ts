@@ -41,15 +41,15 @@ export type BrocodeExecArgs = {
 
 const INTERNAL_ORIGINATOR_ENV = "BROCODE_INTERNAL_ORIGINATOR_OVERRIDE";
 const TYPESCRIPT_SDK_ORIGINATOR = "brocode_sdk_ts";
-const BROCODE_NPM_NAME = "@openai/codex";
+const BROCODE_NPM_NAME = "@openai/brocode";
 
 const PLATFORM_PACKAGE_BY_TARGET: Record<string, string> = {
-  "x86_64-unknown-linux-musl": "@openai/codex-linux-x64",
-  "aarch64-unknown-linux-musl": "@openai/codex-linux-arm64",
-  "x86_64-apple-darwin": "@openai/codex-darwin-x64",
-  "aarch64-apple-darwin": "@openai/codex-darwin-arm64",
-  "x86_64-pc-windows-msvc": "@openai/codex-win32-x64",
-  "aarch64-pc-windows-msvc": "@openai/codex-win32-arm64",
+  "x86_64-unknown-linux-musl": "@openai/brocode-linux-x64",
+  "aarch64-unknown-linux-musl": "@openai/brocode-linux-arm64",
+  "x86_64-apple-darwin": "@openai/brocode-darwin-x64",
+  "aarch64-apple-darwin": "@openai/brocode-darwin-arm64",
+  "x86_64-pc-windows-msvc": "@openai/brocode-win32-x64",
+  "aarch64-pc-windows-msvc": "@openai/brocode-win32-arm64",
 };
 
 const moduleRequire = createRequire(import.meta.url);

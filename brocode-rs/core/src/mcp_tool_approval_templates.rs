@@ -330,7 +330,7 @@ mod tests {
             &templates,
             "brocode_apps",
             Some("github"),
-            None,
+            /*connector_name*/ None,
             Some("add_comment"),
             Some(&json!({})),
         );
@@ -361,7 +361,7 @@ mod tests {
                 &templates,
                 "brocode_apps",
                 Some("calendar"),
-                None,
+                /*connector_name*/ None,
                 Some("create_event"),
                 Some(&json!({})),
             ),

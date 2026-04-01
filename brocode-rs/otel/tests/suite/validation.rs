@@ -35,7 +35,7 @@ fn invalid_tag_component_is_rejected() -> Result<()> {
 fn counter_rejects_invalid_tag_key() -> Result<()> {
     let metrics = build_in_memory_client()?;
     let err = metrics
-        .counter("brocode.turns", 1, &[("bad key", "value")])
+        .counter("brocode.turns", /*inc*/ 1, &[("bad key", "value")])
         .unwrap_err();
     assert!(matches!(
         err,
@@ -51,7 +51,11 @@ fn counter_rejects_invalid_tag_key() -> Result<()> {
 fn histogram_rejects_invalid_tag_value() -> Result<()> {
     let metrics = build_in_memory_client()?;
     let err = metrics
-        .histogram("brocode.request_latency", 3, &[("route", "bad value")])
+        .histogram(
+            "brocode.request_latency",
+            /*value*/ 3,
+            &[("route", "bad value")],
+        )
         .unwrap_err();
     assert!(matches!(
         err,
@@ -66,7 +70,7 @@ fn histogram_rejects_invalid_tag_value() -> Result<()> {
 #[test]
 fn counter_rejects_invalid_metric_name() -> Result<()> {
     let metrics = build_in_memory_client()?;
-    let err = metrics.counter("bad name", 1, &[]).unwrap_err();
+    let err = metrics.counter("bad name", /*inc*/ 1, &[]).unwrap_err();
     assert!(matches!(
         err,
         MetricsError::InvalidMetricName { name } if name == "bad name"
@@ -78,7 +82,9 @@ fn counter_rejects_invalid_metric_name() -> Result<()> {
 #[test]
 fn counter_rejects_negative_increment() -> Result<()> {
     let metrics = build_in_memory_client()?;
-    let err = metrics.counter("brocode.turns", -1, &[]).unwrap_err();
+    let err = metrics
+        .counter("brocode.turns", /*inc*/ -1, &[])
+        .unwrap_err();
     assert!(matches!(
         err,
         MetricsError::NegativeCounterIncrement { name, inc } if name == "brocode.turns" && inc == -1

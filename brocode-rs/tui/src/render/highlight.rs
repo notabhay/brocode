@@ -9,7 +9,7 @@
 //! | `SYNTAX_SET` | `OnceLock<SyntaxSet>` | Grammar database, immutable after init |
 //! | `THEME` | `OnceLock<RwLock<Theme>>` | Active color theme, swappable at runtime |
 //! | `THEME_OVERRIDE` | `OnceLock<Option<String>>` | Persisted user preference (write-once) |
-//! | `CODEX_HOME` | `OnceLock<Option<PathBuf>>` | Root for custom `.tmTheme` discovery |
+//! | `BROCODE_HOME` | `OnceLock<Option<PathBuf>>` | Root for custom `.tmTheme` discovery |
 //!
 //! **Lifecycle:** call [`set_theme_override`] once at startup (after the final
 //! config is resolved) to persist the user preference and seed the `THEME`
@@ -48,7 +48,7 @@ use two_face::theme::EmbeddedThemeName;
 static SYNTAX_SET: OnceLock<SyntaxSet> = OnceLock::new();
 static THEME: OnceLock<RwLock<Theme>> = OnceLock::new();
 static THEME_OVERRIDE: OnceLock<Option<String>> = OnceLock::new();
-static CODEX_HOME: OnceLock<Option<PathBuf>> = OnceLock::new();
+static BROCODE_HOME: OnceLock<Option<PathBuf>> = OnceLock::new();
 
 // Syntect/bat encode ANSI palette semantics in alpha:
 // `a=0` => indexed ANSI palette via RGB payload, `a=1` => terminal default.
@@ -84,7 +84,7 @@ pub(crate) fn set_theme_override(
 ) -> Option<String> {
     let warning = validate_theme_name(name.as_deref(), brocode_home.as_deref());
     let override_set_ok = THEME_OVERRIDE.set(name.clone()).is_ok();
-    let brocode_home_set_ok = CODEX_HOME.set(brocode_home.clone()).is_ok();
+    let brocode_home_set_ok = BROCODE_HOME.set(brocode_home.clone()).is_ok();
     if THEME.get().is_some() {
         set_syntax_theme(resolve_theme_with_override(
             name.as_deref(),
@@ -109,7 +109,7 @@ pub(crate) fn validate_theme_name(
     let name = name?;
     let custom_theme_path_display = brocode_home
         .map(|home| custom_theme_path(name, home).display().to_string())
-        .unwrap_or_else(|| format!("$CODEX_HOME/themes/{name}.tmTheme"));
+        .unwrap_or_else(|| format!("$BROCODE_HOME/themes/{name}.tmTheme"));
     // Bundled themes always resolve.
     if parse_theme_name(name).is_some() {
         return None;
@@ -214,7 +214,7 @@ fn resolve_theme_with_override(name: Option<&str>, brocode_home: Option<&Path>) 
         if let Some(theme_name) = parse_theme_name(name) {
             return ts.get(theme_name).clone();
         }
-        // 2. Try loading {CODEX_HOME}/themes/{name}.tmTheme from disk.
+        // 2. Try loading {BROCODE_HOME}/themes/{name}.tmTheme from disk.
         if let Some(home) = brocode_home
             && let Some(theme) = load_custom_theme(name, home)
         {
@@ -230,7 +230,7 @@ fn resolve_theme_with_override(name: Option<&str>, brocode_home: Option<&Path>) 
 /// Extracted from the old `theme()` init closure so it can be reused.
 fn build_default_theme() -> Theme {
     let name = THEME_OVERRIDE.get().and_then(|name| name.as_deref());
-    let brocode_home = CODEX_HOME
+    let brocode_home = BROCODE_HOME
         .get()
         .and_then(|brocode_home| brocode_home.as_deref());
     resolve_theme_with_override(name, brocode_home)
@@ -312,7 +312,7 @@ pub(crate) fn configured_theme_name() -> String {
         if parse_theme_name(name).is_some() {
             return name.clone();
         }
-        if let Some(Some(home)) = CODEX_HOME.get()
+        if let Some(Some(home)) = BROCODE_HOME.get()
             && load_custom_theme(name, home).is_some()
         {
             return name.clone();
@@ -339,7 +339,7 @@ pub(crate) fn resolve_theme_by_name(name: &str, brocode_home: Option<&Path>) -> 
 }
 
 /// A theme available in the picker, either bundled or loaded from a custom
-/// `.tmTheme` file under `{CODEX_HOME}/themes/`.
+/// `.tmTheme` file under `{BROCODE_HOME}/themes/`.
 pub(crate) struct ThemeEntry {
     /// Kebab-case identifier used for config persistence and theme resolution.
     pub name: String,
@@ -753,7 +753,7 @@ mod tests {
     }
 
     fn unique_foreground_colors_for_theme(theme_name: &str) -> Vec<String> {
-        let theme = resolve_theme_by_name(theme_name, None)
+        let theme = resolve_theme_by_name(theme_name, /*brocode_home*/ None)
             .unwrap_or_else(|| panic!("expected built-in theme {theme_name} to resolve"));
         let lines = highlight_to_line_spans_with_theme(
             "fn main() { let answer = 42; println!(\"hello\"); }\n",
@@ -1003,13 +1003,13 @@ mod tests {
 
     #[test]
     fn ansi_palette_color_maps_ansi_white_to_gray() {
-        assert_eq!(ansi_palette_color(0x07), RtColor::Gray);
+        assert_eq!(ansi_palette_color(/*index*/ 0x07), RtColor::Gray);
     }
 
     #[test]
     fn ansi_family_themes_use_terminal_palette_colors_not_rgb() {
         for theme_name in ["ansi", "base16", "base16-256"] {
-            let theme = resolve_theme_by_name(theme_name, None)
+            let theme = resolve_theme_by_name(theme_name, /*brocode_home*/ None)
                 .unwrap_or_else(|| panic!("expected built-in theme {theme_name} to resolve"));
             let lines = highlight_to_line_spans_with_theme(
                 "fn main() { let answer = 42; println!(\"hello\"); }\n",
@@ -1215,8 +1215,8 @@ mod tests {
 
     #[test]
     fn bundled_theme_can_provide_diff_scope_backgrounds() {
-        let theme =
-            resolve_theme_by_name("github", None).expect("expected built-in GitHub theme to load");
+        let theme = resolve_theme_by_name("github", /*brocode_home*/ None)
+            .expect("expected built-in GitHub theme to load");
         let rgbs = diff_scope_background_rgbs_for_theme(&theme);
         assert!(
             rgbs.inserted.is_some() && rgbs.deleted.is_some(),
@@ -1334,13 +1334,13 @@ mod tests {
     #[test]
     fn validate_theme_name_none_for_bundled() {
         // Bundled themes should never produce a warning.
-        assert!(validate_theme_name(Some("dracula"), None).is_none());
+        assert!(validate_theme_name(Some("dracula"), /*brocode_home*/ None).is_none());
         assert!(validate_theme_name(Some("nord"), Some(Path::new("/nonexistent"))).is_none());
     }
 
     #[test]
     fn validate_theme_name_none_when_no_override() {
-        assert!(validate_theme_name(None, None).is_none());
+        assert!(validate_theme_name(/*name*/ None, /*brocode_home*/ None).is_none());
     }
 
     #[test]

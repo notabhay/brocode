@@ -1,12 +1,12 @@
-<p align="center"><code>npm i -g @openai/codex</code><br />or <code>brew install --cask brocode</code></p>
+<p align="center"><code>npm i -g @openai/brocode</code><br />or <code>brew install --cask brocode</code></p>
 <p align="center"><strong>Brocode CLI</strong> is a coding agent from OpenAI that runs locally on your computer.
 <p align="center">
-  <img src="https://github.com/openai/codex/blob/main/.github/codex-cli-splash.png" alt="Brocode CLI splash" width="80%" />
+  <img src="https://github.com/openai/brocode/blob/main/.github/brocode-cli-splash.png" alt="Brocode CLI splash" width="80%" />
 </p>
 </br>
-If you want Brocode in your code editor (VS Code, Cursor, Windsurf), <a href="https://developers.openai.com/codex/ide">install in your IDE.</a>
-</br>If you want the desktop app experience, run <code>brocode app</code> or visit <a href="https://chatgpt.com/codex?app-landing-page=true">the Brocode App page</a>.
-</br>If you are looking for the <em>cloud-based agent</em> from OpenAI, <strong>Brocode Web</strong>, go to <a href="https://chatgpt.com/codex">chatgpt.com/codex</a>.</p>
+If you want Brocode in your code editor (VS Code, Cursor, Windsurf), <a href="https://developers.openai.com/brocode/ide">install in your IDE.</a>
+</br>If you want the desktop app experience, run <code>brocode app</code> or visit <a href="https://chatgpt.com/brocode?app-landing-page=true">the Brocode App page</a>.
+</br>If you are looking for the <em>cloud-based agent</em> from OpenAI, <strong>Brocode Web</strong>, go to <a href="https://chatgpt.com/brocode">chatgpt.com/brocode</a>.</p>
 
 ---
 
@@ -18,7 +18,7 @@ Install globally with your preferred package manager:
 
 ```shell
 # Install using npm
-npm install -g @openai/codex
+npm install -g @openai/brocode
 ```
 
 ```shell
@@ -29,7 +29,7 @@ brew install --cask brocode
 Then simply run `brocode` to get started.
 
 <details>
-<summary>You can also go to the <a href="https://github.com/openai/codex/releases/latest">latest GitHub Release</a> and download the appropriate binary for your platform.</summary>
+<summary>You can also go to the <a href="https://github.com/openai/brocode/releases/latest">latest GitHub Release</a> and download the appropriate binary for your platform.</summary>
 
 Each GitHub Release contains many executables, but in practice, you likely want one of these:
 
@@ -46,13 +46,13 @@ Each archive contains a single entry with the platform baked into the name (e.g.
 
 ### Using Brocode with your ChatGPT plan
 
-Run `brocode` and select **Sign in with ChatGPT**. We recommend signing into your ChatGPT account to use Brocode as part of your Plus, Pro, Team, Edu, or Enterprise plan. [Learn more about what's included in your ChatGPT plan](https://help.openai.com/en/articles/11369540-codex-in-chatgpt).
+Run `brocode` and select **Sign in with ChatGPT**. We recommend signing into your ChatGPT account to use Brocode as part of your Plus, Pro, Team, Edu, or Enterprise plan. [Learn more about what's included in your ChatGPT plan](https://help.openai.com/en/articles/11369540-brocode-in-chatgpt).
 
-You can also use Brocode with an API key, but this requires [additional setup](https://developers.openai.com/codex/auth#sign-in-with-an-api-key).
+You can also use Brocode with an API key, but this requires [additional setup](https://developers.openai.com/brocode/auth#sign-in-with-an-api-key).
 
 ## Docs
 
-- [**Brocode Documentation**](https://developers.openai.com/codex)
+- [**Brocode Documentation**](https://developers.openai.com/brocode)
 - [**Contributing**](./docs/contributing.md)
 - [**Installing & building**](./docs/install.md)
 - [**Open source fund**](./docs/open-source-fund.md)

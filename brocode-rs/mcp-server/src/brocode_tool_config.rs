@@ -24,7 +24,7 @@ pub struct BrocodeToolCallParam {
     /// The *initial user prompt* to start the Brocode conversation.
     pub prompt: String,
 
-    /// Optional override for the model name (e.g. 'gpt-5.2', 'gpt-5.2-codex').
+    /// Optional override for the model name (e.g. 'gpt-5.2', 'gpt-5.2-brocode').
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub model: Option<String>,
 
@@ -47,7 +47,7 @@ pub struct BrocodeToolCallParam {
     pub sandbox: Option<BrocodeToolCallSandboxMode>,
 
     /// Individual config settings that will override what is in
-    /// CODEX_HOME/config.toml.
+    /// BROCODE_HOME/config.toml.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub config: Option<HashMap<String, serde_json::Value>>,
 
@@ -327,7 +327,7 @@ mod tests {
               },
               "config": {
                 "additionalProperties": true,
-                "description": "Individual config settings that will override what is in CODEX_HOME/config.toml.",
+                "description": "Individual config settings that will override what is in BROCODE_HOME/config.toml.",
                 "type": "object"
               },
               "cwd": {
@@ -339,7 +339,7 @@ mod tests {
                 "type": "string"
               },
               "model": {
-                "description": "Optional override for the model name (e.g. 'gpt-5.2', 'gpt-5.2-codex').",
+                "description": "Optional override for the model name (e.g. 'gpt-5.2', 'gpt-5.2-brocode').",
                 "type": "string"
               },
               "profile": {

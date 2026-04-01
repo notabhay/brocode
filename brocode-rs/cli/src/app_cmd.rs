@@ -1,7 +1,8 @@
 use clap::Parser;
 use std::path::PathBuf;
 
-const DEFAULT_BROCODE_DMG_URL: &str = "https://persistent.oaistatic.com/codex-app-prod/Codex.dmg";
+const DEFAULT_BROCODE_DMG_URL: &str =
+    "https://persistent.oaistatic.com/brocode-app-prod/Brocode.dmg";
 
 #[derive(Debug, Parser)]
 pub struct AppCommand {

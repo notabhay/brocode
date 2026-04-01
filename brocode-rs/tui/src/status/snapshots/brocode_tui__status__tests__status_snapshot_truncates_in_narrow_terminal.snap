@@ -1,17 +1,16 @@
 ---
 source: tui/src/status/tests.rs
-assertion_line: 656
 expression: sanitized
 ---
 /status
 
 ╭────────────────────────────────────────────────────────────────────╮
-│  >_ brocode v0.117.0                                               │
+│  >_ OpenAI Brocode (v0.118.0)                                      │
 │                                                                    │
-│ Visit https://chatgpt.com/codex/settings/usage for up-to-date      │
+│ Visit https://chatgpt.com/brocode/settings/usage for up-to-date    │
 │ information on rate limits and credits                             │
 │                                                                    │
-│  Model:            gpt-5.1-codex-max (reasoning high, summaries de │
+│  Model:            gpt-5.1-brocode-max (reasoning high, summaries  │
 │  Directory: [[workspace]]                                          │
 │  Permissions:      Custom (read-only, on-request)                  │
 │  Agents.md:        <none>                                          │

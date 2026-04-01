@@ -25,7 +25,7 @@ prefix_rule(
     )?;
 
     let output = Command::new(brocode_utils_cargo_bin::cargo_bin("brocode")?)
-        .env("CODEX_HOME", brocode_home.path())
+        .env("BROCODE_HOME", brocode_home.path())
         .args([
             "execpolicy",
             "check",
@@ -82,7 +82,7 @@ prefix_rule(
     )?;
 
     let output = Command::new(brocode_utils_cargo_bin::cargo_bin("brocode")?)
-        .env("CODEX_HOME", brocode_home.path())
+        .env("BROCODE_HOME", brocode_home.path())
         .args([
             "execpolicy",
             "check",

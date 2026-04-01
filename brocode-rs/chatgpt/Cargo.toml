@@ -12,6 +12,7 @@ anyhow = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 brocode-connectors = { workspace = true }
 brocode-core = { workspace = true }
+brocode-login = { workspace = true }
 brocode-utils-cli = { workspace = true }
 brocode-utils-cargo-bin = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

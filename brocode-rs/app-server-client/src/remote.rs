@@ -4,9 +4,8 @@ This module implements the websocket-backed app-server client transport.
 It owns the remote connection lifecycle, including the initialize/initialized
 handshake, JSON-RPC request/response routing, server-request resolution, and
 notification streaming. The rest of the crate uses the same `AppServerEvent`
-surface for both in-process and remote transports, so callers such as
-`tui_app_server` can switch between them without changing their higher-level
-session logic.
+surface for both in-process and remote transports, so callers such as the TUI
+can switch between them without changing their higher-level session logic.
 */
 
 use std::collections::HashMap;
@@ -612,13 +611,9 @@ impl RemoteAppServerClient {
             .await
             .is_ok()
             && let Ok(command_result) = timeout(SHUTDOWN_TIMEOUT, response_rx).await
+            && let Ok(close_result) = command_result
         {
-            command_result.map_err(|_| {
-                IoError::new(
-                    ErrorKind::BrokenPipe,
-                    "remote app-server shutdown channel is closed",
-                )
-            })??;
+            close_result?;
         }
 
         if let Err(_elapsed) = timeout(SHUTDOWN_TIMEOUT, &mut worker_handle).await {

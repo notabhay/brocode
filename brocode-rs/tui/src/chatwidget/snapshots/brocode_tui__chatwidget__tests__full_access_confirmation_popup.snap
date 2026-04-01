@@ -1,10 +1,9 @@
 ---
 source: tui/src/chatwidget/tests.rs
-assertion_line: 8953
 expression: popup
 ---
   Enable full access?
-  When brocode runs with full access, it can edit any file on your computer
+  When Brocode runs with full access, it can edit any file on your computer
   and run commands with network, without your approval. Exercise caution when
   enabling full access. This significantly increases the risk of data loss,
   leaks, or unexpected behavior.

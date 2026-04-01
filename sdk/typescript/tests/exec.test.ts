@@ -110,7 +110,7 @@ describe("BrocodeExec", () => {
 
     try {
       const exec = new BrocodeExec("brocode", {
-        CODEX_HOME: "/tmp/brocode-home",
+        BROCODE_HOME: "/tmp/brocode-home",
         CUSTOM_ENV: "custom",
       });
 
@@ -131,7 +131,7 @@ describe("BrocodeExec", () => {
         throw new Error("Spawn args missing");
       }
 
-      expect(spawnEnv.CODEX_HOME).toBe("/tmp/brocode-home");
+      expect(spawnEnv.BROCODE_HOME).toBe("/tmp/brocode-home");
       expect(spawnEnv.CUSTOM_ENV).toBe("custom");
       expect(spawnEnv.BROCODE_ENV_SHOULD_NOT_LEAK).toBeUndefined();
       expect(spawnEnv.OPENAI_BASE_URL).toBeUndefined();

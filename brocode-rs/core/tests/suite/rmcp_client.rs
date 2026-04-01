@@ -421,7 +421,7 @@ async fn stdio_image_responses_are_sanitized_for_text_only_model() -> anyhow::Re
                 availability_nux: None,
                 apply_patch_tool_type: None,
                 web_search_tool_type: Default::default(),
-                truncation_policy: TruncationPolicyConfig::bytes(10_000),
+                truncation_policy: TruncationPolicyConfig::bytes(/*limit*/ 10_000),
                 supports_parallel_tool_calls: false,
                 supports_image_detail_original: false,
                 context_window: Some(272_000),
@@ -879,8 +879,8 @@ async fn streamable_http_tool_call_round_trip() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// This test writes to a fallback credentials file in CODEX_HOME.
-/// Ideally, we wouldn't need to serialize the test but it's much more cumbersome to wire CODEX_HOME through the code.
+/// This test writes to a fallback credentials file in BROCODE_HOME.
+/// Ideally, we wouldn't need to serialize the test but it's much more cumbersome to wire BROCODE_HOME through the code.
 #[test]
 #[serial(brocode_home)]
 fn streamable_http_with_oauth_round_trip() -> anyhow::Result<()> {
@@ -965,7 +965,7 @@ async fn streamable_http_with_oauth_round_trip_impl() -> anyhow::Result<()> {
         .await?;
 
     let temp_home = Arc::new(tempdir()?);
-    let _brocode_home_guard = EnvVarGuard::set("CODEX_HOME", temp_home.path().as_os_str());
+    let _brocode_home_guard = EnvVarGuard::set("BROCODE_HOME", temp_home.path().as_os_str());
     write_fallback_oauth_tokens(
         temp_home.path(),
         server_name,

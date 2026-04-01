@@ -10,12 +10,13 @@ node_modules
 # build
 dist/
 bazel-*
+user.bazelrc
 build/
 out/
 storybook-static/
 
 # ignore README for publishing
-codex-cli/README.md
+brocode-cli/README.md
 
 # ignore Nix derivation results
 result

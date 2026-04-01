@@ -1,16 +1,16 @@
 # Configuration
 
-For basic configuration instructions, see [this documentation](https://developers.openai.com/codex/config-basic).
+For basic configuration instructions, see [this documentation](https://developers.openai.com/brocode/config-basic).
 
-For advanced configuration instructions, see [this documentation](https://developers.openai.com/codex/config-advanced).
+For advanced configuration instructions, see [this documentation](https://developers.openai.com/brocode/config-advanced).
 
-For a full configuration reference, see [this documentation](https://developers.openai.com/codex/config-reference).
+For a full configuration reference, see [this documentation](https://developers.openai.com/brocode/config-reference).
 
 ## Connecting to MCP servers
 
 Brocode can connect to MCP servers configured in `~/.brocode/config.toml`. See the configuration reference for the latest MCP server options:
 
-- https://developers.openai.com/codex/config-reference
+- https://developers.openai.com/brocode/config-reference
 
 ## MCP tool approvals
 
@@ -32,7 +32,7 @@ and are labeled as connected; others are marked as can be installed.
 
 Brocode can run a notification hook when the agent finishes a turn. See the configuration reference for the latest notification settings:
 
-- https://developers.openai.com/codex/config-reference
+- https://developers.openai.com/brocode/config-reference
 
 When Brocode knows which client started the turn, the legacy notify JSON payload also includes a top-level `client` field. The TUI reports `brocode-tui`, and the app server reports the `clientInfo.name` value from `initialize`.
 
@@ -44,7 +44,7 @@ The generated JSON Schema for `config.toml` lives at `brocode-rs/core/config.sch
 
 Brocode stores the SQLite-backed state DB under `sqlite_home` (config key) or the
 `BROCODE_SQLITE_HOME` environment variable. When unset, WorkspaceWrite sandbox
-sessions default to a temp directory; other modes default to `CODEX_HOME`.
+sessions default to a temp directory; other modes default to `BROCODE_HOME`.
 
 ## Custom CA Certificates
 

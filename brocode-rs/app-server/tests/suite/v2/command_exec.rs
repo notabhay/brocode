@@ -146,7 +146,7 @@ async fn command_exec_env_overrides_merge_with_server_environment_and_support_un
             command: vec![
                 "/bin/sh".to_string(),
                 "-lc".to_string(),
-                "printf '%s|%s|%s|%s' \"$COMMAND_EXEC_BASELINE\" \"$COMMAND_EXEC_EXTRA\" \"${RUST_LOG-unset}\" \"$CODEX_HOME\"".to_string(),
+                "printf '%s|%s|%s|%s' \"$COMMAND_EXEC_BASELINE\" \"$COMMAND_EXEC_EXTRA\" \"${RUST_LOG-unset}\" \"$BROCODE_HOME\"".to_string(),
             ],
             process_id: None,
             tty: false,
@@ -722,15 +722,15 @@ async fn command_exec_process_ids_are_connection_scoped_and_disconnect_terminate
     let mut ws1 = connect_websocket(bind_addr).await?;
     let mut ws2 = connect_websocket(bind_addr).await?;
 
-    send_initialize_request(&mut ws1, 1, "ws_client_one").await?;
-    read_initialize_response(&mut ws1, 1).await?;
-    send_initialize_request(&mut ws2, 2, "ws_client_two").await?;
-    read_initialize_response(&mut ws2, 2).await?;
+    send_initialize_request(&mut ws1, /*id*/ 1, "ws_client_one").await?;
+    read_initialize_response(&mut ws1, /*request_id*/ 1).await?;
+    send_initialize_request(&mut ws2, /*id*/ 2, "ws_client_two").await?;
+    read_initialize_response(&mut ws2, /*request_id*/ 2).await?;
 
     send_request(
         &mut ws1,
         "command/exec",
-        101,
+        /*id*/ 101,
         Some(serde_json::json!({
             "command": [
                 "python3",
@@ -744,17 +744,21 @@ async fn command_exec_process_ids_are_connection_scoped_and_disconnect_terminate
     )
     .await?;
 
-    let delta = read_command_exec_delta_ws(&mut ws1).await?;
-    assert_eq!(delta.process_id, "shared-process");
-    assert_eq!(delta.stream, CommandExecOutputStream::Stdout);
-    let delta_text = String::from_utf8(STANDARD.decode(&delta.delta_base64)?)?;
+    let delta_text = loop {
+        let delta = read_command_exec_delta_ws(&mut ws1).await?;
+        assert_eq!(delta.process_id, "shared-process");
+        let delta_text = String::from_utf8(STANDARD.decode(&delta.delta_base64)?)?;
+        if delta.stream == CommandExecOutputStream::Stdout && delta_text.contains("ready") {
+            break delta_text;
+        }
+    };
     assert!(delta_text.contains("ready"));
-    wait_for_process_marker(&marker, true).await?;
+    wait_for_process_marker(&marker, /*should_exist*/ true).await?;
 
     send_request(
         &mut ws2,
         "command/exec/terminate",
-        102,
+        /*id*/ 102,
         Some(serde_json::json!({
             "processId": "shared-process",
         })),
@@ -773,12 +777,12 @@ async fn command_exec_process_ids_are_connection_scoped_and_disconnect_terminate
         terminate_error.error.message,
         "no active command/exec for process id \"shared-process\""
     );
-    wait_for_process_marker(&marker, true).await?;
+    wait_for_process_marker(&marker, /*should_exist*/ true).await?;
 
     assert_no_message(&mut ws2, Duration::from_millis(250)).await?;
     ws1.close(None).await?;
 
-    wait_for_process_marker(&marker, false).await?;
+    wait_for_process_marker(&marker, /*should_exist*/ false).await?;
 
     process
         .kill()

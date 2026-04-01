@@ -61,7 +61,6 @@ use brocode_core::ThreadManager;
 use brocode_core::config::Config;
 use brocode_core::config_loader::CloudRequirementsLoader;
 use brocode_core::config_loader::LoaderOverrides;
-use brocode_core::default_client::DEFAULT_ORIGINATOR;
 use brocode_core::default_client::SetOriginatorError;
 use brocode_core::default_client::USER_AGENT_SUFFIX;
 use brocode_core::default_client::get_brocode_user_agent;
@@ -88,7 +87,6 @@ use toml::Value as TomlValue;
 use tracing::Instrument;
 
 const EXTERNAL_AUTH_REFRESH_TIMEOUT: Duration = Duration::from_secs(10);
-const TUI_APP_SERVER_CLIENT_NAME: &str = "brocode-tui";
 
 #[derive(Clone)]
 struct ExternalAuthRefreshBridge {
@@ -146,11 +144,11 @@ impl ExternalAuthRefresher for ExternalAuthRefreshBridge {
         let response: ChatgptAuthTokensRefreshResponse =
             serde_json::from_value(result).map_err(std::io::Error::other)?;
 
-        Ok(ExternalAuthTokens {
-            access_token: response.access_token,
-            chatgpt_account_id: response.chatgpt_account_id,
-            chatgpt_plan_type: response.chatgpt_plan_type,
-        })
+        Ok(ExternalAuthTokens::chatgpt(
+            response.access_token,
+            response.chatgpt_account_id,
+            response.chatgpt_plan_type,
+        ))
     }
 }
 
@@ -208,10 +206,13 @@ impl MessageProcessor {
             session_source,
             enable_brocode_api_key_env,
         } = args;
-        let auth_manager = AuthManager::shared(
+        let auth_manager = AuthManager::shared_with_external_chatgpt_auth_refresher(
             config.brocode_home.clone(),
             enable_brocode_api_key_env,
             config.cli_auth_credentials_store_mode,
+            Arc::new(ExternalAuthRefreshBridge {
+                outgoing: outgoing.clone(),
+            }),
         );
         let thread_manager = Arc::new(ThreadManager::new(
             config.as_ref(),
@@ -225,9 +226,6 @@ impl MessageProcessor {
             environment_manager,
         ));
         auth_manager.set_forced_chatgpt_workspace_id(config.forced_chatgpt_workspace_id.clone());
-        auth_manager.set_external_auth_refresher(Arc::new(ExternalAuthRefreshBridge {
-            outgoing: outgoing.clone(),
-        }));
         let analytics_events_client = AnalyticsEventsClient::new(
             Arc::clone(&auth_manager),
             config.chatgpt_base_url.trim_end_matches('/').to_string(),
@@ -284,7 +282,7 @@ impl MessageProcessor {
     }
 
     pub(crate) fn clear_runtime_references(&self) {
-        self.auth_manager.clear_external_auth_refresher();
+        self.auth_manager.clear_external_chatgpt_auth_refresher();
     }
 
     pub(crate) async fn process_request(
@@ -571,13 +569,7 @@ impl MessageProcessor {
                 } = params.client_info;
                 session.app_server_client_name = Some(name.clone());
                 session.client_version = Some(version.clone());
-                let originator = if name == TUI_APP_SERVER_CLIENT_NAME {
-                    // TODO: Remove this temporary workaround once app-server clients no longer
-                    // need to retain the legacy TUI `brocode_cli_rs` originator behavior.
-                    DEFAULT_ORIGINATOR.to_string()
-                } else {
-                    name.clone()
-                };
+                let originator = name.clone();
                 if let Err(error) = set_default_originator(originator) {
                     match error {
                         SetOriginatorError::InvalidHeaderValue => {
@@ -613,7 +605,7 @@ impl MessageProcessor {
                     Err(err) => {
                         let error = JSONRPCErrorError {
                             code: INTERNAL_ERROR_CODE,
-                            message: format!("Invalid CODEX_HOME: {err}"),
+                            message: format!("Invalid BROCODE_HOME: {err}"),
                             data: None,
                         };
                         self.outgoing.send_error(connection_request_id, error).await;

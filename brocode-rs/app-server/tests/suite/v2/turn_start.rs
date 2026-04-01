@@ -534,7 +534,7 @@ async fn turn_start_accepts_collaboration_mode_override_v2() -> Result<()> {
 
     let thread_req = mcp
         .send_thread_start_request(ThreadStartParams {
-            model: Some("gpt-5.2-codex".to_string()),
+            model: Some("gpt-5.2-brocode".to_string()),
             ..Default::default()
         })
         .await?;
@@ -617,7 +617,7 @@ async fn turn_start_uses_thread_feature_overrides_for_collaboration_mode_instruc
 
     let thread_req = mcp
         .send_thread_start_request(ThreadStartParams {
-            model: Some("gpt-5.2-codex".to_string()),
+            model: Some("gpt-5.2-brocode".to_string()),
             config: Some(HashMap::from([(
                 "features.default_mode_request_user_input".to_string(),
                 json!(true),
@@ -701,7 +701,7 @@ async fn turn_start_accepts_personality_override_v2() -> Result<()> {
 
     let thread_req = mcp
         .send_thread_start_request(ThreadStartParams {
-            model: Some("exp-codex-personality".to_string()),
+            model: Some("exp-brocode-personality".to_string()),
             ..Default::default()
         })
         .await?;
@@ -782,7 +782,7 @@ async fn turn_start_change_personality_mid_thread_v2() -> Result<()> {
 
     let thread_req = mcp
         .send_thread_start_request(ThreadStartParams {
-            model: Some("exp-codex-personality".to_string()),
+            model: Some("exp-brocode-personality".to_string()),
             ..Default::default()
         })
         .await?;
@@ -888,7 +888,7 @@ async fn turn_start_uses_migrated_pragmatic_personality_without_override_v2() ->
         "2025-01-01T00:00:00Z",
         "history user message",
         Some("mock_provider"),
-        None,
+        /*git_info*/ None,
     )?;
 
     let mut mcp = McpProcess::new(brocode_home.path()).await?;
@@ -908,7 +908,7 @@ async fn turn_start_uses_migrated_pragmatic_personality_without_override_v2() ->
 
     let thread_req = mcp
         .send_thread_start_request(ThreadStartParams {
-            model: Some("gpt-5.2-codex".to_string()),
+            model: Some("gpt-5.2-brocode".to_string()),
             ..Default::default()
         })
         .await?;
@@ -1031,7 +1031,7 @@ async fn turn_start_exec_approval_toggle_v2() -> Result<()> {
                 "-c".to_string(),
                 "print(42)".to_string(),
             ],
-            None,
+            /*workdir*/ None,
             Some(5000),
             "call1",
         )?,
@@ -1042,7 +1042,7 @@ async fn turn_start_exec_approval_toggle_v2() -> Result<()> {
                 "-c".to_string(),
                 "print(42)".to_string(),
             ],
-            None,
+            /*workdir*/ None,
             Some(5000),
             "call2",
         )?,
@@ -1186,7 +1186,7 @@ async fn turn_start_exec_approval_decline_v2() -> Result<()> {
                 "-c".to_string(),
                 "print(42)".to_string(),
             ],
-            None,
+            /*workdir*/ None,
             Some(5000),
             "call-decline",
         )?,
@@ -1331,14 +1331,14 @@ async fn turn_start_updates_sandbox_and_cwd_between_turns_v2() -> Result<()> {
     let responses = vec![
         create_shell_command_sse_response(
             vec!["echo".to_string(), "first".to_string(), "turn".to_string()],
-            None,
+            /*workdir*/ None,
             Some(5000),
             "call-first",
         )?,
         create_final_assistant_message_sse_response("done first")?,
         create_shell_command_sse_response(
             vec!["echo".to_string(), "second".to_string(), "turn".to_string()],
-            None,
+            /*workdir*/ None,
             Some(5000),
             "call-second",
         )?,
@@ -1726,7 +1726,7 @@ async fn turn_start_emits_spawn_agent_item_with_model_metadata_v2() -> Result<()
 
     let thread_req = mcp
         .send_thread_start_request(ThreadStartParams {
-            model: Some("gpt-5.2-codex".to_string()),
+            model: Some("gpt-5.2-brocode".to_string()),
             ..Default::default()
         })
         .await?;
@@ -1867,7 +1867,7 @@ async fn turn_start_emits_spawn_agent_item_with_effective_role_model_metadata_v2
     const SPAWN_CALL_ID: &str = "spawn-call-1";
     const REQUESTED_MODEL: &str = "gpt-5.1";
     const REQUESTED_REASONING_EFFORT: ReasoningEffort = ReasoningEffort::Low;
-    const ROLE_MODEL: &str = "gpt-5.1-codex-max";
+    const ROLE_MODEL: &str = "gpt-5.1-brocode-max";
     const ROLE_REASONING_EFFORT: ReasoningEffort = ReasoningEffort::High;
 
     let server = responses::start_mock_server().await;
@@ -1940,7 +1940,7 @@ config_file = "./custom-role.toml"
 
     let thread_req = mcp
         .send_thread_start_request(ThreadStartParams {
-            model: Some("gpt-5.2-codex".to_string()),
+            model: Some("gpt-5.2-brocode".to_string()),
             ..Default::default()
         })
         .await?;

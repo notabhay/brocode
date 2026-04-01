@@ -277,7 +277,7 @@ mod tests {
             HeaderValue::from_static("1704069000"),
         );
 
-        let snapshot = parse_rate_limit_for_limit(&headers, None).expect("snapshot");
+        let snapshot = parse_rate_limit_for_limit(&headers, /*limit_id*/ None).expect("snapshot");
         assert_eq!(snapshot.limit_id.as_deref(), Some("brocode"));
         assert_eq!(snapshot.limit_name, None);
         let primary = snapshot.primary.expect("primary");
@@ -322,13 +322,16 @@ mod tests {
         );
         headers.insert(
             "x-brocode-bengalfox-limit-name",
-            HeaderValue::from_static("gpt-5.2-codex-sonic"),
+            HeaderValue::from_static("gpt-5.2-brocode-sonic"),
         );
 
         let snapshot =
             parse_rate_limit_for_limit(&headers, Some("brocode_bengalfox")).expect("snapshot");
         assert_eq!(snapshot.limit_id.as_deref(), Some("brocode_bengalfox"));
-        assert_eq!(snapshot.limit_name.as_deref(), Some("gpt-5.2-codex-sonic"));
+        assert_eq!(
+            snapshot.limit_name.as_deref(),
+            Some("gpt-5.2-brocode-sonic")
+        );
     }
 
     #[test]

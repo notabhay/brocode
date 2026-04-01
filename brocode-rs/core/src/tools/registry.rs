@@ -24,6 +24,7 @@ use brocode_hooks::HookToolInput;
 use brocode_hooks::HookToolInputLocalShell;
 use brocode_hooks::HookToolKind;
 use brocode_protocol::models::ResponseInputItem;
+use brocode_tools::ConfiguredToolSpec;
 use brocode_utils_readiness::Readiness;
 use serde_json::Value;
 use tracing::warn;
@@ -432,21 +433,6 @@ impl ToolRegistry {
                 Ok(result)
             }
             Err(err) => Err(err),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct ConfiguredToolSpec {
-    pub spec: ToolSpec,
-    pub supports_parallel_tool_calls: bool,
-}
-
-impl ConfiguredToolSpec {
-    pub fn new(spec: ToolSpec, supports_parallel_tool_calls: bool) -> Self {
-        Self {
-            spec,
-            supports_parallel_tool_calls,
         }
     }
 }

@@ -1,14 +1,13 @@
 ---
 source: tui/src/bottom_pane/list_selection_view.rs
-assertion_line: 1522
 expression: "render_lines_with_width(&view, 80)"
 ---
                                                                                 
   Select Model and Effort                                                       
                                                                                 
-› 1. gpt-5.1-codex (current)  Optimized for brocode. Balance of reasoning       
-                              quality and coding ability.                       
-  2. gpt-5.1-codex-mini       Optimized for brocode. Cheaper, faster, but less  
-                              capable.                                          
-  3. gpt-4.1-codex            Legacy model. Use when you need compatibility     
-                              with older automations.
+› 1. gpt-5.1-brocode (current)  Optimized for Brocode. Balance of reasoning     
+                                quality and coding ability.                     
+  2. gpt-5.1-brocode-mini       Optimized for Brocode. Cheaper, faster, but     
+                                less capable.                                   
+  3. gpt-4.1-brocode            Legacy model. Use when you need compatibility   
+                                with older automations.

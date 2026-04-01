@@ -388,25 +388,6 @@
         }
       ]
     },
-    "ByteRange": {
-      "properties": {
-        "end": {
-          "format": "uint",
-          "minimum": 0.0,
-          "type": "integer"
-        },
-        "start": {
-          "format": "uint",
-          "minimum": 0.0,
-          "type": "integer"
-        }
-      },
-      "required": [
-        "end",
-        "start"
-      ],
-      "type": "object"
-    },
     "BrocodeErrorInfo": {
       "description": "This translation layer make sure that we expose brocode error code in camel case.\n\nWhen an upstream HTTP status is available (for example, from the Responses API or a provider), it is forwarded in `httpStatusCode` on the relevant `brocodeErrorInfo` variant.",
       "oneOf": [
@@ -542,6 +523,25 @@
           "type": "object"
         }
       ]
+    },
+    "ByteRange": {
+      "properties": {
+        "end": {
+          "format": "uint",
+          "minimum": 0.0,
+          "type": "integer"
+        },
+        "start": {
+          "format": "uint",
+          "minimum": 0.0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "end",
+        "start"
+      ],
+      "type": "object"
     },
     "CollabAgentState": {
       "properties": {
@@ -1777,7 +1777,9 @@
         "plus",
         "pro",
         "team",
+        "self_serve_business_usage_based",
         "business",
+        "enterprise_cbp_usage_based",
         "enterprise",
         "edu",
         "unknown"

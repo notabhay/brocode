@@ -1,10 +1,10 @@
 use crate::exec::ExecToolCallOutput;
 use crate::network_policy_decision::NetworkPolicyDecisionPayload;
-use crate::token_data::KnownPlan;
-use crate::token_data::PlanType;
 use brocode_async_utils::CancelErr;
 pub use brocode_login::auth::RefreshTokenFailedError;
 pub use brocode_login::auth::RefreshTokenFailedReason;
+use brocode_login::token_data::KnownPlan;
+use brocode_login::token_data::PlanType;
 use brocode_protocol::ThreadId;
 use brocode_protocol::protocol::BrocodeErrorInfo;
 use brocode_protocol::protocol::ErrorEvent;
@@ -436,10 +436,15 @@ impl std::fmt::Display for UsageLimitReachedError {
 
         let message = match self.plan_type.as_ref() {
             Some(PlanType::Known(KnownPlan::Plus)) => format!(
-                "You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits{}",
+                "You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/brocode/settings/usage to purchase more credits{}",
                 retry_suffix_after_or(self.resets_at.as_ref())
             ),
-            Some(PlanType::Known(KnownPlan::Team)) | Some(PlanType::Known(KnownPlan::Business)) => {
+            Some(PlanType::Known(
+                KnownPlan::Team
+                | KnownPlan::SelfServeBusinessUsageBased
+                | KnownPlan::Business
+                | KnownPlan::EnterpriseCbpUsageBased,
+            )) => {
                 format!(
                     "You've hit your usage limit. To get more access now, send a request to your admin{}",
                     retry_suffix_after_or(self.resets_at.as_ref())
@@ -452,7 +457,7 @@ impl std::fmt::Display for UsageLimitReachedError {
                 )
             }
             Some(PlanType::Known(KnownPlan::Pro)) => format!(
-                "You've hit your usage limit. Visit https://chatgpt.com/codex/settings/usage to purchase more credits{}",
+                "You've hit your usage limit. Visit https://chatgpt.com/brocode/settings/usage to purchase more credits{}",
                 retry_suffix_after_or(self.resets_at.as_ref())
             ),
             Some(PlanType::Known(KnownPlan::Enterprise))
@@ -460,21 +465,6 @@ impl std::fmt::Display for UsageLimitReachedError {
                 "You've hit your usage limit.{}",
                 retry_suffix(self.resets_at.as_ref())
             ),
-            Some(PlanType::Unknown(plan))
-                if plan.eq_ignore_ascii_case("self_serve_business_usage_based") =>
-            {
-                match self
-                    .rate_limits
-                    .as_ref()
-                    .and_then(|snapshot| snapshot.credits.as_ref())
-                    .map(|credits| credits.has_credits)
-                {
-                    Some(true) => "You've hit your usage limit. Contact your admin to increase spend limits to continue."
-                        .to_string(),
-                    Some(false) | None => "You've hit your usage limit. Contact your admin to add credits to continue."
-                        .to_string(),
-                }
-            }
             Some(PlanType::Unknown(_)) | None => format!(
                 "You've hit your usage limit.{}",
                 retry_suffix(self.resets_at.as_ref())

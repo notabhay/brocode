@@ -17,6 +17,7 @@ brocode-config = { workspace = true }
 brocode-keyring-store = { workspace = true }
 brocode-protocol = { workspace = true }
 brocode-terminal-detection = { workspace = true }
+brocode-utils-template = { workspace = true }
 once_cell = { workspace = true }
 os_info = { workspace = true }
 rand = { workspace = true }

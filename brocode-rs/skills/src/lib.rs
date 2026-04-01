@@ -18,7 +18,7 @@ const SYSTEM_SKILLS_MARKER_SALT: &str = "v1";
 
 /// Returns the on-disk cache location for embedded system skills.
 ///
-/// This is typically located at `CODEX_HOME/skills/.system`.
+/// This is typically located at `BROCODE_HOME/skills/.system`.
 pub fn system_cache_root_dir(brocode_home: &Path) -> PathBuf {
     AbsolutePathBuf::try_from(brocode_home)
         .and_then(|brocode_home| system_cache_root_dir_abs(&brocode_home))
@@ -36,7 +36,7 @@ fn system_cache_root_dir_abs(brocode_home: &AbsolutePathBuf) -> std::io::Result<
         .join(SYSTEM_SKILLS_DIR_NAME)
 }
 
-/// Installs embedded system skills into `CODEX_HOME/skills/.system`.
+/// Installs embedded system skills into `BROCODE_HOME/skills/.system`.
 ///
 /// Clears any existing system skills directory first and then writes the embedded
 /// skills directory into place.

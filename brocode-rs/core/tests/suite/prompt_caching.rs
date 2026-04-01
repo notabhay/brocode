@@ -119,7 +119,7 @@ async fn prompt_tools_are_consistent_across_requests() -> anyhow::Result<()> {
     } = test_brocode()
         .with_config(|config| {
             config.user_instructions = Some("be consistent and helpful".to_string());
-            config.model = Some("gpt-5.1-codex-max".to_string());
+            config.model = Some("gpt-5.1-brocode-max".to_string());
             // Keep tool expectations stable when the default web_search mode changes.
             config
                 .web_search_mode
@@ -516,7 +516,7 @@ async fn override_before_first_turn_emits_environment_context() -> anyhow::Resul
             approvals_reviewer: None,
             sandbox_policy: None,
             windows_sandbox_level: None,
-            model: Some("gpt-5.1-codex".to_string()),
+            model: Some("gpt-5.1-brocode".to_string()),
             effort: Some(Some(ReasoningEffort::Low)),
             summary: None,
             service_tier: None,

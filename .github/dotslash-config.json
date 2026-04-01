@@ -1,82 +1,82 @@
 {
   "outputs": {
-    "codex": {
+    "brocode": {
       "platforms": {
         "macos-aarch64": {
-          "regex": "^codex-aarch64-apple-darwin\\.zst$",
-          "path": "codex"
+          "regex": "^brocode-aarch64-apple-darwin\\.zst$",
+          "path": "brocode"
         },
         "macos-x86_64": {
-          "regex": "^codex-x86_64-apple-darwin\\.zst$",
-          "path": "codex"
+          "regex": "^brocode-x86_64-apple-darwin\\.zst$",
+          "path": "brocode"
         },
         "linux-x86_64": {
-          "regex": "^codex-x86_64-unknown-linux-musl\\.zst$",
-          "path": "codex"
+          "regex": "^brocode-x86_64-unknown-linux-musl\\.zst$",
+          "path": "brocode"
         },
         "linux-aarch64": {
-          "regex": "^codex-aarch64-unknown-linux-musl\\.zst$",
-          "path": "codex"
+          "regex": "^brocode-aarch64-unknown-linux-musl\\.zst$",
+          "path": "brocode"
         },
         "windows-x86_64": {
-          "regex": "^codex-x86_64-pc-windows-msvc\\.exe\\.zst$",
-          "path": "codex.exe"
+          "regex": "^brocode-x86_64-pc-windows-msvc\\.exe\\.zst$",
+          "path": "brocode.exe"
         },
         "windows-aarch64": {
-          "regex": "^codex-aarch64-pc-windows-msvc\\.exe\\.zst$",
-          "path": "codex.exe"
+          "regex": "^brocode-aarch64-pc-windows-msvc\\.exe\\.zst$",
+          "path": "brocode.exe"
         }
       }
     },
-    "codex-responses-api-proxy": {
+    "brocode-responses-api-proxy": {
       "platforms": {
         "macos-aarch64": {
-          "regex": "^codex-responses-api-proxy-aarch64-apple-darwin\\.zst$",
-          "path": "codex-responses-api-proxy"
+          "regex": "^brocode-responses-api-proxy-aarch64-apple-darwin\\.zst$",
+          "path": "brocode-responses-api-proxy"
         },
         "macos-x86_64": {
-          "regex": "^codex-responses-api-proxy-x86_64-apple-darwin\\.zst$",
-          "path": "codex-responses-api-proxy"
+          "regex": "^brocode-responses-api-proxy-x86_64-apple-darwin\\.zst$",
+          "path": "brocode-responses-api-proxy"
         },
         "linux-x86_64": {
-          "regex": "^codex-responses-api-proxy-x86_64-unknown-linux-musl\\.zst$",
-          "path": "codex-responses-api-proxy"
+          "regex": "^brocode-responses-api-proxy-x86_64-unknown-linux-musl\\.zst$",
+          "path": "brocode-responses-api-proxy"
         },
         "linux-aarch64": {
-          "regex": "^codex-responses-api-proxy-aarch64-unknown-linux-musl\\.zst$",
-          "path": "codex-responses-api-proxy"
+          "regex": "^brocode-responses-api-proxy-aarch64-unknown-linux-musl\\.zst$",
+          "path": "brocode-responses-api-proxy"
         },
         "windows-x86_64": {
-          "regex": "^codex-responses-api-proxy-x86_64-pc-windows-msvc\\.exe\\.zst$",
-          "path": "codex-responses-api-proxy.exe"
+          "regex": "^brocode-responses-api-proxy-x86_64-pc-windows-msvc\\.exe\\.zst$",
+          "path": "brocode-responses-api-proxy.exe"
         },
         "windows-aarch64": {
-          "regex": "^codex-responses-api-proxy-aarch64-pc-windows-msvc\\.exe\\.zst$",
-          "path": "codex-responses-api-proxy.exe"
+          "regex": "^brocode-responses-api-proxy-aarch64-pc-windows-msvc\\.exe\\.zst$",
+          "path": "brocode-responses-api-proxy.exe"
         }
       }
     },
-    "codex-command-runner": {
+    "brocode-command-runner": {
       "platforms": {
         "windows-x86_64": {
-          "regex": "^codex-command-runner-x86_64-pc-windows-msvc\\.exe\\.zst$",
-          "path": "codex-command-runner.exe"
+          "regex": "^brocode-command-runner-x86_64-pc-windows-msvc\\.exe\\.zst$",
+          "path": "brocode-command-runner.exe"
         },
         "windows-aarch64": {
-          "regex": "^codex-command-runner-aarch64-pc-windows-msvc\\.exe\\.zst$",
-          "path": "codex-command-runner.exe"
+          "regex": "^brocode-command-runner-aarch64-pc-windows-msvc\\.exe\\.zst$",
+          "path": "brocode-command-runner.exe"
         }
       }
     },
-    "codex-windows-sandbox-setup": {
+    "brocode-windows-sandbox-setup": {
       "platforms": {
         "windows-x86_64": {
-          "regex": "^codex-windows-sandbox-setup-x86_64-pc-windows-msvc\\.exe\\.zst$",
-          "path": "codex-windows-sandbox-setup.exe"
+          "regex": "^brocode-windows-sandbox-setup-x86_64-pc-windows-msvc\\.exe\\.zst$",
+          "path": "brocode-windows-sandbox-setup.exe"
         },
         "windows-aarch64": {
-          "regex": "^codex-windows-sandbox-setup-aarch64-pc-windows-msvc\\.exe\\.zst$",
-          "path": "codex-windows-sandbox-setup.exe"
+          "regex": "^brocode-windows-sandbox-setup-aarch64-pc-windows-msvc\\.exe\\.zst$",
+          "path": "brocode-windows-sandbox-setup.exe"
         }
       }
     }

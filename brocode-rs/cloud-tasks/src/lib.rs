@@ -931,7 +931,8 @@ pub async fn run_main(cli: Cli, _brocode_linux_sandbox_exe: Option<PathBuf>) -> 
                 if let Some(page) = app.new_task.as_mut() {
                     if page.composer.flush_paste_burst_if_due() { needs_redraw = true; }
                     if page.composer.is_in_paste_burst() {
-                        let _ = frame_tx.send(Instant::now() + brocode_tui::ComposerInput::recommended_flush_delay());
+                        let _ = frame_tx
+                            .send(Instant::now() + brocode_tui::ComposerInput::recommended_flush_delay());
                     }
                 }
                 // Keep spinner pulsing only while loading.
@@ -1492,7 +1493,9 @@ pub async fn run_main(cli: Cli, _brocode_linux_sandbox_exe: Option<PathBuf>) -> 
                                 _ => {
                                     if page.submitting {
                                         // Ignore input while submitting
-                                    } else if let brocode_tui::ComposerAction::Submitted(text) = page.composer.input(key) {
+                                    } else if let brocode_tui::ComposerAction::Submitted(text) =
+                                        page.composer.input(key)
+                                    {
                                             // Submit only if we have an env id
                                             if let Some(env) = page.env_id.clone() {
                                                 append_error_log(format!(
@@ -1522,7 +1525,10 @@ pub async fn run_main(cli: Cli, _brocode_linux_sandbox_exe: Option<PathBuf>) -> 
                                     needs_redraw = true;
                                     // If paste‑burst is active, schedule a micro‑flush frame.
                                     if page.composer.is_in_paste_burst() {
-                                        let _ = frame_tx.send(Instant::now() + brocode_tui::ComposerInput::recommended_flush_delay());
+                                        let _ = frame_tx.send(
+                                            Instant::now()
+                                                + brocode_tui::ComposerInput::recommended_flush_delay(),
+                                        );
                                     }
                                     // Always schedule an immediate redraw for key edits in the composer.
                                     let _ = frame_tx.send(Instant::now());
@@ -2169,7 +2175,7 @@ mod tests {
     async fn branch_override_is_used_when_provided() {
         let git_ref = resolve_git_ref_with_git_info(
             Some(&"feature/override".to_string()),
-            &StubGitInfo::new(None, None),
+            &StubGitInfo::new(/*default_branch*/ None, /*current_branch*/ None),
         )
         .await;
 
@@ -2180,7 +2186,7 @@ mod tests {
     async fn trims_override_whitespace() {
         let git_ref = resolve_git_ref_with_git_info(
             Some(&"  feature/spaces  ".to_string()),
-            &StubGitInfo::new(None, None),
+            &StubGitInfo::new(/*default_branch*/ None, /*current_branch*/ None),
         )
         .await;
 
@@ -2190,7 +2196,7 @@ mod tests {
     #[tokio::test]
     async fn prefers_current_branch_when_available() {
         let git_ref = resolve_git_ref_with_git_info(
-            None,
+            /*branch_override*/ None,
             &StubGitInfo::new(
                 Some("default-main".to_string()),
                 Some("feature/current".to_string()),
@@ -2204,8 +2210,8 @@ mod tests {
     #[tokio::test]
     async fn falls_back_to_current_branch_when_default_is_missing() {
         let git_ref = resolve_git_ref_with_git_info(
-            None,
-            &StubGitInfo::new(None, Some("develop".to_string())),
+            /*branch_override*/ None,
+            &StubGitInfo::new(/*default_branch*/ None, Some("develop".to_string())),
         )
         .await;
 
@@ -2214,7 +2220,11 @@ mod tests {
 
     #[tokio::test]
     async fn falls_back_to_main_when_no_git_info_is_available() {
-        let git_ref = resolve_git_ref_with_git_info(None, &StubGitInfo::new(None, None)).await;
+        let git_ref = resolve_git_ref_with_git_info(
+            /*branch_override*/ None,
+            &StubGitInfo::new(/*default_branch*/ None, /*current_branch*/ None),
+        )
+        .await;
 
         assert_eq!(git_ref, "main");
     }
@@ -2237,7 +2247,7 @@ mod tests {
             is_review: false,
             attempt_total: None,
         };
-        let lines = format_task_status_lines(&task, now, false);
+        let lines = format_task_status_lines(&task, now, /*colorize*/ false);
         assert_eq!(
             lines,
             vec![
@@ -2262,7 +2272,7 @@ mod tests {
             is_review: false,
             attempt_total: Some(1),
         };
-        let lines = format_task_status_lines(&task, now, false);
+        let lines = format_task_status_lines(&task, now, /*colorize*/ false);
         assert_eq!(
             lines,
             vec![
@@ -2304,16 +2314,21 @@ mod tests {
                 attempt_total: Some(1),
             },
         ];
-        let lines = format_task_list_lines(&tasks, "https://chatgpt.com/backend-api", now, false);
+        let lines = format_task_list_lines(
+            &tasks,
+            "https://chatgpt.com/backend-api",
+            now,
+            /*colorize*/ false,
+        );
         assert_eq!(
             lines,
             vec![
-                "https://chatgpt.com/codex/tasks/task_1".to_string(),
+                "https://chatgpt.com/brocode/tasks/task_1".to_string(),
                 "  [READY] Example task".to_string(),
                 "  Env  •  0s ago".to_string(),
                 "  +5/-2 • 3 files".to_string(),
                 String::new(),
-                "https://chatgpt.com/codex/tasks/task_2".to_string(),
+                "https://chatgpt.com/brocode/tasks/task_2".to_string(),
                 "  [PENDING] No diff task".to_string(),
                 "  env-2  •  0s ago".to_string(),
                 "  no diff".to_string(),
@@ -2324,7 +2339,7 @@ mod tests {
     #[tokio::test]
     async fn collect_attempt_diffs_includes_sibling_attempts() {
         let backend = MockClient;
-        let task_id = parse_task_id("https://chatgpt.com/codex/tasks/T-1000").expect("id");
+        let task_id = parse_task_id("https://chatgpt.com/brocode/tasks/T-1000").expect("id");
         let attempts = collect_attempt_diffs(&backend, &task_id)
             .await
             .expect("attempts");
@@ -2351,8 +2366,8 @@ mod tests {
     fn parse_task_id_from_url_and_raw() {
         let raw = parse_task_id("task_i_abc123").expect("raw id");
         assert_eq!(raw.0, "task_i_abc123");
-        let url =
-            parse_task_id("https://chatgpt.com/codex/tasks/task_i_123456?foo=bar").expect("url id");
+        let url = parse_task_id("https://chatgpt.com/brocode/tasks/task_i_123456?foo=bar")
+            .expect("url id");
         assert_eq!(url.0, "task_i_123456");
         assert!(parse_task_id("   ").is_err());
     }

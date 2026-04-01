@@ -13,8 +13,8 @@ This file is a curated helper. Every recommendation here must be verified agains
 | `gpt-5.4` | Explicit no-reasoning text path via `reasoning.effort: none` |
 | `gpt-4.1-mini` | Cheaper no-reasoning text |
 | `gpt-4.1-nano` | Fastest and cheapest no-reasoning text |
-| `gpt-5.3-codex` | Agentic coding, code editing, and tool-heavy coding workflows |
-| `gpt-5.1-codex-mini` | Cheaper coding workflows |
+| `gpt-5.3-brocode` | Agentic coding, code editing, and tool-heavy coding workflows |
+| `gpt-5.1-brocode-mini` | Cheaper coding workflows |
 | `gpt-image-1.5` | Best image generation and edit quality |
 | `gpt-image-1-mini` | Cost-optimized image generation |
 | `gpt-4o-mini-tts` | Text-to-speech |

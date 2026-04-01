@@ -137,7 +137,7 @@ mod tests {
                 &all_connectors,
                 &[],
                 &[AppConnectorId("alpha".to_string())],
-                false,
+                /*brocode_apps_ready*/ false,
             ),
             Vec::new()
         );

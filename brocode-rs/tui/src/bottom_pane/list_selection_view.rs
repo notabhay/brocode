@@ -1047,14 +1047,14 @@ mod tests {
         let items = vec![
             SelectionItem {
                 name: "Read Only".to_string(),
-                description: Some("brocode can read files".to_string()),
+                description: Some("Brocode can read files".to_string()),
                 is_current: true,
                 dismiss_on_select: true,
                 ..Default::default()
             },
             SelectionItem {
                 name: "Full Access".to_string(),
-                description: Some("brocode can edit files".to_string()),
+                description: Some("Brocode can edit files".to_string()),
                 is_current: false,
                 dismiss_on_select: true,
                 ..Default::default()
@@ -1073,7 +1073,7 @@ mod tests {
     }
 
     fn render_lines(view: &ListSelectionView) -> String {
-        render_lines_with_width(view, 48)
+        render_lines_with_width(view, /*width*/ 48)
     }
 
     fn render_lines_with_width(view: &ListSelectionView, width: u16) -> String {
@@ -1153,7 +1153,7 @@ mod tests {
 
     #[test]
     fn renders_blank_line_between_title_and_items_without_subtitle() {
-        let view = make_selection_view(None);
+        let view = make_selection_view(/*subtitle*/ None);
         assert_snapshot!(
             "list_selection_spacing_without_subtitle",
             render_lines(&view)
@@ -1162,7 +1162,7 @@ mod tests {
 
     #[test]
     fn renders_blank_line_between_subtitle_and_items() {
-        let view = make_selection_view(Some("Switch between brocode approval presets"));
+        let view = make_selection_view(Some("Switch between Brocode approval presets"));
         assert_snapshot!("list_selection_spacing_with_subtitle", render_lines(&view));
     }
 
@@ -1172,17 +1172,24 @@ mod tests {
         let tx = AppEventSender::new(tx_raw);
         let home = dirs::home_dir().expect("home directory should be available");
         let brocode_home = home.join(".brocode");
-        let params =
-            crate::theme_picker::build_theme_picker_params(None, Some(&brocode_home), Some(94));
+        let params = crate::theme_picker::build_theme_picker_params(
+            /*current_name*/ None,
+            Some(&brocode_home),
+            Some(94),
+        );
         let view = ListSelectionView::new(params, tx);
 
-        let rendered = render_lines_in_area(&view, 94, 35);
+        let rendered = render_lines_in_area(&view, /*width*/ 94, /*height*/ 35);
         assert!(rendered.contains("Move up/down to live preview themes"));
     }
 
     #[test]
     fn theme_picker_enables_side_content_background_preservation() {
-        let params = crate::theme_picker::build_theme_picker_params(None, None, Some(120));
+        let params = crate::theme_picker::build_theme_picker_params(
+            /*current_name*/ None,
+            /*brocode_home*/ None,
+            Some(120),
+        );
         assert!(
             params.preserve_side_content_bg,
             "theme picker should preserve side-content backgrounds to keep diff preview styling",
@@ -1238,7 +1245,7 @@ mod tests {
         let tx = AppEventSender::new(tx_raw);
         let items = vec![SelectionItem {
             name: "Read Only".to_string(),
-            description: Some("brocode can read files".to_string()),
+            description: Some("Brocode can read files".to_string()),
             is_current: true,
             dismiss_on_select: true,
             ..Default::default()
@@ -1260,7 +1267,7 @@ mod tests {
         );
         assert_snapshot!(
             "list_selection_footer_note_wraps",
-            render_lines_with_width(&view, 40)
+            render_lines_with_width(&view, /*width*/ 40)
         );
     }
 
@@ -1270,7 +1277,7 @@ mod tests {
         let tx = AppEventSender::new(tx_raw);
         let items = vec![SelectionItem {
             name: "Read Only".to_string(),
-            description: Some("brocode can read files".to_string()),
+            description: Some("Brocode can read files".to_string()),
             is_current: false,
             dismiss_on_select: true,
             ..Default::default()
@@ -1380,7 +1387,7 @@ mod tests {
             tx,
         );
 
-        let rendered = render_lines_with_width(&view, 60);
+        let rendered = render_lines_with_width(&view, /*width*/ 60);
         let command_line = rendered
             .lines()
             .find(|line| line.contains("python -mpre_commit run"))
@@ -1402,9 +1409,9 @@ mod tests {
         let tx = AppEventSender::new(tx_raw);
         let items = vec![
             SelectionItem {
-                name: "gpt-5.1-codex".to_string(),
+                name: "gpt-5.1-brocode".to_string(),
                 description: Some(
-                    "Optimized for brocode. Balance of reasoning quality and coding ability."
+                    "Optimized for Brocode. Balance of reasoning quality and coding ability."
                         .to_string(),
                 ),
                 is_current: true,
@@ -1412,15 +1419,15 @@ mod tests {
                 ..Default::default()
             },
             SelectionItem {
-                name: "gpt-5.1-codex-mini".to_string(),
+                name: "gpt-5.1-brocode-mini".to_string(),
                 description: Some(
-                    "Optimized for brocode. Cheaper, faster, but less capable.".to_string(),
+                    "Optimized for Brocode. Cheaper, faster, but less capable.".to_string(),
                 ),
                 dismiss_on_select: true,
                 ..Default::default()
             },
             SelectionItem {
-                name: "gpt-4.1-codex".to_string(),
+                name: "gpt-4.1-brocode".to_string(),
                 description: Some(
                     "Legacy model. Use when you need compatibility with older automations."
                         .to_string(),
@@ -1471,7 +1478,7 @@ mod tests {
             },
             tx,
         );
-        let rendered = render_lines_with_width(&view, 24);
+        let rendered = render_lines_with_width(&view, /*width*/ 24);
         assert!(
             rendered.contains("3."),
             "third option missing for width 24:\n{rendered}"
@@ -1484,9 +1491,9 @@ mod tests {
         let tx = AppEventSender::new(tx_raw);
         let items = vec![
             SelectionItem {
-                name: "gpt-5.1-codex".to_string(),
+                name: "gpt-5.1-brocode".to_string(),
                 description: Some(
-                    "Optimized for brocode. Balance of reasoning quality and coding ability."
+                    "Optimized for Brocode. Balance of reasoning quality and coding ability."
                         .to_string(),
                 ),
                 is_current: true,
@@ -1494,15 +1501,15 @@ mod tests {
                 ..Default::default()
             },
             SelectionItem {
-                name: "gpt-5.1-codex-mini".to_string(),
+                name: "gpt-5.1-brocode-mini".to_string(),
                 description: Some(
-                    "Optimized for brocode. Cheaper, faster, but less capable.".to_string(),
+                    "Optimized for Brocode. Cheaper, faster, but less capable.".to_string(),
                 ),
                 dismiss_on_select: true,
                 ..Default::default()
             },
             SelectionItem {
-                name: "gpt-4.1-codex".to_string(),
+                name: "gpt-4.1-brocode".to_string(),
                 description: Some(
                     "Legacy model. Use when you need compatibility with older automations."
                         .to_string(),
@@ -1521,7 +1528,7 @@ mod tests {
         );
         assert_snapshot!(
             "list_selection_model_picker_width_80",
-            render_lines_with_width(&view, 80)
+            render_lines_with_width(&view, /*width*/ 80)
         );
     }
 
@@ -1548,7 +1555,7 @@ mod tests {
         );
         assert_snapshot!(
             "list_selection_narrow_width_preserves_rows",
-            render_lines_with_width(&view, 24)
+            render_lines_with_width(&view, /*width*/ 24)
         );
     }
 
@@ -1556,7 +1563,7 @@ mod tests {
     fn snapshot_auto_visible_col_width_mode_scroll_behavior() {
         assert_snapshot!(
             "list_selection_col_width_mode_auto_visible_scroll",
-            render_before_after_scroll_snapshot(ColumnWidthMode::AutoVisible, 96)
+            render_before_after_scroll_snapshot(ColumnWidthMode::AutoVisible, /*width*/ 96)
         );
     }
 
@@ -1564,7 +1571,7 @@ mod tests {
     fn snapshot_auto_all_rows_col_width_mode_scroll_behavior() {
         assert_snapshot!(
             "list_selection_col_width_mode_auto_all_rows_scroll",
-            render_before_after_scroll_snapshot(ColumnWidthMode::AutoAllRows, 96)
+            render_before_after_scroll_snapshot(ColumnWidthMode::AutoAllRows, /*width*/ 96)
         );
     }
 
@@ -1572,7 +1579,7 @@ mod tests {
     fn snapshot_fixed_col_width_mode_scroll_behavior() {
         assert_snapshot!(
             "list_selection_col_width_mode_fixed_scroll",
-            render_before_after_scroll_snapshot(ColumnWidthMode::Fixed, 96)
+            render_before_after_scroll_snapshot(ColumnWidthMode::Fixed, /*width*/ 96)
         );
     }
 
@@ -1591,11 +1598,11 @@ mod tests {
             tx,
         );
 
-        let before_scroll = render_lines_with_width(&view, 96);
+        let before_scroll = render_lines_with_width(&view, /*width*/ 96);
         for _ in 0..8 {
             view.handle_key_event(KeyEvent::from(KeyCode::Down));
         }
-        let after_scroll = render_lines_with_width(&view, 96);
+        let after_scroll = render_lines_with_width(&view, /*width*/ 96);
 
         assert!(
             after_scroll.contains("9. Item 9 with an intentionally much longer name"),
@@ -1693,7 +1700,7 @@ mod tests {
             tx,
         );
 
-        assert_eq!(view.side_layout_width(80), None);
+        assert_eq!(view.side_layout_width(/*content_width*/ 80), None);
     }
 
     #[test]
@@ -1723,7 +1730,7 @@ mod tests {
             tx,
         );
 
-        let rendered = render_lines_with_width(&view, 70);
+        let rendered = render_lines_with_width(&view, /*width*/ 70);
         assert!(
             rendered.contains('N'),
             "expected stacked marker to be rendered:\n{rendered}"

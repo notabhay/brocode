@@ -1,9 +1,9 @@
 /// Update action the CLI should perform after the TUI exits.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UpdateAction {
-    /// Update via `npm install -g @openai/codex@latest`.
+    /// Update via `npm install -g @openai/brocode@latest`.
     NpmGlobalLatest,
-    /// Update via `bun install -g @openai/codex@latest`.
+    /// Update via `bun install -g @openai/brocode@latest`.
     BunGlobalLatest,
     /// Update via `brew upgrade brocode`.
     BrewUpgrade,
@@ -13,8 +13,8 @@ impl UpdateAction {
     /// Returns the list of command-line arguments for invoking the update.
     pub fn command_args(self) -> (&'static str, &'static [&'static str]) {
         match self {
-            UpdateAction::NpmGlobalLatest => ("npm", &["install", "-g", "@openai/codex"]),
-            UpdateAction::BunGlobalLatest => ("bun", &["install", "-g", "@openai/codex"]),
+            UpdateAction::NpmGlobalLatest => ("npm", &["install", "-g", "@openai/brocode"]),
+            UpdateAction::BunGlobalLatest => ("bun", &["install", "-g", "@openai/brocode"]),
             UpdateAction::BrewUpgrade => ("brew", &["upgrade", "--cask", "brocode"]),
         }
     }
@@ -68,32 +68,47 @@ mod tests {
     #[test]
     fn detects_update_action_without_env_mutation() {
         assert_eq!(
-            detect_update_action(false, std::path::Path::new("/any/path"), false, false),
+            detect_update_action(
+                /*is_macos*/ false,
+                std::path::Path::new("/any/path"),
+                /*managed_by_npm*/ false,
+                /*managed_by_bun*/ false
+            ),
             None
         );
         assert_eq!(
-            detect_update_action(false, std::path::Path::new("/any/path"), true, false),
+            detect_update_action(
+                /*is_macos*/ false,
+                std::path::Path::new("/any/path"),
+                /*managed_by_npm*/ true,
+                /*managed_by_bun*/ false
+            ),
             Some(UpdateAction::NpmGlobalLatest)
         );
         assert_eq!(
-            detect_update_action(false, std::path::Path::new("/any/path"), false, true),
+            detect_update_action(
+                /*is_macos*/ false,
+                std::path::Path::new("/any/path"),
+                /*managed_by_npm*/ false,
+                /*managed_by_bun*/ true
+            ),
             Some(UpdateAction::BunGlobalLatest)
         );
         assert_eq!(
             detect_update_action(
-                true,
+                /*is_macos*/ true,
                 std::path::Path::new("/opt/homebrew/bin/brocode"),
-                false,
-                false
+                /*managed_by_npm*/ false,
+                /*managed_by_bun*/ false
             ),
             Some(UpdateAction::BrewUpgrade)
         );
         assert_eq!(
             detect_update_action(
-                true,
+                /*is_macos*/ true,
                 std::path::Path::new("/usr/local/bin/brocode"),
-                false,
-                false
+                /*managed_by_npm*/ false,
+                /*managed_by_bun*/ false
             ),
             Some(UpdateAction::BrewUpgrade)
         );

@@ -30,11 +30,11 @@ const TURN_0_FORK_PROMPT: &str = "seed fork context";
 const TURN_1_PROMPT: &str = "spawn a child and continue";
 const TURN_2_NO_WAIT_PROMPT: &str = "follow up without wait";
 const CHILD_PROMPT: &str = "child: do work";
-const INHERITED_MODEL: &str = "gpt-5.2-codex";
+const INHERITED_MODEL: &str = "gpt-5.2-brocode";
 const INHERITED_REASONING_EFFORT: ReasoningEffort = ReasoningEffort::XHigh;
 const REQUESTED_MODEL: &str = "gpt-5.1";
 const REQUESTED_REASONING_EFFORT: ReasoningEffort = ReasoningEffort::Low;
-const ROLE_MODEL: &str = "gpt-5.1-codex-max";
+const ROLE_MODEL: &str = "gpt-5.1-brocode-max";
 const ROLE_REASONING_EFFORT: ReasoningEffort = ReasoningEffort::High;
 
 fn body_contains(req: &wiremock::Request, text: &str) -> bool {
@@ -144,7 +144,7 @@ async fn setup_turn_one_with_spawned_child(
             "message": CHILD_PROMPT,
         }),
         child_response_delay,
-        true,
+        /*wait_for_parent_notification*/ true,
         |builder| builder,
     )
     .await
@@ -253,9 +253,14 @@ async fn spawn_child_and_capture_snapshot(
         core_test_support::test_brocode::TestBrocodeBuilder,
     ) -> core_test_support::test_brocode::TestBrocodeBuilder,
 ) -> Result<ThreadConfigSnapshot> {
-    let (test, spawned_id) =
-        setup_turn_one_with_custom_spawned_child(server, spawn_args, None, false, configure_test)
-            .await?;
+    let (test, spawned_id) = setup_turn_one_with_custom_spawned_child(
+        server,
+        spawn_args,
+        /*child_response_delay*/ None,
+        /*wait_for_parent_notification*/ false,
+        configure_test,
+    )
+    .await?;
     let thread_id = ThreadId::from_string(&spawned_id)?;
     Ok(test
         .thread_manager
@@ -270,7 +275,8 @@ async fn subagent_notification_is_included_without_wait() -> Result<()> {
     skip_if_no_network!(Ok(()));
 
     let server = start_mock_server().await;
-    let (test, _spawned_id) = setup_turn_one_with_spawned_child(&server, None).await?;
+    let (test, _spawned_id) =
+        setup_turn_one_with_spawned_child(&server, /*child_response_delay*/ None).await?;
 
     let turn2 = mount_sse_once_match(
         &server,
@@ -523,7 +529,7 @@ async fn spawn_agent_tool_description_mentions_role_locked_settings() -> Result<
         role_block(&agent_type_description, "custom").expect("custom role description");
     assert_eq!(
         custom_role_description,
-        "custom: {\nCustom role\n- This role's model is set to `gpt-5.1-codex-max` and its reasoning effort is set to `high`. These settings cannot be changed.\n}"
+        "custom: {\nCustom role\n- This role's model is set to `gpt-5.1-brocode-max` and its reasoning effort is set to `high`. These settings cannot be changed.\n}"
     );
 
     Ok(())

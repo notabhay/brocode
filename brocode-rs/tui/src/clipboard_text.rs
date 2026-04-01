@@ -1,6 +1,6 @@
 //! Clipboard text copy support for `/copy` in the TUI.
 //!
-//! This module owns the policy for getting plain text from the running brocode
+//! This module owns the policy for getting plain text from the running Brocode
 //! process into the user's system clipboard. It prefers the direct native
 //! clipboard path when the current machine is also the user's desktop, but it
 //! intentionally changes strategy in environments where a "local" clipboard
@@ -202,13 +202,16 @@ mod tests {
 
     #[test]
     fn osc52_sequence_encodes_text_for_terminal_clipboard() {
-        assert_eq!(osc52_sequence("hello", false), "\u{1b}]52;c;aGVsbG8=\u{7}");
+        assert_eq!(
+            osc52_sequence("hello", /*tmux*/ false),
+            "\u{1b}]52;c;aGVsbG8=\u{7}"
+        );
     }
 
     #[test]
     fn osc52_sequence_wraps_tmux_passthrough() {
         assert_eq!(
-            osc52_sequence("hello", true),
+            osc52_sequence("hello", /*tmux*/ true),
             "\u{1b}Ptmux;\u{1b}\u{1b}]52;c;aGVsbG8=\u{7}\u{1b}\\"
         );
     }

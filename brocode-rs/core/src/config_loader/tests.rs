@@ -260,7 +260,7 @@ async fn returns_empty_when_all_layers_missing() {
     .expect("load layers");
     let user_layer = layers
         .get_user_layer()
-        .expect("expected a user layer even when CODEX_HOME/config.toml does not exist");
+        .expect("expected a user layer even when BROCODE_HOME/config.toml does not exist");
     assert_eq!(
         &ConfigLayerEntry {
             name: super::ConfigLayerSource::User {
@@ -797,7 +797,7 @@ async fn load_config_layers_fails_when_cloud_requirements_loader_fails() -> anyh
         CloudRequirementsLoader::new(async {
             Err(CloudRequirementsLoadError::new(
                 brocode_config::CloudRequirementsLoadErrorCode::RequestFailed,
-                None,
+                /*status_code*/ None,
                 "cloud requirements failed",
             ))
         }),
@@ -833,7 +833,13 @@ async fn project_layers_prefer_closest_cwd() -> std::io::Result<()> {
 
     let brocode_home = tmp.path().join("home");
     tokio::fs::create_dir_all(&brocode_home).await?;
-    make_config_for_test(&brocode_home, &project_root, TrustLevel::Trusted, None).await?;
+    make_config_for_test(
+        &brocode_home,
+        &project_root,
+        TrustLevel::Trusted,
+        /*project_root_markers*/ None,
+    )
+    .await?;
     let cwd = AbsolutePathBuf::from_absolute_path(&nested)?;
     let layers = load_config_layers_state(
         &brocode_home,
@@ -906,7 +912,13 @@ model_instructions_file = "child.txt"
 
     let brocode_home = tmp.path().join("home");
     tokio::fs::create_dir_all(&brocode_home).await?;
-    make_config_for_test(&brocode_home, &project_root, TrustLevel::Trusted, None).await?;
+    make_config_for_test(
+        &brocode_home,
+        &project_root,
+        TrustLevel::Trusted,
+        /*project_root_markers*/ None,
+    )
+    .await?;
 
     let config = ConfigBuilder::default()
         .brocode_home(brocode_home)
@@ -973,7 +985,13 @@ async fn project_layer_is_added_when_dot_brocode_exists_without_config_toml() ->
 
     let brocode_home = tmp.path().join("home");
     tokio::fs::create_dir_all(&brocode_home).await?;
-    make_config_for_test(&brocode_home, &project_root, TrustLevel::Trusted, None).await?;
+    make_config_for_test(
+        &brocode_home,
+        &project_root,
+        TrustLevel::Trusted,
+        /*project_root_markers*/ None,
+    )
+    .await?;
     let cwd = AbsolutePathBuf::from_absolute_path(&nested)?;
     let layers = load_config_layers_state(
         &brocode_home,
@@ -1028,7 +1046,7 @@ async fn brocode_home_is_not_loaded_as_project_layer_from_home_dir() -> std::io:
     let project_layers: Vec<_> = layers
         .get_layers(
             super::ConfigLayerStackOrdering::HighestPrecedenceFirst,
-            true,
+            /*include_disabled*/ true,
         )
         .into_iter()
         .filter(|layer| matches!(layer.name, super::ConfigLayerSource::Project { .. }))
@@ -1064,7 +1082,7 @@ async fn brocode_home_within_project_tree_is_not_double_loaded() -> std::io::Res
         &project_dot_brocode,
         &project_root,
         TrustLevel::Trusted,
-        None,
+        /*project_root_markers*/ None,
     )
     .await?;
     let user_config_path = project_dot_brocode.join(CONFIG_TOML_FILE);
@@ -1088,7 +1106,7 @@ async fn brocode_home_within_project_tree_is_not_double_loaded() -> std::io::Res
     let project_layers: Vec<_> = layers
         .get_layers(
             super::ConfigLayerStackOrdering::HighestPrecedenceFirst,
-            true,
+            /*include_disabled*/ true,
         )
         .into_iter()
         .filter(|layer| matches!(layer.name, super::ConfigLayerSource::Project { .. }))
@@ -1135,7 +1153,7 @@ async fn project_layers_disabled_when_untrusted_or_unknown() -> std::io::Result<
         &brocode_home_untrusted,
         &project_root,
         TrustLevel::Untrusted,
-        None,
+        /*project_root_markers*/ None,
     )
     .await?;
     let untrusted_config_path = brocode_home_untrusted.join(CONFIG_TOML_FILE);
@@ -1157,7 +1175,7 @@ async fn project_layers_disabled_when_untrusted_or_unknown() -> std::io::Result<
     let project_layers_untrusted: Vec<_> = layers_untrusted
         .get_layers(
             super::ConfigLayerStackOrdering::HighestPrecedenceFirst,
-            true,
+            /*include_disabled*/ true,
         )
         .into_iter()
         .filter(|layer| matches!(layer.name, super::ConfigLayerSource::Project { .. }))
@@ -1195,7 +1213,7 @@ async fn project_layers_disabled_when_untrusted_or_unknown() -> std::io::Result<
     let project_layers_unknown: Vec<_> = layers_unknown
         .get_layers(
             super::ConfigLayerStackOrdering::HighestPrecedenceFirst,
-            true,
+            /*include_disabled*/ true,
         )
         .into_iter()
         .filter(|layer| matches!(layer.name, super::ConfigLayerSource::Project { .. }))
@@ -1238,7 +1256,13 @@ enabled = false
 "#,
     )
     .await?;
-    make_config_for_test(&brocode_home, &project_root, TrustLevel::Trusted, None).await?;
+    make_config_for_test(
+        &brocode_home,
+        &project_root,
+        TrustLevel::Trusted,
+        /*project_root_markers*/ None,
+    )
+    .await?;
 
     let config = ConfigBuilder::default()
         .brocode_home(brocode_home)
@@ -1323,7 +1347,13 @@ async fn invalid_project_config_ignored_when_untrusted_or_unknown() -> std::io::
         let config_path = brocode_home.join(CONFIG_TOML_FILE);
 
         if let Some(trust_level) = trust_level {
-            make_config_for_test(&brocode_home, &project_root, trust_level, None).await?;
+            make_config_for_test(
+                &brocode_home,
+                &project_root,
+                trust_level,
+                /*project_root_markers*/ None,
+            )
+            .await?;
             let config_contents = tokio::fs::read_to_string(&config_path).await?;
             tokio::fs::write(&config_path, format!("foo = \"user\"\n{config_contents}")).await?;
         } else {
@@ -1341,7 +1371,7 @@ async fn invalid_project_config_ignored_when_untrusted_or_unknown() -> std::io::
         let project_layers: Vec<_> = layers
             .get_layers(
                 super::ConfigLayerStackOrdering::HighestPrecedenceFirst,
-                true,
+                /*include_disabled*/ true,
             )
             .into_iter()
             .filter(|layer| matches!(layer.name, super::ConfigLayerSource::Project { .. }))
@@ -1378,7 +1408,13 @@ async fn cli_overrides_with_relative_paths_do_not_break_trust_check() -> std::io
 
     let brocode_home = tmp.path().join("home");
     tokio::fs::create_dir_all(&brocode_home).await?;
-    make_config_for_test(&brocode_home, &project_root, TrustLevel::Trusted, None).await?;
+    make_config_for_test(
+        &brocode_home,
+        &project_root,
+        TrustLevel::Trusted,
+        /*project_root_markers*/ None,
+    )
+    .await?;
 
     let cwd = AbsolutePathBuf::from_absolute_path(&nested)?;
     let cli_overrides = vec![(

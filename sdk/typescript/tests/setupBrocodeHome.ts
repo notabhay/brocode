@@ -4,12 +4,12 @@ import path from "node:path";
 
 import { afterEach, beforeEach } from "@jest/globals";
 
-const originalBrocodeHome = process.env.CODEX_HOME;
+const originalBrocodeHome = process.env.BROCODE_HOME;
 let currentBrocodeHome: string | undefined;
 
 beforeEach(async () => {
   currentBrocodeHome = await fs.mkdtemp(path.join(os.tmpdir(), "brocode-sdk-test-"));
-  process.env.CODEX_HOME = currentBrocodeHome;
+  process.env.BROCODE_HOME = currentBrocodeHome;
 });
 
 afterEach(async () => {
@@ -17,9 +17,9 @@ afterEach(async () => {
   currentBrocodeHome = undefined;
 
   if (originalBrocodeHome === undefined) {
-    delete process.env.CODEX_HOME;
+    delete process.env.BROCODE_HOME;
   } else {
-    process.env.CODEX_HOME = originalBrocodeHome;
+    process.env.BROCODE_HOME = originalBrocodeHome;
   }
 
   if (brocodeHomeToDelete) {

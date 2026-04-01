@@ -115,7 +115,7 @@ async fn thread_resume_rejects_unmaterialized_thread() -> Result<()> {
     // Start a thread.
     let start_id = mcp
         .send_thread_start_request(ThreadStartParams {
-            model: Some("gpt-5.1-codex-max".to_string()),
+            model: Some("gpt-5.1-brocode-max".to_string()),
             ..Default::default()
         })
         .await?;
@@ -171,7 +171,7 @@ async fn thread_resume_returns_rollout_history() -> Result<()> {
             .map(|elem| serde_json::to_value(elem).expect("serialize text element"))
             .collect(),
         Some("mock_provider"),
-        None,
+        /*git_info*/ None,
     )?;
 
     let mut mcp = McpProcess::new(brocode_home.path()).await?;
@@ -233,7 +233,7 @@ async fn thread_resume_prefers_persisted_git_metadata_for_local_threads() -> Res
         &config_toml,
         format!(
             r#"
-model = "gpt-5.2-codex"
+model = "gpt-5.2-brocode"
 approval_policy = "never"
 sandbox_mode = "read-only"
 
@@ -368,7 +368,9 @@ stream_max_retries = 0
     )?;
     let state_db =
         StateRuntime::init(brocode_home.path().to_path_buf(), "mock_provider".into()).await?;
-    state_db.mark_backfill_complete(None).await?;
+    state_db
+        .mark_backfill_complete(/*last_watermark*/ None)
+        .await?;
 
     let mut mcp = McpProcess::new(brocode_home.path()).await?;
     timeout(DEFAULT_READ_TIMEOUT, mcp.initialize()).await??;
@@ -429,7 +431,7 @@ async fn thread_resume_and_read_interrupt_incomplete_rollout_turn_when_thread_is
         "Saved user message",
         Vec::new(),
         Some("mock_provider"),
-        None,
+        /*git_info*/ None,
     )?;
     let rollout_file_path = rollout_path(brocode_home.path(), filename_ts, &conversation_id);
     let persisted_rollout = std::fs::read_to_string(&rollout_file_path)?;
@@ -595,7 +597,7 @@ async fn thread_resume_keeps_in_flight_turn_streaming() -> Result<()> {
 
     let start_id = primary
         .send_thread_start_request(ThreadStartParams {
-            model: Some("gpt-5.1-codex-max".to_string()),
+            model: Some("gpt-5.1-brocode-max".to_string()),
             ..Default::default()
         })
         .await?;
@@ -702,7 +704,7 @@ async fn thread_resume_rejects_history_when_thread_is_running() -> Result<()> {
 
     let start_id = primary
         .send_thread_start_request(ThreadStartParams {
-            model: Some("gpt-5.1-codex-max".to_string()),
+            model: Some("gpt-5.1-brocode-max".to_string()),
             ..Default::default()
         })
         .await?;
@@ -818,7 +820,7 @@ async fn thread_resume_rejects_mismatched_path_when_thread_is_running() -> Resul
 
     let start_id = primary
         .send_thread_start_request(ThreadStartParams {
-            model: Some("gpt-5.1-codex-max".to_string()),
+            model: Some("gpt-5.1-brocode-max".to_string()),
             ..Default::default()
         })
         .await?;
@@ -924,7 +926,7 @@ async fn thread_resume_rejoins_running_thread_even_with_override_mismatch() -> R
 
     let start_id = primary
         .send_thread_start_request(ThreadStartParams {
-            model: Some("gpt-5.1-codex-max".to_string()),
+            model: Some("gpt-5.1-brocode-max".to_string()),
             ..Default::default()
         })
         .await?;
@@ -993,7 +995,7 @@ async fn thread_resume_rejoins_running_thread_even_with_override_mismatch() -> R
     .await??;
     let ThreadResumeResponse { thread, model, .. } =
         to_response::<ThreadResumeResponse>(resume_resp)?;
-    assert_eq!(model, "gpt-5.1-codex-max");
+    assert_eq!(model, "gpt-5.1-brocode-max");
     // The running-thread resume response is queued onto the thread listener task.
     // If the in-flight turn completes before that queued command runs, the response
     // can legitimately observe the thread as idle.
@@ -1022,7 +1024,7 @@ async fn thread_resume_replays_pending_command_execution_request_approval() -> R
                 "-c".to_string(),
                 "print(42)".to_string(),
             ],
-            None,
+            /*workdir*/ None,
             Some(5000),
             "call-1",
         )?,
@@ -1037,7 +1039,7 @@ async fn thread_resume_replays_pending_command_execution_request_approval() -> R
 
     let start_id = primary
         .send_thread_start_request(ThreadStartParams {
-            model: Some("gpt-5.1-codex-max".to_string()),
+            model: Some("gpt-5.1-brocode-max".to_string()),
             ..Default::default()
         })
         .await?;
@@ -1143,7 +1145,7 @@ async fn thread_resume_replays_pending_command_execution_request_approval() -> R
         primary.read_stream_until_notification_message("turn/completed"),
     )
     .await??;
-    wait_for_responses_request_count(&server, 3).await?;
+    wait_for_responses_request_count(&server, /*expected_count*/ 3).await?;
 
     Ok(())
 }
@@ -1174,7 +1176,7 @@ async fn thread_resume_replays_pending_file_change_request_approval() -> Result<
 
     let start_id = primary
         .send_thread_start_request(ThreadStartParams {
-            model: Some("gpt-5.1-codex-max".to_string()),
+            model: Some("gpt-5.1-brocode-max".to_string()),
             cwd: Some(workspace.to_string_lossy().into_owned()),
             ..Default::default()
         })
@@ -1309,7 +1311,7 @@ async fn thread_resume_replays_pending_file_change_request_approval() -> Result<
         primary.read_stream_until_notification_message("turn/completed"),
     )
     .await??;
-    wait_for_responses_request_count(&server, 3).await?;
+    wait_for_responses_request_count(&server, /*expected_count*/ 3).await?;
 
     Ok(())
 }
@@ -1465,7 +1467,7 @@ async fn thread_resume_surfaces_cloud_requirements_load_errors() -> Result<()> {
         "Saved user message",
         Vec::new(),
         Some("mock_provider"),
-        None,
+        /*git_info*/ None,
     )?;
     let refresh_token_url = format!("{}/oauth/token", server.uri());
     let mut mcp = McpProcess::new_with_env(
@@ -1523,7 +1525,7 @@ async fn thread_resume_prefers_path_over_thread_id() -> Result<()> {
 
     let start_id = mcp
         .send_thread_start_request(ThreadStartParams {
-            model: Some("gpt-5.1-codex-max".to_string()),
+            model: Some("gpt-5.1-brocode-max".to_string()),
             ..Default::default()
         })
         .await?;
@@ -1643,7 +1645,7 @@ async fn start_materialized_thread_and_restart(
 
     let start_id = first_mcp
         .send_thread_start_request(ThreadStartParams {
-            model: Some("gpt-5.1-codex-max".to_string()),
+            model: Some("gpt-5.1-brocode-max".to_string()),
             ..Default::default()
         })
         .await?;
@@ -1717,7 +1719,7 @@ async fn thread_resume_accepts_personality_override() -> Result<()> {
 
     let start_id = primary
         .send_thread_start_request(ThreadStartParams {
-            model: Some("gpt-5.2-codex".to_string()),
+            model: Some("gpt-5.2-brocode".to_string()),
             ..Default::default()
         })
         .await?;
@@ -1755,7 +1757,7 @@ async fn thread_resume_accepts_personality_override() -> Result<()> {
     let resume_id = secondary
         .send_thread_resume_request(ThreadResumeParams {
             thread_id: thread.id,
-            model: Some("gpt-5.2-codex".to_string()),
+            model: Some("gpt-5.2-brocode".to_string()),
             personality: Some(Personality::Friendly),
             ..Default::default()
         })
@@ -1817,7 +1819,7 @@ fn create_config_toml(brocode_home: &std::path::Path, server_uri: &str) -> std::
         config_toml,
         format!(
             r#"
-model = "gpt-5.2-codex"
+model = "gpt-5.2-brocode"
 approval_policy = "never"
 sandbox_mode = "read-only"
 
@@ -1847,7 +1849,7 @@ fn create_config_toml_with_chatgpt_base_url(
         config_toml,
         format!(
             r#"
-model = "gpt-5.2-codex"
+model = "gpt-5.2-brocode"
 approval_policy = "never"
 sandbox_mode = "read-only"
 chatgpt_base_url = "{chatgpt_base_url}"
@@ -1877,7 +1879,7 @@ fn create_config_toml_with_required_broken_mcp(
         config_toml,
         format!(
             r#"
-model = "gpt-5.2-codex"
+model = "gpt-5.2-brocode"
 approval_policy = "never"
 sandbox_mode = "read-only"
 
@@ -1933,7 +1935,7 @@ fn setup_rollout_fixture(brocode_home: &Path, server_uri: &str) -> Result<Rollou
         preview,
         Vec::new(),
         Some("mock_provider"),
-        None,
+        /*git_info*/ None,
     )?;
     let rollout_file_path = rollout_path(brocode_home, filename_ts, &conversation_id);
     set_rollout_mtime(rollout_file_path.as_path(), expected_updated_at_rfc3339)?;

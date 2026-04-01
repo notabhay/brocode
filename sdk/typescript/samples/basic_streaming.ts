@@ -3,8 +3,8 @@
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 
-import { Brocode } from "@openai/codex-sdk";
-import type { ThreadEvent, ThreadItem } from "@openai/codex-sdk";
+import { Brocode } from "@openai/brocode-sdk";
+import type { ThreadEvent, ThreadItem } from "@openai/brocode-sdk";
 import { brocodePathOverride } from "./helpers.ts";
 
 const brocode = new Brocode({ brocodePathOverride: brocodePathOverride() });
