@@ -1655,58 +1655,12 @@ fn scenarios() -> Vec<ScenarioSpec> {
     ]
 }
 
-const APPROVAL_MATRIX_CHUNK_SIZE: usize = 8;
-const APPROVAL_MATRIX_TEST_CHUNKS: usize = 6;
-
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn approval_matrix_covers_all_modes_1_of_6() -> Result<()> {
-    run_approval_matrix_chunk(/*chunk_index*/ 0).await
-}
-
-#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn approval_matrix_covers_all_modes_2_of_6() -> Result<()> {
-    run_approval_matrix_chunk(/*chunk_index*/ 1).await
-}
-
-#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn approval_matrix_covers_all_modes_3_of_6() -> Result<()> {
-    run_approval_matrix_chunk(/*chunk_index*/ 2).await
-}
-
-#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn approval_matrix_covers_all_modes_4_of_6() -> Result<()> {
-    run_approval_matrix_chunk(/*chunk_index*/ 3).await
-}
-
-#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn approval_matrix_covers_all_modes_5_of_6() -> Result<()> {
-    run_approval_matrix_chunk(/*chunk_index*/ 4).await
-}
-
-#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn approval_matrix_covers_all_modes_6_of_6() -> Result<()> {
-    run_approval_matrix_chunk(/*chunk_index*/ 5).await
-}
-
-async fn run_approval_matrix_chunk(chunk_index: usize) -> Result<()> {
+async fn approval_matrix_covers_all_modes() -> Result<()> {
     skip_if_no_network!(Ok(()));
 
-    let scenarios = scenarios();
-    let total_chunks = scenarios.len().div_ceil(APPROVAL_MATRIX_CHUNK_SIZE);
-    assert!(
-        total_chunks <= APPROVAL_MATRIX_TEST_CHUNKS,
-        "approval matrix now needs more chunk tests: {} scenarios at chunk size {} exceed {} chunks",
-        scenarios.len(),
-        APPROVAL_MATRIX_CHUNK_SIZE,
-        APPROVAL_MATRIX_TEST_CHUNKS,
-    );
-
-    let start = chunk_index * APPROVAL_MATRIX_CHUNK_SIZE;
-    let end = ((chunk_index + 1) * APPROVAL_MATRIX_CHUNK_SIZE).min(scenarios.len());
-    assert!(start < end, "approval matrix chunk {chunk_index} is empty");
-
-    for scenario in &scenarios[start..end] {
-        run_scenario(scenario).await?;
+    for scenario in scenarios() {
+        run_scenario(&scenario).await?;
     }
 
     Ok(())
